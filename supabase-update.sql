@@ -1,0 +1,1 @@
+-- Deprecated: apply supabase/migrations/20260405120000_init_campx.sql instead.

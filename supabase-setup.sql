@@ -1,0 +1,2 @@
+-- Deprecated: use supabase/migrations/20260405120000_init_campx.sql for new projects.
+-- This file is kept only so older notes or links do not 404.

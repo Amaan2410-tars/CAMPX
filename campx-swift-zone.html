@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-campx-nav="swift">
+<head>
+<meta charset="UTF-8">
+<script type="module" src="/src/entries/session-gate.ts"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CampX — Swift Zone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/campx-speed-dial.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --border: rgba(255,255,255,0.07);
+  --accent: #6c63ff;
+  --text: #f0f0f8;
+  --text-sub: rgba(240,240,248,0.6);
+  --text-muted: rgba(240,240,248,0.38);
+}
+html, body { height: 100%; background: #070709; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+.app { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.phone {
+  width: 390px; height: 844px; background: var(--bg); border-radius: 48px;
+  border: 1px solid rgba(255,255,255,0.09); overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 40px 120px rgba(0,0,0,0.85);
+  display: flex; flex-direction: column;
+}
+.topbar {
+  flex-shrink: 0; padding: 52px 20px 16px; border-bottom: 1px solid var(--border);
+}
+.topbar-title {
+  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
+  letter-spacing: -0.5px; color: var(--text);
+}
+.content {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 28px 120px; text-align: center;
+}
+.zap {
+  width: 72px; height: 72px; border-radius: 22px;
+  background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(251,191,36,0.12));
+  border: 1px solid rgba(108,99,255,0.35);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin-bottom: 20px;
+}
+h1 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+p { font-size: 14px; color: var(--text-sub); line-height: 1.65; max-width: 300px; }
+.badge {
+  display: inline-block; margin-top: 18px; padding: 6px 12px; border-radius: 10px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25);
+}
+@media (max-height: 860px) { .phone { height: 100vh; border-radius: 0; border: none; } }
+@media (max-width: 420px) { .phone { width: 100vw; height: 100vh; border-radius: 0; border: none; } .app { align-items: flex-start; } }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="phone">
+  <div class="topbar">
+    <div class="topbar-title">Swift Zone</div>
+  </div>
+  <div class="content">
+    <div class="zap">⚡</div>
+    <h1>Coming soon</h1>
+    <p>Swift Zone is a Plus-only verified connection experience. It is not part of the initial launch scope per CampX product spec.</p>
+    <span class="badge">Plus tier</span>
+  </div>
+
+  <div class="dial-backdrop" id="campx-backdrop"></div>
+  <div class="hold-hint" id="campx-holdHint">Swipe up to open menu</div>
+  <div class="speed-dial-wrap" id="campx-speedDial">
+    <div class="screen-chip" id="campx-screenChip">Swift Zone</div>
+  </div>
+  <div class="nav-pill" id="campx-navPill">
+    <div class="pill-arrows"><span></span><span></span></div>
+    <span class="pill-label" id="campx-pillLabel">Swift Zone</span>
+    <div class="pill-dot"></div>
+  </div>
+  <script src="/campx-speed-dial.js" defer></script>
+</div>
+</div>
+</body>
+</html>

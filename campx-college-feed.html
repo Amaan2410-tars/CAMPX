@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en" data-campx-nav="college">
+<head>
+<meta charset="UTF-8">
+<script type="module" src="/src/entries/session-gate.ts"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CampX — College Feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/campx-speed-dial.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c27;
+  --surface3: #22222f;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent: #6c63ff;
+  --accent-dim: rgba(108,99,255,0.15);
+  --accent2: #ff6b6b;
+  --accent2-dim: rgba(255,107,107,0.12);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.12);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251,191,36,0.12);
+  --text: #f0f0f8;
+  --text-sub: rgba(240,240,248,0.6);
+  --text-muted: rgba(240,240,248,0.38);
+}
+
+html, body { height: 100%; background: #070709; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+
+.app { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+/* ── PHONE ── */
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg);
+  border-radius: 48px;
+  border: 1px solid rgba(255,255,255,0.09);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 40px 120px rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  flex-shrink: 0;
+  padding: 52px 20px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
+}
+
+.topbar-left { display: flex; flex-direction: column; gap: 1px; }
+
+.college-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.verified-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px rgba(74,222,128,0.6);
+}
+
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.icon-btn:hover { background: var(--surface2); }
+.icon-btn svg { width: 17px; height: 17px; stroke: var(--text-sub); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.notif-badge {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent2);
+  border: 1.5px solid var(--bg);
+}
+
+/* ── STORY ROW ── */
+.story-row {
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  padding: 14px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+}
+.story-row::-webkit-scrollbar { display: none; }
+
+.story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.story-ring {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  transition: transform 0.15s;
+}
+.story-ring:hover { transform: scale(1.06); }
+
+.story-ring.seen { background: var(--surface2); }
+
+.story-avatar {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+}
+
+.story-name {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-story .story-ring {
+  background: var(--surface2);
+  border: 1px dashed var(--border2);
+}
+.add-story .story-avatar { background: transparent; font-size: 22px; color: var(--accent); }
+
+/* ── FEED ── */
+.feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0 104px;
+  scrollbar-width: none;
+}
+.feed::-webkit-scrollbar { display: none; }
+
+/* ── POST CARD ── */
+.post {
+  margin: 0 0 2px;
+  padding: 16px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  animation: fadeUp 0.4s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.post:nth-child(1) { animation-delay: 0.05s; }
+.post:nth-child(2) { animation-delay: 0.12s; }
+.post:nth-child(3) { animation-delay: 0.19s; }
+.post:nth-child(4) { animation-delay: 0.26s; }
+.post:nth-child(5) { animation-delay: 0.33s; }
+
+.post-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+
+.avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  flex-shrink: 0;
+  border: 1px solid var(--border2);
+}
+
+.post-meta { flex: 1; min-width: 0; }
+
+.post-author {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tier-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-verified { background: var(--green-dim); color: var(--green); }
+.badge-pro      { background: var(--accent-dim); color: #a89fff; }
+.badge-plus     { background: var(--amber-dim); color: var(--amber); }
+
+.post-info {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dot-sep { opacity: 0.4; }
+
+.post-more {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.post-more:hover { background: var(--surface); }
+.post-more svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* Post text */
+.post-text {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.65;
+  margin-bottom: 12px;
+}
+.post-text .mention { color: var(--accent); }
+.post-text .hashtag { color: #a89fff; }
+
+/* Photo post */
+.post-image {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: var(--surface2);
+}
+
+.post-image .img-placeholder {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.img-placeholder.campus {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+.img-placeholder.event {
+  background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%);
+}
+
+.img-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  font-style: italic;
+}
+
+/* Campus decoration inside image */
+.campus-decor {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.campus-decor::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+}
+
+/* Poll */
+.poll-container { margin-bottom: 12px; }
+
+.poll-question {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.poll-option {
+  position: relative;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.poll-option:hover { border-color: var(--border2); }
+.poll-option.voted { border-color: rgba(108,99,255,0.4); }
+
+.poll-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: var(--accent-dim);
+  border-radius: 10px;
+  transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.poll-option-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.poll-opt-text { font-size: 13px; color: var(--text-sub); }
+.poll-opt-pct  { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.poll-option.voted .poll-opt-text { color: var(--text); }
+
+.poll-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* Accomplishment post */
+.accomplish-card {
+  background: linear-gradient(135deg, rgba(108,99,255,0.08) 0%, rgba(74,222,128,0.05) 100%);
+  border: 1px solid rgba(108,99,255,0.2);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.accomplish-card::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108,99,255,0.15) 0%, transparent 70%);
+}
+
+.accomplish-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.accomplish-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), #9b8fff);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.accomplish-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  line-height: 1.3;
+}
+
+.accomplish-org {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.accomplish-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.investigate-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  width: 100%;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(108,99,255,0.35);
+}
+.investigate-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.45); }
+.investigate-btn:active { transform: scale(0.98); }
+.investigate-btn svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Investigate modal */
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal-sheet {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px 40px;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.1,0.64,1);
+  border-top: 1px solid var(--border2);
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: var(--border2);
+  margin: 0 auto 16px;
+}
+
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+.step-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+
+.step-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.step-num {
+  width: 24px; height: 24px;
+  border-radius: 8px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(108,99,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-text { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+.step-text strong { color: var(--text); font-weight: 500; }
+
+.resource-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+
+.resource-chip {
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  font-size: 11px;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex; align-items: center; gap: 4px;
+}
+.resource-chip:hover { background: var(--surface3); }
+.resource-chip svg { width: 11px; height: 11px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.modal-close {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.modal-close:hover { background: var(--surface3); }
+
+/* Engagement bar */
+.engage-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.engage-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  transition: background 0.15s, color 0.15s;
+  flex: 1;
+  justify-content: center;
+}
+.engage-btn:hover { background: var(--surface); color: var(--text-sub); }
+.engage-btn.liked { color: var(--accent2); }
+.engage-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; }
+.engage-btn.liked svg { fill: var(--accent2); stroke: var(--accent2); transform: scale(1.15); }
+
+.engage-sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+
+/* Reaction pill */
+.reaction-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.reaction-pill {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.reaction-pill:hover { background: var(--surface2); }
+.reaction-pill.active { background: var(--accent-dim); border-color: rgba(108,99,255,0.3); color: var(--text-sub); }
+
+/* Sponsored badge */
+.sponsored-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.2);
+  font-size: 10px;
+  color: var(--amber);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+}
+
+/* Post composer hint */
+.compose-fab {
+  position: absolute;
+  bottom: 88px;
+  right: 16px;
+  width: 48px; height: 48px;
+  border-radius: 16px;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 24px rgba(108,99,255,0.45);
+  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 15;
+}
+.compose-fab:hover { transform: scale(1.07); box-shadow: 0 12px 32px rgba(108,99,255,0.55); }
+.compose-fab svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Swipe hint */
+.swipe-hint {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface2);
+  border-left: 1px solid var(--border2);
+  border-radius: 8px 0 0 8px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 5;
+  opacity: 0.6;
+  animation: hint-pulse 3s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  0%,100% { opacity: 0.6; transform: translateY(-50%) translateX(0); }
+  50%      { opacity: 0.9; transform: translateY(-50%) translateX(-3px); }
+}
+
+.swipe-hint svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.swipe-hint span { font-size: 9px; color: var(--text-muted); writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.08em; transform: rotate(180deg); }
+
+@media (max-height: 860px) {
+  .phone { height: 100vh; border-radius: 0; border: none; }
+}
+@media (max-width: 420px) {
+  .phone { width: 100vw; height: 100vh; border-radius: 0; border: none; }
+  .app { align-items: flex-start; }
+}
+
+.campx-live-wrap { margin-bottom: 10px; }
+.campx-feed-error { padding: 10px 12px; border-radius: 12px; background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.25); color: #fca5a5; margin-bottom: 10px; font-size: 13px; line-height: 1.4; }
+.campx-composer { display: flex; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 12px; align-items: flex-end; }
+.campx-composer textarea { flex: 1; min-height: 48px; max-height: 120px; resize: vertical; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; line-height: 1.4; }
+.campx-composer textarea:focus { outline: none; border-color: rgba(108,99,255,0.5); box-shadow: 0 0 0 2px rgba(108,99,255,0.12); }
+.campx-post-submit { flex-shrink: 0; padding: 10px 18px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), #9b8fff); color: white; border: none; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+.campx-post-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.campx-post-live { margin-bottom: 4px; }
+.campx-post-live .college-chip {
+  font-size: 10px; padding: 1px 7px; border-radius: 6px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text-muted); font-weight: 400; white-space: nowrap;
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="phone">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="college-label">College Feed</span>
+      <div class="topbar-title">
+        CBIT Hyderabad
+        <div class="verified-dot"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn" title="Search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+      </div>
+      <div class="icon-btn" title="Notifications">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-badge"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STORIES -->
+  <div class="story-row">
+    <div class="story-item add-story">
+      <div class="story-ring">
+        <div class="story-avatar">+</div>
+      </div>
+      <span class="story-name">Your story</span>
+    </div>
+    <div class="story-item">
+      <div class="story-ring">
+        <div class="story-avatar" style="background: linear-gradient(135deg,#1e1e2e,#2d2d44);">RK</div>
+      </div>
+      <span class="story-name">Rahul K</span>
+    </div>
+    <div class="story-item">
+      <div class="story-ring">
+        <div class="story-avatar" style="background: linear-gradient(135deg,#1e2e1e,#2d442d);">PS</div>
+      </div>
+      <span class="story-name">Priya S</span>
+    </div>
+    <div class="story-item">
+      <div class="story-ring seen">
+        <div class="story-avatar" style="background: linear-gradient(135deg,#2e1e1e,#44302d);">AM</div>
+      </div>
+      <span class="story-name">Arjun M</span>
+    </div>
+    <div class="story-item">
+      <div class="story-ring seen">
+        <div class="story-avatar" style="background: linear-gradient(135deg,#1e1e2e,#1a1a3e);">SV</div>
+      </div>
+      <span class="story-name">Sneha V</span>
+    </div>
+    <div class="story-item">
+      <div class="story-ring">
+        <div class="story-avatar" style="background: linear-gradient(135deg,#2e2a1e,#3e3422);">KR</div>
+      </div>
+      <span class="story-name">Kiran R</span>
+    </div>
+  </div>
+
+  <!-- FEED -->
+  <div class="feed">
+    <div id="campx-live-wrap" class="campx-live-wrap">
+      <div id="campx-feed-error" class="campx-feed-error" hidden></div>
+      <div class="campx-composer">
+        <textarea id="campx-post-body" maxlength="2000" placeholder="Share with your campus…"></textarea>
+        <button type="button" id="campx-post-submit" class="campx-post-submit">Post</button>
+      </div>
+      <div id="campx-db-posts"></div>
+    </div>
+
+    <!-- POST 1 — Accomplishment -->
+    <div class="post">
+      <div class="post-header">
+        <div class="avatar" style="background: linear-gradient(135deg,#2d1b4e,#3d2b6e);">NP</div>
+        <div class="post-meta">
+          <div class="post-author">
+            Neha Patel
+            <span class="tier-badge badge-pro">Pro</span>
+          </div>
+          <div class="post-info">
+            <span>CSE 3rd Year</span>
+            <span class="dot-sep">·</span>
+            <span>2h ago</span>
+          </div>
+        </div>
+        <button class="post-more">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+
+      <div class="post-text">
+        Just cleared my <span class="mention">@Google</span> Summer Internship interview! 🎉 Can't believe it — 4 rounds and a month of grinding finally paid off. Super grateful to everyone who helped.
+        <span class="hashtag">#Internship #GoogleSWE #CBIT</span>
+      </div>
+
+      <div class="accomplish-card">
+        <div class="accomplish-top">
+          <div class="accomplish-icon">🏆</div>
+          <div>
+            <div class="accomplish-title">Google SWE Intern 2025</div>
+            <div class="accomplish-org">Google LLC · Summer Internship · ₹1.2L/month</div>
+          </div>
+        </div>
+        <div class="accomplish-desc">
+          Cracked all 4 rounds — DSA screening, two technical interviews and an HR round. Used LeetCode, System Design primer and mock interviews with seniors.
+        </div>
+        <button class="investigate-btn" onclick="openInvestigate()">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+          Investigate — How she did it
+        </button>
+      </div>
+
+      <div class="reaction-strip">
+        <div class="reaction-pill active">🔥 <span>124</span></div>
+        <div class="reaction-pill">👏 <span>88</span></div>
+        <div class="reaction-pill">💡 <span>41</span></div>
+        <div class="reaction-pill">+ React</div>
+      </div>
+
+      <div class="engage-bar">
+        <button class="engage-btn liked" onclick="toggleLike(this)">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          253
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          48
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Repost
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          Save
+        </button>
+      </div>
+    </div>
+
+    <!-- POST 2 — Photo Post -->
+    <div class="post">
+      <div class="post-header">
+        <div class="avatar" style="background: linear-gradient(135deg,#0f2e1e,#1a4a30);">AK</div>
+        <div class="post-meta">
+          <div class="post-author">
+            Aryan Kumar
+            <span class="tier-badge badge-verified">Verified</span>
+          </div>
+          <div class="post-info">
+            <span>ECE 2nd Year</span>
+            <span class="dot-sep">·</span>
+            <span>5h ago</span>
+          </div>
+        </div>
+        <button class="post-more">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+
+      <div class="post-text">
+        Hacky night at the lab 🛠️ — been working on our IoT project for 6 straight hours. The sensor readings are finally stable! Presenting next Thursday. <span class="hashtag">#ECE #IoT #HackyNight</span>
+      </div>
+
+      <div class="post-image">
+        <div class="img-placeholder campus">
+          <div class="campus-decor"></div>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+      </div>
+
+      <div class="engage-bar">
+        <button class="engage-btn" onclick="toggleLike(this)">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          87
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          22
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Repost
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          Save
+        </button>
+      </div>
+    </div>
+
+    <!-- POST 3 — Poll -->
+    <div class="post">
+      <div class="post-header">
+        <div class="avatar" style="background: linear-gradient(135deg,#2e1a0f,#4a2e1a);">SL</div>
+        <div class="post-meta">
+          <div class="post-author">
+            Sanjana Lal
+            <span class="tier-badge badge-plus">Plus</span>
+          </div>
+          <div class="post-info">
+            <span>MBA 1st Year</span>
+            <span class="dot-sep">·</span>
+            <span>8h ago</span>
+          </div>
+        </div>
+        <button class="post-more">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+
+      <div class="post-text">
+        Quick poll for the CS students — what's your go-to language for competitive programming? 👇</div>
+
+      <div class="poll-container">
+        <div class="poll-option voted" onclick="vote(this, 58)">
+          <div class="poll-fill" style="width: 58%"></div>
+          <div class="poll-option-inner">
+            <span class="poll-opt-text">C++</span>
+            <span class="poll-opt-pct">58%</span>
+          </div>
+        </div>
+        <div class="poll-option" onclick="vote(this, 24)">
+          <div class="poll-fill" style="width: 24%"></div>
+          <div class="poll-option-inner">
+            <span class="poll-opt-text">Python</span>
+            <span class="poll-opt-pct">24%</span>
+          </div>
+        </div>
+        <div class="poll-option" onclick="vote(this, 12)">
+          <div class="poll-fill" style="width: 12%"></div>
+          <div class="poll-option-inner">
+            <span class="poll-opt-text">Java</span>
+            <span class="poll-opt-pct">12%</span>
+          </div>
+        </div>
+        <div class="poll-option" onclick="vote(this, 6)">
+          <div class="poll-fill" style="width: 6%"></div>
+          <div class="poll-option-inner">
+            <span class="poll-opt-text">Other</span>
+            <span class="poll-opt-pct">6%</span>
+          </div>
+        </div>
+        <div class="poll-meta">342 votes · 18h left</div>
+      </div>
+
+      <div class="engage-bar">
+        <button class="engage-btn" onclick="toggleLike(this)">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          61
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          14
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Repost
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          Save
+        </button>
+      </div>
+    </div>
+
+    <!-- POST 4 — Sponsored (brand) -->
+    <div class="post">
+      <div class="post-header">
+        <div class="avatar" style="background: linear-gradient(135deg,#1a1a1a,#2a2a2a); border-color: rgba(251,191,36,0.3);">SW</div>
+        <div class="post-meta">
+          <div class="post-author" style="color: var(--amber);">
+            Swiggy Campus
+            <span class="tier-badge" style="background: var(--amber-dim); color: var(--amber);">Brand</span>
+          </div>
+          <div class="post-info">
+            <span>Verified Brand</span>
+          </div>
+        </div>
+        <button class="post-more">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+
+      <div class="sponsored-tag">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Sponsored
+      </div>
+
+      <div class="post-text">
+        Students of CBIT — get <strong style="color: var(--text);">60% off</strong> your first 10 Swiggy orders this semester! Use code <strong style="color: var(--amber);">CBIT60</strong> at checkout. Valid till end of month. 🍕🛵</div>
+
+      <div class="post-image">
+        <div class="img-placeholder event">
+          <div class="campus-decor"></div>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+      </div>
+
+      <div class="engage-bar">
+        <button class="engage-btn" onclick="toggleLike(this)">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          19
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          Share
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn" style="color: var(--text-muted); font-size: 12px;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          Hide ad
+        </button>
+      </div>
+    </div>
+
+    <!-- POST 5 — Text post -->
+    <div class="post">
+      <div class="post-header">
+        <div class="avatar" style="background: linear-gradient(135deg,#0f1e2e,#1a304a);">VR</div>
+        <div class="post-meta">
+          <div class="post-author">
+            Vikram Rao
+            <span class="tier-badge badge-verified">Verified</span>
+          </div>
+          <div class="post-info">
+            <span>IT 4th Year</span>
+            <span class="dot-sep">·</span>
+            <span>12h ago</span>
+          </div>
+        </div>
+        <button class="post-more">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+
+      <div class="post-text">
+        Anyone else feel like the placement season this year is absolutely brutal? Companies are asking DSA, system design AND HR rounds all in one day. No wonder everyone's stressed 😮‍💨 <span class="hashtag">#Placements2025 #CBIT #TechJobs</span>
+      </div>
+
+      <div class="engage-bar">
+        <button class="engage-btn" onclick="toggleLike(this)">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          176
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          63
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Repost
+        </button>
+        <div class="engage-sep"></div>
+        <button class="engage-btn">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          Save
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /feed -->
+
+  <!-- SWIPE HINT -->
+  <a href="/campx-dms.html" class="swipe-hint" style="text-decoration:none;color:inherit;" aria-label="Open messages">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    <span>DMs</span>
+  </a>
+
+  <!-- FAB -->
+  <button class="compose-fab">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+
+  <div class="dial-backdrop" id="campx-backdrop"></div>
+  <div class="hold-hint" id="campx-holdHint">Swipe up to open menu</div>
+  <div class="speed-dial-wrap" id="campx-speedDial">
+    <div class="screen-chip" id="campx-screenChip">College</div>
+  </div>
+  <div class="nav-pill" id="campx-navPill">
+    <div class="pill-arrows"><span></span><span></span></div>
+    <span class="pill-label" id="campx-pillLabel">College</span>
+    <div class="pill-dot"></div>
+  </div>
+  <script src="/campx-speed-dial.js" defer></script>
+
+  <!-- INVESTIGATE MODAL -->
+  <div class="modal-overlay" id="investigate-modal" onclick="closeInvestigate(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">How Neha cracked Google</div>
+      <div class="modal-sub">Google SWE Intern · 4 rounds · 3 months prep</div>
+
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>DSA foundation (6 weeks)</strong> — LeetCode Top 150, focused on trees, graphs and DP. Did 3–4 problems every day after college.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>Mock interviews (2 weeks)</strong> — Practiced with seniors from CBIT who interned at top companies. Used Pramp for peer mocks.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>System design basics</strong> — Watched Gaurav Sen's YouTube series. Read the System Design Primer on GitHub.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-text"><strong>Applied via referral</strong> — Got a referral from a CBIT alumnus on LinkedIn. Cold DM'd 12 people, 2 responded.</div>
+        </div>
+      </div>
+
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Resources used</div>
+      <div class="resource-chips">
+        <div class="resource-chip">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          LeetCode Top 150
+        </div>
+        <div class="resource-chip">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          System Design Primer
+        </div>
+        <div class="resource-chip">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Pramp (mock interviews)
+        </div>
+        <div class="resource-chip">
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Gaurav Sen (YouTube)
+        </div>
+      </div>
+
+      <button class="modal-close" onclick="closeInvestigate()">Close</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function toggleLike(btn) {
+  btn.classList.toggle('liked');
+  const countText = btn.childNodes[btn.childNodes.length - 1];
+  const num = parseInt(countText.textContent.trim()) || 0;
+  countText.textContent = ' ' + (btn.classList.contains('liked') ? num + 1 : num - 1);
+}
+
+function vote(el, pct) {
+  const container = el.closest('.poll-container');
+  container.querySelectorAll('.poll-option').forEach(o => o.classList.remove('voted'));
+  el.classList.add('voted');
+}
+
+function openInvestigate() {
+  document.getElementById('investigate-modal').classList.add('open');
+}
+
+function closeInvestigate(e) {
+  if (!e || e.target === document.getElementById('investigate-modal')) {
+    document.getElementById('investigate-modal').classList.remove('open');
+  }
+}
+</script>
+<script type="module" src="/src/entries/feed-live.ts"></script>
+</body>
+</html>
