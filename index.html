@@ -3,53 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CampX — HTML prototypes</title>
-    <meta name="description" content="CampX static UI prototypes (speed dial navigation)" />
-    <style>
-      body {
-        font-family: system-ui, sans-serif;
-        max-width: 42rem;
-        margin: 2rem auto;
-        padding: 0 1.25rem;
-        line-height: 1.5;
-        color: #e8e8ef;
-        background: #0a0a0f;
-      }
-      h1 { font-size: 1.35rem; margin-bottom: 0.5rem; }
-      p { color: #9b9bab; margin: 0 0 1.25rem; }
-      ul { padding-left: 1.1rem; }
-      a { color: #a89fff; }
-      a:hover { color: #c4bfff; }
-      code { font-size: 0.9em; background: #1a1a24; padding: 0.1em 0.35em; border-radius: 4px; }
-    </style>
+    <title>CampX</title>
+    <meta http-equiv="refresh" content="0;url=/feed" />
+    <script>
+      location.replace("/feed");
+    </script>
   </head>
-  <body>
-    <h1>CampX HTML prototypes</h1>
-    <p>
-      Start with <strong>Onboarding</strong> for the sign-up / log-in flow (prototype redirects into the app). On other screens, use the <strong>speed dial</strong>: tap, hold, or swipe up on the pill, then pick a destination.
-      Shared assets: <code>/campx-speed-dial.css</code>, <code>/campx-speed-dial.js</code>.
-    </p>
-    <ul>
-      <li><a href="/onboarding"><strong>Onboarding</strong></a> — multi-step sign up, email verification + code, forgot password; log in → College (use email with <code>notverified</code> to test verify flow)</li>
-      <li><a href="/college-feed">College feed</a></li>
-      <li><a href="/explore-feed">Explore feed</a></li>
-      <li><a href="/communities">Communities</a></li>
-      <li><a href="/messages">Messages (DMs)</a></li>
-      <li><a href="/settings">Settings</a> (speed dial slot; includes profile entry at top)</li>
-      <li><a href="/profile">Profile</a> (open from Settings → profile card)</li>
-      <li><a href="/swift-zone">Swift Zone</a> (placeholder)</li>
-      <li><a href="/speeddial-nav">College feed (original speed dial reference)</a></li>
-    </ul>
-    <p>Additional product-spec modules:</p>
-    <ul>
-      <li><a href="/tiers">User tiers</a></li>
-      <li><a href="/notifications">Notifications &amp; emails</a></li>
-      <li><a href="/billing">Subscription &amp; billing</a></li>
-      <li><a href="/founder-dashboard">Founder dashboard</a></li>
-      <li><a href="/ambassador-dashboard">Campus ambassador dashboard</a></li>
-      <li><a href="/college-onboarding">College onboarding</a></li>
-      <li><a href="/moderation">Moderation system</a></li>
-      <li><a href="/events">Events &amp; contests</a></li>
-    </ul>
+  <body
+    style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0f;color:#9b9bab;font-family:system-ui,sans-serif"
+  >
+    <p><a href="/feed" style="color:#a89fff">Opening CampX…</a></p>
   </body>
 </html>

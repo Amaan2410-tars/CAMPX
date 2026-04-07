@@ -33,6 +33,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, "index.html"),
+        prototypes: path.resolve(__dirname, "prototypes.html"),
         onboarding: path.resolve(__dirname, "campx-onboarding.html"),
         auth_login: path.resolve(__dirname, "auth/login.html"),
         feed: path.resolve(__dirname, "feed.html"),

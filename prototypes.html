@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CampX — HTML prototypes (dev)</title>
+    <meta name="robots" content="noindex" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 3rem;
+        line-height: 1.55;
+        color: #e8e8ef;
+        background: #0a0a0f;
+      }
+      h1 {
+        font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+        margin-bottom: 0.35rem;
+      }
+      .sub {
+        color: #9b9bab;
+        margin: 0 0 1.75rem;
+        max-width: 52rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+        gap: 0.35rem 1.5rem;
+      }
+      ul {
+        padding-left: 1.1rem;
+        margin: 0 0 1.5rem;
+      }
+      a {
+        color: #a89fff;
+      }
+      a:hover {
+        color: #c4bfff;
+      }
+      code {
+        font-size: 0.88em;
+        background: #1a1a24;
+        padding: 0.12em 0.4em;
+        border-radius: 4px;
+      }
+      h2 {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #7a7a8f;
+        margin: 1.75rem 0 0.65rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CampX HTML prototypes</h1>
+    <p class="sub">
+      Developer map of static screens. The live app entry is <a href="/feed">/feed</a> (session-aware). Use the
+      <strong>speed dial</strong> on main screens: click and hold the bottom pill, or swipe up, then choose a
+      destination. Shared: <code>/campx-speed-dial.css</code>, <code>/campx-speed-dial.js</code>.
+    </p>
+    <h2>Core flows</h2>
+    <ul class="grid">
+      <li><a href="/onboarding"><strong>Onboarding</strong></a> — sign up, verify, login</li>
+      <li><a href="/college-feed">College feed</a></li>
+      <li><a href="/explore-feed">Explore feed</a></li>
+      <li><a href="/communities">Communities</a></li>
+      <li><a href="/messages">Messages (DMs)</a></li>
+      <li><a href="/settings">Settings</a></li>
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/swift-zone">Swift Zone</a> (placeholder)</li>
+      <li><a href="/speeddial-nav">Speed dial reference</a></li>
+    </ul>
+    <h2>Additional modules</h2>
+    <ul class="grid">
+      <li><a href="/tiers">User tiers</a></li>
+      <li><a href="/notifications">Notifications &amp; emails</a></li>
+      <li><a href="/billing">Subscription &amp; billing</a></li>
+      <li><a href="/founder-dashboard">Founder dashboard</a></li>
+      <li><a href="/ambassador-dashboard">Campus ambassador</a></li>
+      <li><a href="/college-onboarding">College onboarding</a></li>
+      <li><a href="/moderation">Moderation</a></li>
+      <li><a href="/events">Events &amp; contests</a></li>
+    </ul>
+  </body>
+</html>

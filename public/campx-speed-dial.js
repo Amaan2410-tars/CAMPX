@@ -72,6 +72,9 @@
   if (screenChip) {
     screenChip.textContent = pillOverride || match?.label || NAV_ITEMS[0].label;
   }
+  if (holdHint && window.matchMedia("(min-width: 768px)").matches) {
+    holdHint.textContent = "Click and hold — or swipe up — for menu";
+  }
 
   let dialOpen = false;
   let holdHintTimer = null;

@@ -1,5 +1,6 @@
 {
   "redirects": [
+    { "source": "/", "destination": "/feed", "permanent": false },
     { "source": "/campx-onboarding.html", "destination": "/onboarding", "permanent": true },
     { "source": "/campx-college-feed.html", "destination": "/college-feed", "permanent": true },
     { "source": "/campx-explore-feed.html", "destination": "/explore-feed", "permanent": true },
@@ -37,6 +38,7 @@
     { "source": "/moderation", "destination": "/campx-moderation-system.html" },
     { "source": "/events", "destination": "/campx-events-contests.html" },
     { "source": "/feed", "destination": "/feed.html" },
-    { "source": "/auth/login", "destination": "/auth/login.html" }
+    { "source": "/auth/login", "destination": "/auth/login.html" },
+    { "source": "/prototypes", "destination": "/prototypes.html" }
   ]
 }
