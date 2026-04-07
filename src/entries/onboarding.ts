@@ -749,7 +749,7 @@ function wireGlobals(): void {
       const sb = await getClient();
       if (!sb) return;
 
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
       if (error) {
         showToast(error.message);
         return;
