@@ -8,7 +8,19 @@
 </head>
 <body>
   <script>
-    window.location.replace("/onboarding#login");
+    (function () {
+      const host = (window.location.hostname || "").toLowerCase();
+      const qp = new URLSearchParams(window.location.search);
+      const existingNext = qp.get("next");
+      const fallbackNext =
+        host === "admin.campx.social" || host.startsWith("admin.")
+          ? "/founder-dashboard"
+          : host === "college.campx.social" || host.startsWith("college.")
+            ? "/ambassador-dashboard"
+            : "/feed";
+      const next = existingNext || fallbackNext;
+      window.location.replace("/onboarding?next=" + encodeURIComponent(next) + "#login");
+    })();
   </script>
 </body>
 </html>

@@ -418,6 +418,7 @@ async function upsertProfileFromSignup(sb: SupabaseClient, userId: string, email
   const phone = val("phone");
   const marketing = el<HTMLInputElement>("marketing-optin")?.checked ?? false;
   const tier = await detectTierForEmail(sb, email);
+  const verificationStatus = tier === "verified" ? "verified" : "kyc_pending";
 
   await sb.from("profiles").upsert(
     {
@@ -429,7 +430,7 @@ async function upsertProfileFromSignup(sb: SupabaseClient, userId: string, email
       major,
       phone,
       tier,
-      verification_status: "email_verified",
+      verification_status: verificationStatus,
       marketing_opt_in: marketing,
       updated_at: new Date().toISOString(),
     },

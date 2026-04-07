@@ -3,6 +3,13 @@ import { assertRouteRoleAccess } from "@/lib/routeRoles";
 
 const SIGN_IN_PATH = "/auth/login";
 
+function hostDefaultNextPath(): string {
+  const host = (window.location.hostname || "").toLowerCase();
+  if (host === "admin.campx.social" || host.startsWith("admin.")) return "/founder-dashboard";
+  if (host === "college.campx.social" || host.startsWith("college.")) return "/ambassador-dashboard";
+  return "/feed";
+}
+
 function normalizedPath(): string {
   let p = window.location.pathname || "/";
   if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
@@ -48,10 +55,8 @@ async function main(): Promise<void> {
   const next = safeNextUrl(
     normalizedPath() + window.location.search + window.location.hash,
   );
-  const target =
-    next != null
-      ? `${SIGN_IN_PATH}?next=${encodeURIComponent(next)}`
-      : SIGN_IN_PATH;
+  const defaultNext = hostDefaultNextPath();
+  const target = `${SIGN_IN_PATH}?next=${encodeURIComponent(next ?? defaultNext)}`;
 
   window.location.replace(target);
 }

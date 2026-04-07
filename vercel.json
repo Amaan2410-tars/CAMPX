@@ -1,5 +1,17 @@
 {
   "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "admin.campx.social" }],
+      "destination": "/auth/login?next=/founder-dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "college.campx.social" }],
+      "destination": "/auth/login?next=/ambassador-dashboard",
+      "permanent": false
+    },
     { "source": "/", "destination": "/feed", "permanent": false },
     { "source": "/campx-onboarding.html", "destination": "/onboarding", "permanent": true },
     { "source": "/campx-college-feed.html", "destination": "/college-feed", "permanent": true },

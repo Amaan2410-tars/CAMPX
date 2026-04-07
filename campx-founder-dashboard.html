@@ -20,6 +20,15 @@ a { color: #b9b9ff; text-decoration: none; }
 .section h2 { margin: 0 0 10px; font-size: 18px; }
 ul { margin: 0; padding-left: 18px; color: #ced3f3; }
 li { margin: 6px 0; }
+.table-wrap { overflow: auto; border: 1px solid #272b45; border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; min-width: 720px; }
+th, td { text-align: left; padding: 10px; border-bottom: 1px solid #1f2440; font-size: 13px; }
+th { color: #95a0d9; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.btn { border: 1px solid #30365b; background: #171b31; color: #eef0ff; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
+.btn:hover { border-color: #46508b; }
+.btn.ok { background: #123022; border-color: #266546; }
+.btn.bad { background: #33181d; border-color: #7a2f3c; }
+.muted { color: #95a0d9; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -51,6 +60,12 @@ li { margin: 6px 0; }
         <li>Content health and trust/safety metrics.</li>
         <li>Billing, payout and subscription overview.</li>
       </ul>
+    </div>
+
+    <div class="section">
+      <h2>Verification Requests (Founder Approval)</h2>
+      <p class="muted">Users with pending verification can be approved or rejected here.</p>
+      <div id="campx-verify-queue" class="table-wrap"></div>
     </div>
 
     <div class="section">
