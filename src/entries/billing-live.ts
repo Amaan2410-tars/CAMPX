@@ -8,6 +8,10 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 async function main(): Promise<void> {
   const host = document.getElementById("campx-billing-live");
   if (!host) return;
@@ -50,6 +54,7 @@ async function main(): Promise<void> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   const fnBase = supabaseUrl ? `${supabaseUrl}/functions/v1` : "";
 
+  const statusElId = "campx-billing-status";
   host.innerHTML = `
     <div class="box">
       <div style="font-weight:600;margin-bottom:8px;">Your subscription</div>
@@ -77,6 +82,7 @@ async function main(): Promise<void> {
       }
       <p style="font-size:12px;color:#64748b;margin-top:8px;">Production: deploy Edge Functions <code>razorpay-create-order</code> and <code>razorpay-webhook</code>, then set secrets.</p>
     </div>
+    <div id="${statusElId}" class="box" style="display:none;"></div>
     <div class="box">
       <div style="font-weight:600;margin-bottom:8px;">Recent payments</div>
       ${
@@ -91,6 +97,27 @@ async function main(): Promise<void> {
       }
     </div>
     <p><a href="/feed">Back to app</a></p>`;
+
+  const statusEl = document.getElementById(statusElId) as HTMLDivElement | null;
+  function showStatus(html: string, kind: "info" | "ok" | "err" = "info"): void {
+    if (!statusEl) return;
+    const border =
+      kind === "ok"
+        ? "rgba(74,222,128,0.35)"
+        : kind === "err"
+          ? "rgba(248,113,113,0.35)"
+          : "rgba(99,102,241,0.28)";
+    const bg =
+      kind === "ok"
+        ? "rgba(74,222,128,0.08)"
+        : kind === "err"
+          ? "rgba(248,113,113,0.08)"
+          : "rgba(99,102,241,0.08)";
+    statusEl.style.display = "block";
+    statusEl.style.borderColor = border;
+    statusEl.style.background = bg;
+    statusEl.innerHTML = html;
+  }
 
   function loadRazorpay(): Promise<new (options: Record<string, unknown>) => { open: () => void }> {
     return new Promise((resolve, reject) => {
@@ -114,9 +141,25 @@ async function main(): Promise<void> {
     btn.addEventListener("click", async () => {
       const planId = (btn as HTMLButtonElement).dataset.plan;
       if (!planId || !user || !fnBase) return;
+      const btnEl = btn as HTMLButtonElement;
+      const prevText = btnEl.textContent;
+      btnEl.disabled = true;
+      btnEl.textContent = "Starting…";
+      showStatus(
+        `<div style="font-weight:600;margin-bottom:6px;">Starting checkout</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">Opening Razorpay. After payment, we’ll verify your subscription status.</div>`,
+        "info",
+      );
       const { data: sessionData } = await sb.auth.getSession();
       const token = sessionData.session?.access_token;
-      if (!token) return;
+      if (!token) {
+        btnEl.disabled = false;
+        btnEl.textContent = prevText || "Pay (Razorpay)";
+        showStatus(
+          `<div style="font-weight:600;margin-bottom:6px;">Please sign in again</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">Your session is missing. Reload and sign in.</div>`,
+          "err",
+        );
+        return;
+      }
       const res = await fetch(`${fnBase}/razorpay-create-order`, {
         method: "POST",
         headers: {
@@ -137,13 +180,21 @@ async function main(): Promise<void> {
         plan?: { name?: string };
       };
       if (json.demo) {
-        alert(
-          `Razorpay keys are not configured on the server. Plan: ${json.plan?.name ?? planId}. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET for Edge Functions.`,
+        showStatus(
+          `<div style="font-weight:600;margin-bottom:6px;">Payments not configured</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">Razorpay keys are not configured on the server. Plan: <strong>${escapeHtml(json.plan?.name ?? planId)}</strong>. Set <code>RAZORPAY_KEY_ID</code> and <code>RAZORPAY_KEY_SECRET</code> on Edge Functions.</div>`,
+          "err",
         );
+        btnEl.disabled = false;
+        btnEl.textContent = prevText || "Pay (Razorpay)";
         return;
       }
       if (json.error) {
-        alert(json.error);
+        showStatus(
+          `<div style="font-weight:600;margin-bottom:6px;">Checkout error</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">${escapeHtml(json.error)}</div>`,
+          "err",
+        );
+        btnEl.disabled = false;
+        btnEl.textContent = prevText || "Pay (Razorpay)";
         return;
       }
       if (json.key_id && json.order_id && json.amount != null) {
@@ -156,16 +207,61 @@ async function main(): Promise<void> {
             name: "CampX",
             description: json.name ?? "Subscription",
             order_id: json.order_id,
-            handler: () => {
-              alert("Payment completed — check billing and webhook logs.");
+            prefill: {
+              email: user.email ?? "",
+            },
+            notes: {
+              user_id: user.id,
+              plan_id: planId,
+            },
+            handler: async () => {
+              showStatus(
+                `<div style="font-weight:600;margin-bottom:6px;">Payment received</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">Finalizing your subscription… (this may take a few seconds)</div>`,
+                "info",
+              );
+              // Webhook drives the final subscription update. Poll briefly for UX.
+              const start = Date.now();
+              while (Date.now() - start < 15000) {
+                const { data: latest } = await sb
+                  .from("subscriptions")
+                  .select("status, current_period_end, plan_id")
+                  .eq("user_id", user.id)
+                  .maybeSingle();
+                if (latest?.status === "active") {
+                  showStatus(
+                    `<div style="font-weight:600;margin-bottom:6px;">Subscription active</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">You’re upgraded. Current period ends: <strong>${escapeHtml(new Date(latest.current_period_end).toLocaleString())}</strong>.</div>`,
+                    "ok",
+                  );
+                  btnEl.disabled = false;
+                  btnEl.textContent = prevText || "Pay (Razorpay)";
+                  return;
+                }
+                await sleep(1200);
+              }
+              showStatus(
+                `<div style="font-weight:600;margin-bottom:6px;">Payment captured</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">We’re still waiting for backend confirmation. If this persists, refresh this page or contact support with your receipt.</div>`,
+                "info",
+              );
+              btnEl.disabled = false;
+              btnEl.textContent = prevText || "Pay (Razorpay)";
             },
           });
           rzp.open();
         } catch (e) {
-          alert(String(e));
+          showStatus(
+            `<div style="font-weight:600;margin-bottom:6px;">Checkout failed</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">${escapeHtml(String(e))}</div>`,
+            "err",
+          );
+          btnEl.disabled = false;
+          btnEl.textContent = prevText || "Pay (Razorpay)";
         }
       } else {
-        alert("Payment init failed — deploy Edge Function and configure Razorpay.");
+        showStatus(
+          `<div style="font-weight:600;margin-bottom:6px;">Payment init failed</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">Deploy the Edge Function and configure Razorpay keys.</div>`,
+          "err",
+        );
+        btnEl.disabled = false;
+        btnEl.textContent = prevText || "Pay (Razorpay)";
       }
     });
   });
