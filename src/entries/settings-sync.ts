@@ -68,9 +68,15 @@ async function main(): Promise<void> {
       ? ((profile as { settings_json?: Record<string, unknown> }).settings_json ?? {})
       : {};
   const currentSettings: Record<string, boolean> = { ...defaultSettings };
+  const profileSettings: Record<string, unknown> = {
+    ...(rawSettings as Record<string, unknown>),
+  };
   Object.keys(defaultSettings).forEach((k) => {
     if (typeof rawSettings[k] === "boolean") currentSettings[k] = rawSettings[k] as boolean;
   });
+  if (!("dm_visibility" in profileSettings)) {
+    profileSettings.dm_visibility = "everyone";
+  }
 
   function applyToggleState(el: Element, on: boolean): void {
     el.classList.toggle("on", on);
@@ -84,14 +90,111 @@ async function main(): Promise<void> {
       const next = !t.classList.contains("on");
       applyToggleState(t, next);
       currentSettings[key] = next;
+      profileSettings[key] = next;
       const { error: upErr } = await sb
         .from("profiles")
-        .update({ settings_json: currentSettings, updated_at: new Date().toISOString() })
+        .update({ settings_json: profileSettings, updated_at: new Date().toISOString() })
         .eq("id", user.id);
       if (upErr) {
         applyToggleState(t, !next);
       }
     });
+  });
+
+  function getRowByTitle(title: string): HTMLElement | null {
+    const rows = Array.from(document.querySelectorAll<HTMLElement>(".settings-row"));
+    return rows.find((r) => r.querySelector(".row-title")?.textContent?.trim() === title) ?? null;
+  }
+
+  async function saveProfileFields(fields: Record<string, unknown>): Promise<boolean> {
+    const { error: upErr } = await sb
+      .from("profiles")
+      .update({ ...fields, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
+    return !upErr;
+  }
+
+  // Make "Edit profile" actually edit + persist.
+  getRowByTitle("Edit profile")?.addEventListener("click", async () => {
+    const nextName = window.prompt("Full name", String(profile.full_name ?? ""))?.trim();
+    if (!nextName) return;
+    const nextCollege = window.prompt("College", String(profile.college ?? ""))?.trim();
+    if (nextCollege == null) return;
+    const nextYear = window.prompt("Year of study (1-5)", String(profile.year_of_study ?? ""))?.trim();
+    if (nextYear == null) return;
+    const nextMajor = window.prompt("Major / Branch", String((profile as { major?: string }).major ?? ""))?.trim();
+    if (nextMajor == null) return;
+
+    const ok = await saveProfileFields({
+      full_name: nextName,
+      college: nextCollege,
+      year_of_study: nextYear,
+      major: nextMajor,
+    });
+    if (ok) window.location.reload();
+  });
+
+  // Change email and password now work from settings.
+  getRowByTitle("Change email")?.addEventListener("click", async () => {
+    const nextEmail = window.prompt("New email");
+    if (!nextEmail) return;
+    const { error: e } = await sb.auth.updateUser({ email: nextEmail.trim() });
+    if (e) {
+      alert(e.message);
+      return;
+    }
+    alert("Verification email sent to new address.");
+  });
+
+  getRowByTitle("Change password")?.addEventListener("click", async () => {
+    const p1 = window.prompt("New password (min 8 chars)");
+    if (!p1 || p1.length < 8) return;
+    const p2 = window.prompt("Confirm new password");
+    if (p1 !== p2) {
+      alert("Passwords do not match.");
+      return;
+    }
+    const { error: e } = await sb.auth.updateUser({ password: p1 });
+    if (e) {
+      alert(e.message);
+      return;
+    }
+    alert("Password updated.");
+  });
+
+  // Who can DM me selector persists.
+  const dmValueEl = document.getElementById("campx-dm-visibility-value");
+  const dmRow = getRowByTitle("Who can DM me");
+  const dmVisibility = String(profileSettings.dm_visibility || "everyone");
+  if (dmValueEl) dmValueEl.textContent = dmVisibility === "followers" ? "Followers only" : "Everyone";
+  dmRow?.addEventListener("click", async () => {
+    const next = String(profileSettings.dm_visibility || "everyone") === "everyone" ? "followers" : "everyone";
+    profileSettings.dm_visibility = next;
+    if (dmValueEl) dmValueEl.textContent = next === "followers" ? "Followers only" : "Everyone";
+    await sb
+      .from("profiles")
+      .update({ settings_json: profileSettings, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
+  });
+
+  // Wire previously dummy actions.
+  document.querySelector(".upgrade-banner")?.addEventListener("click", () => {
+    window.location.href = "/billing";
+  });
+  getRowByTitle("Current plan")?.addEventListener("click", () => {
+    window.location.href = "/billing";
+  });
+  getRowByTitle("Contact support")?.addEventListener("click", () => {
+    window.location.href = "/contact";
+  });
+  getRowByTitle("Request a feature")?.addEventListener("click", () => {
+    window.location.href = "mailto:support@campx.social?subject=Feature%20Request";
+  });
+  getRowByTitle("Report a bug")?.addEventListener("click", () => {
+    window.location.href = "mailto:support@campx.social?subject=Bug%20Report";
+  });
+  getRowByTitle("Delete account")?.addEventListener("click", () => {
+    alert("For safety, account deletion is currently handled via support.");
   });
 
   const logoutRow = document.getElementById("campx-logout-row");
