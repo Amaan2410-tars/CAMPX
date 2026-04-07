@@ -33,20 +33,17 @@
 }
 
 .campx-nav-dock.is-dial-open {
-  transform: none !important;
   opacity: 1 !important;
   visibility: visible !important;
   transition: none;
 }
 
+/* Still hide/show when user prefers reduced motion — only skip long animations */
 @media (prefers-reduced-motion: reduce) {
-  .campx-nav-dock {
-    transition: none !important;
-  }
+  .campx-nav-dock,
   .campx-nav-dock.is-collapsed {
-    transform: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
   }
 }
 

@@ -60,8 +60,6 @@
   const holdHint = document.getElementById("campx-holdHint");
   if (!speedDial) return;
 
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
   const SCROLL_ROOT_SELECTORS = [
     ".feed",
     ".settings-scroll",
@@ -73,28 +71,21 @@
     ".chat-messages",
   ];
 
-  function pickScrollRoot() {
-    const candidates = [];
+  /** Prefer the first in-phone panel that actually scrolls; else use the window (tall page / desktop). */
+  function getBestScrollY() {
     for (const sel of SCROLL_ROOT_SELECTORS) {
       const el = phone.querySelector(sel);
-      if (el) candidates.push(el);
+      if (el && el.scrollHeight > el.clientHeight + 6) {
+        return el.scrollTop;
+      }
     }
-    for (const el of candidates) {
-      if (el.scrollHeight > el.clientHeight + 12) return el;
-    }
-    if (document.documentElement.scrollHeight > window.innerHeight + 24) return window;
-    return candidates[0] || window;
-  }
-
-  function scrollTopOf(target) {
-    if (target === window) return window.scrollY || document.documentElement.scrollTop || 0;
-    return target.scrollTop;
+    return window.scrollY || document.documentElement.scrollTop || 0;
   }
 
   let dialOpen = false;
-  let scrollRoot = pickScrollRoot();
-  let lastScrollTop = scrollTopOf(scrollRoot);
+  let lastScrollY = getBestScrollY();
   let navCollapsed = false;
+  let scrollRaf = 0;
 
   function setDockDialOpen(open) {
     if (!navDock) return;
@@ -102,44 +93,67 @@
     if (open) navDock.classList.remove("is-collapsed");
   }
 
-  function onScrollNavigate() {
-    if (!navDock || reduceMotion || dialOpen) return;
-    const y = scrollTopOf(scrollRoot);
-    if (y < 20) {
-      if (navCollapsed) {
-        navDock.classList.remove("is-collapsed");
-        navCollapsed = false;
-      }
-      lastScrollTop = y;
+  function applyScrollNavCollapse() {
+    if (!navDock || dialOpen) return;
+    const y = getBestScrollY();
+    if (y < 18) {
+      navDock.classList.remove("is-collapsed");
+      navCollapsed = false;
+      lastScrollY = y;
       return;
     }
-    const delta = y - lastScrollTop;
-    if (Math.abs(delta) < 10) return;
-    if (delta > 0 && y > 48) {
-      if (!navCollapsed) {
-        navDock.classList.add("is-collapsed");
-        navCollapsed = true;
-      }
+    const delta = y - lastScrollY;
+    if (Math.abs(delta) < 6) return;
+    if (delta > 0 && y > 36) {
+      navDock.classList.add("is-collapsed");
+      navCollapsed = true;
     } else if (delta < 0) {
-      if (navCollapsed) {
-        navDock.classList.remove("is-collapsed");
-        navCollapsed = false;
-      }
+      navDock.classList.remove("is-collapsed");
+      navCollapsed = false;
     }
-    lastScrollTop = y;
+    lastScrollY = y;
   }
 
-  if (navDock && !reduceMotion) {
-    scrollRoot.addEventListener("scroll", onScrollNavigate, { passive: true });
-    let resizeT = 0;
-    window.addEventListener("resize", () => {
-      window.clearTimeout(resizeT);
-      resizeT = window.setTimeout(() => {
-        scrollRoot = pickScrollRoot();
-        lastScrollTop = scrollTopOf(scrollRoot);
-      }, 150);
+  function onScrollNavigate() {
+    if (!navDock) return;
+    if (scrollRaf) cancelAnimationFrame(scrollRaf);
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = 0;
+      applyScrollNavCollapse();
     });
   }
+
+  function bindScrollCollapseListeners() {
+    if (!navDock) return;
+    const roots = new Set();
+    roots.add(window);
+    SCROLL_ROOT_SELECTORS.forEach((sel) => {
+      phone.querySelectorAll(sel).forEach((el) => roots.add(el));
+    });
+    roots.forEach((r) => {
+      r.addEventListener("scroll", onScrollNavigate, { passive: true });
+    });
+    const syncLastY = () => {
+      lastScrollY = getBestScrollY();
+    };
+    let resizeT = 0;
+    window.addEventListener(
+      "resize",
+      () => {
+        window.clearTimeout(resizeT);
+        resizeT = window.setTimeout(syncLastY, 120);
+      },
+      { passive: true },
+    );
+    window.addEventListener("load", syncLastY, { passive: true });
+    if (document.readyState === "complete") {
+      syncLastY();
+    }
+    window.setTimeout(syncLastY, 0);
+    window.setTimeout(syncLastY, 400);
+  }
+
+  bindScrollCollapseListeners();
   const pillLabel = document.getElementById("campx-pillLabel");
   const screenChip = document.getElementById("campx-screenChip");
 
