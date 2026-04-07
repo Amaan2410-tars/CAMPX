@@ -24,6 +24,12 @@ async function main(): Promise<void> {
   const metaEl = document.querySelector(".pc-meta .pc-college");
   const tierEl = document.querySelector(".pc-tier");
   const avEl = document.querySelector(".pc-avatar");
+  const changeEmailSub = document.querySelector(".settings-row .row-sub a.__cf_email__");
+  const verifySub = (() => {
+    const rows = Array.from(document.querySelectorAll<HTMLElement>(".settings-row"));
+    const r = rows.find((x) => x.querySelector(".row-title")?.textContent?.trim() === "Verification status");
+    return r?.querySelector(".row-sub") as HTMLElement | null;
+  })();
 
   const name = (profile.full_name as string)?.trim() || (profile.campx_id as string) || "You";
   if (nameEl) nameEl.textContent = name;
@@ -46,6 +52,15 @@ async function main(): Promise<void> {
   if (tierEl) {
     const t = (profile.tier as string) || "basic";
     tierEl.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  if (changeEmailSub) {
+    changeEmailSub.textContent = user.email ?? "No email";
+    changeEmailSub.setAttribute("href", `mailto:${user.email ?? ""}`);
+  }
+  if (verifySub) {
+    const vs = String((profile as { verification_status?: string }).verification_status ?? "unverified");
+    const t = String((profile as { tier?: string }).tier ?? "basic");
+    verifySub.textContent = `${vs.replace("_", " ")} · ${t}`;
   }
 
   if (avEl) {
@@ -178,13 +193,31 @@ async function main(): Promise<void> {
   });
 
   // Wire previously dummy actions.
-  document.querySelector(".upgrade-banner")?.addEventListener("click", () => {
-    window.location.href = "/billing";
+  document.querySelector(".upgrade-banner")?.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement | null;
+    const planSlug = target?.getAttribute("data-plan-slug");
+    if (planSlug) {
+      window.location.href = `/billing?plan=${encodeURIComponent(planSlug)}&src=settings`;
+      return;
+    }
+    window.location.href = "/billing?src=settings";
   });
   getRowByTitle("Current plan")?.addEventListener("click", () => {
     window.location.href = "/billing";
   });
+  getRowByTitle("Payment method")?.addEventListener("click", () => {
+    window.location.href = "/billing";
+  });
+  getRowByTitle("Billing history")?.addEventListener("click", () => {
+    window.location.href = "/billing";
+  });
+  getRowByTitle("FAQs")?.addEventListener("click", () => {
+    window.location.href = "/contact";
+  });
   getRowByTitle("Contact support")?.addEventListener("click", () => {
+    window.location.href = "/contact";
+  });
+  getRowByTitle("Verification status")?.addEventListener("click", () => {
     window.location.href = "/contact";
   });
   getRowByTitle("Request a feature")?.addEventListener("click", () => {

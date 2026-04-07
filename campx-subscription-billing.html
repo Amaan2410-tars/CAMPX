@@ -22,9 +22,9 @@ small{color:rgba(238,240,255,0.62)}
 </head>
 <body>
   <div class="wrap">
-    <h1>Subscription and Billing</h1>
+    <h1>Choose a Plan & Pay</h1>
     <p class="sub">
-      Upgrade to Pro/Plus for premium features. Payments are processed via Razorpay. You can view policies and contact details below (required for payment provider verification).
+      Pick the plan that fits your student needs, then continue to secure Razorpay checkout. Your membership is activated automatically after successful payment.
     </p>
 
     <div class="grid">
@@ -51,7 +51,12 @@ small{color:rgba(238,240,255,0.62)}
       </div>
     </div>
 
-    <div class="box"><a href="/feed">Back to app</a></div>
+    <div class="box">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a class="pill" href="/settings">Back to settings</a>
+        <a class="pill" href="/feed">Back to feed</a>
+      </div>
+    </div>
   </div>
   <script type="module" src="/src/entries/billing-live.ts"></script>
 </body>

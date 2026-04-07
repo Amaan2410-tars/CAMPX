@@ -15,6 +15,9 @@ function sleep(ms: number): Promise<void> {
 async function main(): Promise<void> {
   const host = document.getElementById("campx-billing-live");
   if (!host) return;
+  const search = new URLSearchParams(window.location.search);
+  const requestedPlan = (search.get("plan") || "").trim().toLowerCase();
+  const fromSettings = search.get("src") === "settings";
   if (!isSupabaseConfigured()) {
     host.textContent = "";
     return;
@@ -50,6 +53,16 @@ async function main(): Promise<void> {
 
   let errMsg = "";
   if (e1) errMsg = e1.message;
+  const resolveRequestedPlanId = (): string | null => {
+    if (!plans?.length || !requestedPlan) return null;
+    const bySlug = plans.find((p) => String(p.slug || "").toLowerCase() === requestedPlan);
+    if (bySlug) return bySlug.id;
+    const byId = plans.find((p) => String(p.id).toLowerCase() === requestedPlan);
+    if (byId) return byId.id;
+    const byName = plans.find((p) => String(p.name || "").toLowerCase().includes(requestedPlan));
+    return byName?.id ?? null;
+  };
+  const selectedPlanId = resolveRequestedPlanId();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   const fnBase = supabaseUrl ? `${supabaseUrl}/functions/v1` : "";
@@ -67,15 +80,31 @@ async function main(): Promise<void> {
       }
     </div>
     <div class="box">
-      <div style="font-weight:600;margin-bottom:8px;">Plans</div>
+      <div style="font-weight:600;margin-bottom:8px;">Choose your plan</div>
+      ${
+        fromSettings
+          ? `<div style="font-size:12px;color:#a5b4fc;margin-bottom:10px;">You came from Settings. Select a plan and continue to Razorpay.</div>`
+          : ""
+      }
       ${errMsg ? `<p style="color:#f87171;">${escapeHtml(errMsg)}</p>` : ""}
       ${
         plans?.length
-          ? `<ul style="padding-left:18px;">${plans
+          ? `<ul style="padding-left:0;list-style:none;display:grid;gap:8px;">${plans
               .map(
                 (p) =>
-                  `<li>${escapeHtml(p.name)} — ${(p.price_cents / 100).toFixed(2)} ${escapeHtml(p.currency)} / ${escapeHtml(p.interval)} 
-            ${user && fnBase ? `<button type="button" class="campx-pay-btn" data-plan="${p.id}" style="margin-left:8px;padding:4px 10px;font-size:12px;border-radius:6px;border:none;background:#6366f1;color:#fff;cursor:pointer;">Pay (Razorpay)</button>` : ""}</li>`,
+                  `<li style="padding:10px;border:1px solid ${selectedPlanId === p.id ? "rgba(99,102,241,0.45)" : "rgba(255,255,255,0.12)"};border-radius:10px;background:${selectedPlanId === p.id ? "rgba(99,102,241,0.08)" : "transparent"};">
+                    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+                      <div>
+                        <div style="font-weight:600;">${escapeHtml(p.name)}</div>
+                        <div style="font-size:13px;color:#9ca3af;">${(p.price_cents / 100).toFixed(2)} ${escapeHtml(p.currency)} / ${escapeHtml(p.interval)}</div>
+                      </div>
+                      ${
+                        user && fnBase
+                          ? `<button type="button" class="campx-pay-btn" data-plan="${p.id}" style="padding:6px 10px;font-size:12px;border-radius:8px;border:none;background:#6366f1;color:#fff;cursor:pointer;">${selectedPlanId === p.id ? "Pay selected plan" : "Pay now"}</button>`
+                          : ""
+                      }
+                    </div>
+                  </li>`,
               )
               .join("")}</ul>`
           : "<p style=\"color:#9ca3af;\">Seed the <code>plans</code> table in Supabase.</p>"
