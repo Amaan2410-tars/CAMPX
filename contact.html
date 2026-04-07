@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CampX — Contact</title>
+    <meta name="description" content="Contact CampX support" />
+    <style>
+      :root {
+        --bg: #07070b;
+        --card: rgba(16, 16, 22, 0.92);
+        --border: rgba(255, 255, 255, 0.1);
+        --text: rgba(240, 240, 248, 0.95);
+        --muted: rgba(240, 240, 248, 0.62);
+        --link: #a89fff;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        background: radial-gradient(1100px 520px at 50% -10%, rgba(108, 99, 255, 0.14), transparent 55%),
+          var(--bg);
+        color: var(--text);
+      }
+      a {
+        color: var(--link);
+      }
+      .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 28px 18px 40px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px 18px;
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 10px;
+        letter-spacing: -0.02em;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 0 0 18px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      @media (min-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .item {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 14px 14px;
+      }
+      .k {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(240, 240, 248, 0.55);
+        margin-bottom: 6px;
+      }
+      .v {
+        font-size: 14px;
+        color: rgba(240, 240, 248, 0.88);
+        line-height: 1.55;
+      }
+      .toplinks {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        background: rgba(28, 28, 39, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        padding: 9px 12px;
+        color: rgba(240, 240, 248, 0.88);
+        font-size: 13px;
+      }
+      .pill:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+      code {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0 6px;
+        border-radius: 8px;
+        color: rgba(240, 240, 248, 0.92);
+        font-size: 0.95em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="toplinks">
+        <a class="pill" href="/feed">← Back to app</a>
+        <a class="pill" href="/privacy">Privacy</a>
+        <a class="pill" href="/terms">Terms</a>
+        <a class="pill" href="/refunds">Refunds</a>
+      </div>
+      <div class="card">
+        <h1>Contact</h1>
+        <p class="meta">
+          Replace placeholders before go-live so Razorpay can verify your business contact info.
+        </p>
+
+        <div class="grid">
+          <div class="item">
+            <div class="k">Support email</div>
+            <div class="v"><a href="mailto:[support@campx.social]">[support@campx.social]</a></div>
+          </div>
+          <div class="item">
+            <div class="k">Billing email</div>
+            <div class="v"><a href="mailto:[billing@campx.social]">[billing@campx.social]</a></div>
+          </div>
+          <div class="item">
+            <div class="k">Phone</div>
+            <div class="v"><a href="tel:[+91XXXXXXXXXX]">[+91XXXXXXXXXX]</a></div>
+          </div>
+          <div class="item">
+            <div class="k">Address</div>
+            <div class="v">[Company / Proprietor Name]<br />[Street, Area]<br />Hyderabad, Telangana, India</div>
+          </div>
+        </div>
+
+        <p class="meta" style="margin-top: 16px">
+          For refund/cancellation requests, see <a href="/refunds">Refund &amp; Cancellation Policy</a>.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
+

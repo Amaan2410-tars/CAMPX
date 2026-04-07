@@ -39,6 +39,10 @@
     { "source": "/events", "destination": "/campx-events-contests.html" },
     { "source": "/feed", "destination": "/feed.html" },
     { "source": "/auth/login", "destination": "/auth/login.html" },
-    { "source": "/prototypes", "destination": "/prototypes.html" }
+    { "source": "/prototypes", "destination": "/prototypes.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/refunds", "destination": "/refunds.html" },
+    { "source": "/contact", "destination": "/contact.html" }
   ]
 }
