@@ -35,6 +35,7 @@ async function main(): Promise<void> {
   const composer = document.querySelector<HTMLElement>(".campx-composer");
   const bodyEl = document.getElementById("campx-post-body") as HTMLTextAreaElement | null;
   const submitEl = document.getElementById("campx-post-submit");
+  const mockPosts = Array.from(document.querySelectorAll<HTMLElement>(".feed > .post"));
 
   if (!listEl) return;
 
@@ -48,6 +49,9 @@ async function main(): Promise<void> {
   if (!sb) return;
 
   clearError(errEl);
+  mockPosts.forEach((p) => {
+    p.style.display = "none";
+  });
 
   async function refresh(): Promise<void> {
     const { data, error } = await fetchPosts(sb, kind);

@@ -1,5 +1,6 @@
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchUserRoles, hasRole } from "@/lib/rbac";
 
 declare global {
   interface Window {
@@ -398,6 +399,18 @@ function enterAppAfterVerify(): void {
   redirectAfterAuth(fallback);
 }
 
+async function getPostLoginFallback(sb: SupabaseClient): Promise<string> {
+  const host = (window.location.hostname || "").toLowerCase();
+  if (host === "admin.campx.social" || host.startsWith("admin.")) return "/founder-dashboard";
+  if (host === "college.campx.social" || host.startsWith("college.")) return "/ambassador-dashboard";
+
+  const { roles, error } = await fetchUserRoles(sb);
+  if (error) return "/feed";
+  if (hasRole(roles, "founder", "admin")) return "/founder-dashboard";
+  if (hasRole(roles, "ambassador")) return "/ambassador-dashboard";
+  return "/feed";
+}
+
 async function detectTierForEmail(sb: SupabaseClient, email: string): Promise<"verified" | "basic"> {
   const domain = getEmailDomain(email);
   if (!domain) return "basic";
@@ -700,7 +713,8 @@ function wireGlobals(): void {
       await upsertProfileFromSignup(sb, user.id, email);
       await syncEmailVerifiedStatus(sb, user);
       showToast("Email verified.");
-      window.location.href = "/feed";
+      const fallback = await getPostLoginFallback(sb);
+      redirectAfterAuth(fallback);
     };
   window.handleLogin = async () => {
       const email = val("login-email");
@@ -768,8 +782,7 @@ function wireGlobals(): void {
       await syncEmailVerifiedStatus(sb, user);
 
       showToast("Signed in. Redirecting…");
-      const profileEmail = user.email ?? email;
-      const fallback = "/feed";
+      const fallback = await getPostLoginFallback(sb);
       setTimeout(() => redirectAfterAuth(fallback), 400);
     };
   window.handleForgotSubmit = async () => {

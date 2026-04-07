@@ -14,7 +14,7 @@ async function main(): Promise<void> {
 
   const { data: profile, error } = await sb
     .from("profiles")
-    .select("full_name, campx_id, college, program, year_of_study, tier, verification_status")
+    .select("full_name, campx_id, college, program, year_of_study, tier, verification_status, settings_json")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -54,6 +54,45 @@ async function main(): Promise<void> {
     if (ring) avEl.appendChild(ring);
     avEl.appendChild(document.createTextNode(initials(name)));
   }
+
+  const defaultSettings: Record<string, boolean> = {
+    activity_status: true,
+    hide_from_explore: false,
+    two_factor: true,
+    notif_messages: true,
+    notif_community: true,
+    notif_events: true,
+  };
+  const rawSettings =
+    profile && typeof (profile as { settings_json?: unknown }).settings_json === "object"
+      ? ((profile as { settings_json?: Record<string, unknown> }).settings_json ?? {})
+      : {};
+  const currentSettings: Record<string, boolean> = { ...defaultSettings };
+  Object.keys(defaultSettings).forEach((k) => {
+    if (typeof rawSettings[k] === "boolean") currentSettings[k] = rawSettings[k] as boolean;
+  });
+
+  function applyToggleState(el: Element, on: boolean): void {
+    el.classList.toggle("on", on);
+  }
+
+  document.querySelectorAll<HTMLElement>(".toggle-track[data-setting-key]").forEach((t) => {
+    const key = t.dataset.settingKey;
+    if (!key) return;
+    applyToggleState(t, currentSettings[key] ?? false);
+    t.addEventListener("click", async () => {
+      const next = !t.classList.contains("on");
+      applyToggleState(t, next);
+      currentSettings[key] = next;
+      const { error: upErr } = await sb
+        .from("profiles")
+        .update({ settings_json: currentSettings, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+      if (upErr) {
+        applyToggleState(t, !next);
+      }
+    });
+  });
 
   const logoutRow = document.getElementById("campx-logout-row");
   const signOut = async () => {
