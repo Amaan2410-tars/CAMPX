@@ -1,5 +1,55 @@
 /* CampX speed dial — shared across HTML prototypes */
 
+/* Floating dock: pill + speed dial + hint (scroll-hide via .is-collapsed) */
+.campx-nav-dock {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  height: 210px;
+  z-index: 50;
+  pointer-events: none;
+  transition:
+    transform 0.34s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.28s ease,
+    visibility 0s linear 0s;
+}
+
+.campx-nav-dock.is-collapsed {
+  transform: translate3d(0, calc(100% + 28px), 0);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 0.34s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.22s ease,
+    visibility 0s linear 0.36s;
+}
+
+.campx-nav-dock.is-collapsed .nav-pill,
+.campx-nav-dock.is-collapsed .speed-dial-wrap,
+.campx-nav-dock.is-collapsed .hold-hint {
+  pointer-events: none !important;
+}
+
+.campx-nav-dock.is-dial-open {
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campx-nav-dock {
+    transition: none !important;
+  }
+  .campx-nav-dock.is-collapsed {
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
+
 .dial-backdrop {
   position: absolute;
   inset: 0;
@@ -15,25 +65,31 @@
 
 .nav-pill {
   position: absolute;
-  bottom: 20px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
-  width: 140px;
-  height: 40px;
-  border-radius: 24px;
-  background: rgba(28, 28, 39, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px);
+  width: min(200px, calc(100% - 24px));
+  max-width: 200px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(22, 22, 32, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.07) inset;
   user-select: none;
   touch-action: none;
-  transition: width 0.2s, box-shadow 0.2s;
+  transition: width 0.2s, box-shadow 0.2s, transform 0.2s;
+  pointer-events: auto;
 }
 .nav-pill:hover {
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
@@ -55,12 +111,18 @@
 
 .pill-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-sub, rgba(240, 240, 248, 0.6));
   font-family: "DM Sans", sans-serif;
   letter-spacing: 0.02em;
   white-space: nowrap;
   transition: color 0.2s;
+}
+
+@media (min-width: 768px) {
+  .pill-label {
+    font-size: 13px;
+  }
 }
 .nav-pill.held .pill-label {
   color: var(--accent, #6c63ff);
@@ -92,11 +154,13 @@
 
 .speed-dial-wrap {
   position: absolute;
-  bottom: 38px;
+  bottom: 48px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 55;
   pointer-events: none;
+  width: min(320px, 100vw - 48px);
+  height: 200px;
 }
 
 .dial-item {
@@ -176,12 +240,12 @@
 
 .hold-hint {
   position: absolute;
-  bottom: 68px;
+  bottom: 86px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.45);
   white-space: nowrap;
   font-family: "DM Sans", sans-serif;
   letter-spacing: 0.04em;

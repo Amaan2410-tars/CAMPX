@@ -54,10 +54,92 @@
   const pill = document.getElementById("campx-navPill");
   if (!phone || !pill) return;
 
+  const navDock = document.getElementById("campx-navDock");
   const backdrop = document.getElementById("campx-backdrop");
   const speedDial = document.getElementById("campx-speedDial");
   const holdHint = document.getElementById("campx-holdHint");
   if (!speedDial) return;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const SCROLL_ROOT_SELECTORS = [
+    ".feed",
+    ".settings-scroll",
+    ".community-list",
+    ".messages",
+    ".profile-scroll",
+    ".other-scroll",
+    ".conv-list",
+    ".chat-messages",
+  ];
+
+  function pickScrollRoot() {
+    const candidates = [];
+    for (const sel of SCROLL_ROOT_SELECTORS) {
+      const el = phone.querySelector(sel);
+      if (el) candidates.push(el);
+    }
+    for (const el of candidates) {
+      if (el.scrollHeight > el.clientHeight + 12) return el;
+    }
+    if (document.documentElement.scrollHeight > window.innerHeight + 24) return window;
+    return candidates[0] || window;
+  }
+
+  function scrollTopOf(target) {
+    if (target === window) return window.scrollY || document.documentElement.scrollTop || 0;
+    return target.scrollTop;
+  }
+
+  let dialOpen = false;
+  let scrollRoot = pickScrollRoot();
+  let lastScrollTop = scrollTopOf(scrollRoot);
+  let navCollapsed = false;
+
+  function setDockDialOpen(open) {
+    if (!navDock) return;
+    navDock.classList.toggle("is-dial-open", open);
+    if (open) navDock.classList.remove("is-collapsed");
+  }
+
+  function onScrollNavigate() {
+    if (!navDock || reduceMotion || dialOpen) return;
+    const y = scrollTopOf(scrollRoot);
+    if (y < 20) {
+      if (navCollapsed) {
+        navDock.classList.remove("is-collapsed");
+        navCollapsed = false;
+      }
+      lastScrollTop = y;
+      return;
+    }
+    const delta = y - lastScrollTop;
+    if (Math.abs(delta) < 10) return;
+    if (delta > 0 && y > 48) {
+      if (!navCollapsed) {
+        navDock.classList.add("is-collapsed");
+        navCollapsed = true;
+      }
+    } else if (delta < 0) {
+      if (navCollapsed) {
+        navDock.classList.remove("is-collapsed");
+        navCollapsed = false;
+      }
+    }
+    lastScrollTop = y;
+  }
+
+  if (navDock && !reduceMotion) {
+    scrollRoot.addEventListener("scroll", onScrollNavigate, { passive: true });
+    let resizeT = 0;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(resizeT);
+      resizeT = window.setTimeout(() => {
+        scrollRoot = pickScrollRoot();
+        lastScrollTop = scrollTopOf(scrollRoot);
+      }, 150);
+    });
+  }
   const pillLabel = document.getElementById("campx-pillLabel");
   const screenChip = document.getElementById("campx-screenChip");
 
@@ -76,7 +158,6 @@
     holdHint.textContent = "Click and hold — or swipe up — for menu";
   }
 
-  let dialOpen = false;
   let holdHintTimer = null;
   let holdOpenTimer = null;
   let isHolding = false;
@@ -109,6 +190,7 @@
   function openDial() {
     if (dialOpen) return;
     dialOpen = true;
+    setDockDialOpen(true);
     if (backdrop) backdrop.classList.add("open");
     if (speedDial) speedDial.classList.add("open");
     NAV_ITEMS.forEach((item, i) => {
@@ -127,6 +209,7 @@
   function closeDial() {
     if (!dialOpen) return;
     dialOpen = false;
+    setDockDialOpen(false);
     if (backdrop) backdrop.classList.remove("open");
     if (speedDial) speedDial.classList.remove("open");
     NAV_ITEMS.forEach((item, i) => {
