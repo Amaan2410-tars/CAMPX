@@ -1,6 +1,7 @@
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import { assertRouteRoleAccess } from "@/lib/routeRoles";
 
-const SIGN_IN_PATH = "/campx-onboarding.html";
+const SIGN_IN_PATH = "/auth/login";
 
 function normalizedPath(): string {
   let p = window.location.pathname || "/";
@@ -11,6 +12,8 @@ function normalizedPath(): string {
 function shouldSkipGate(): boolean {
   const p = normalizedPath();
   if (p === "/" || p === "/index.html") return true;
+  if (p === "/auth/login") return true;
+  if (p === "/onboarding") return true;
   if (p.endsWith(SIGN_IN_PATH) || p.includes("campx-onboarding.html")) return true;
   return false;
 }
@@ -33,7 +36,14 @@ async function main(): Promise<void> {
     data: { session },
   } = await sb.auth.getSession();
 
-  if (session) return;
+  if (session) {
+    const roleCheck = await assertRouteRoleAccess(sb, normalizedPath());
+    if (!roleCheck.ok) {
+      window.location.replace(roleCheck.redirectTo);
+      return;
+    }
+    return;
+  }
 
   const next = safeNextUrl(
     normalizedPath() + window.location.search + window.location.hash,

@@ -1,10 +1,15 @@
 import {
+  addPostComment,
   fetchPosts,
+  getLikedSet,
   insertPost,
   isSupabaseConfigured,
   getSupabase,
   navToFeedKind,
+  repostPost,
   renderPostCard,
+  togglePostLike,
+  type FeedPostRow,
 } from "@/lib/campxFeed";
 
 function showError(el: HTMLElement | null, msg: string): void {
@@ -56,10 +61,87 @@ async function main(): Promise<void> {
         '<div class="campx-feed-empty" style="padding:14px;color:var(--text-muted);font-size:13px;text-align:center;border:1px dashed var(--border);border-radius:12px;">No live posts yet — be the first.</div>';
       return;
     }
-    listEl.innerHTML = data.map(renderPostCard).join("");
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    const ids = data.map((p) => p.id);
+    const likedSet =
+      user && ids.length ? await getLikedSet(sb, ids, user.id) : new Set();
+    listEl.innerHTML = data
+      .map((p: FeedPostRow) => renderPostCard(p, { liked: likedSet.has(p.id) }))
+      .join("");
   }
 
   await refresh();
+
+  sb.channel(`campx-feed-${kind}`)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "posts", filter: `feed_kind=eq.${kind}` },
+      () => {
+        void refresh();
+      },
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "post_likes" },
+      () => {
+        void refresh();
+      },
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "post_comments" },
+      () => {
+        void refresh();
+      },
+    )
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "post_reposts" },
+      () => {
+        void refresh();
+      },
+    )
+    .subscribe();
+
+  listEl.addEventListener("click", async (e) => {
+    const t = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-action]");
+    if (!t) return;
+    const action = t.dataset.action;
+    const postId = t.dataset.postId;
+    if (!postId || !action) return;
+
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    if (!user) {
+      showError(errEl, "Sign in to interact.");
+      return;
+    }
+
+    if (action === "like") {
+      const { error } = await togglePostLike(sb, postId, user.id);
+      if (error) showError(errEl, error.message);
+      else await refresh();
+      return;
+    }
+
+    if (action === "comment") {
+      const text = window.prompt("Write a comment:");
+      if (text == null) return;
+      const { error } = await addPostComment(sb, postId, user.id, text);
+      if (error) showError(errEl, error.message);
+      else await refresh();
+      return;
+    }
+
+    if (action === "repost") {
+      const { error } = await repostPost(sb, postId, user.id);
+      if (error) showError(errEl, error.message);
+      else await refresh();
+    }
+  });
 
   submitEl?.addEventListener("click", async () => {
     const text = bodyEl?.value ?? "";

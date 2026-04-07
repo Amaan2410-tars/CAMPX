@@ -58,7 +58,7 @@ async function main(): Promise<void> {
   const logoutRow = document.getElementById("campx-logout-row");
   const signOut = async () => {
     await sb.auth.signOut();
-    window.location.href = "/campx-onboarding.html";
+    window.location.href = "/auth/login";
   };
   logoutRow?.addEventListener("click", () => void signOut());
   logoutRow?.addEventListener("keydown", (e) => {

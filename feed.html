@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampX Feed</title>
+  <script type="module" src="/src/entries/session-gate.ts"></script>
+</head>
+<body>
+  <script type="module">
+    import { getSupabase } from "/src/lib/supabase.ts";
+    void (async () => {
+      const sb = getSupabase();
+      if (!sb) {
+        window.location.replace("/explore-feed");
+        return;
+      }
+      const {
+        data: { user },
+      } = await sb.auth.getUser();
+      if (!user) {
+        window.location.replace("/auth/login");
+        return;
+      }
+      const { data: profile } = await sb
+        .from("profiles")
+        .select("tier")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.tier === "verified" || profile?.tier === "plus") {
+        window.location.replace("/college-feed");
+      } else {
+        window.location.replace("/explore-feed");
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -10,6 +10,14 @@ const campxPages = [
   "campx-profile.html",
   "campx-swift-zone.html",
   "campx-speeddial-nav.html",
+  "campx-user-tiers.html",
+  "campx-notifications-emails.html",
+  "campx-subscription-billing.html",
+  "campx-founder-dashboard.html",
+  "campx-campus-ambassador-dashboard.html",
+  "campx-college-onboarding.html",
+  "campx-moderation-system.html",
+  "campx-events-contests.html",
 ] as const;
 
 const campxInputs = Object.fromEntries(
@@ -26,6 +34,8 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, "index.html"),
         onboarding: path.resolve(__dirname, "campx-onboarding.html"),
+        auth_login: path.resolve(__dirname, "auth/login.html"),
+        feed: path.resolve(__dirname, "feed.html"),
         ...campxInputs,
       },
     },

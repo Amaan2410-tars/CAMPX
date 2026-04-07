@@ -40,6 +40,8 @@ let current: ScreenId = "splash";
 let signupProgram: "ug" | "pg" = "ug";
 let resendSeconds = 0;
 let resendTimer: ReturnType<typeof setInterval> | null = null;
+let signupColleges: Array<{ id: string; name: string; code: string }> = [];
+let selectedCollege: { id: string; name: string; code: string } | null = null;
 
 function el<T extends HTMLElement>(id: string): T | null {
   return document.getElementById(id) as T | null;
@@ -47,6 +49,17 @@ function el<T extends HTMLElement>(id: string): T | null {
 
 function val(id: string): string {
   return el<HTMLInputElement>(id)?.value?.trim() ?? "";
+}
+
+function setInlineError(id: string, message: string): void {
+  const node = el(id);
+  if (!node) return;
+  node.textContent = message;
+  node.style.display = message ? "block" : "none";
+}
+
+function clearInlineErrors(ids: string[]): void {
+  ids.forEach((id) => setInlineError(id, ""));
 }
 
 function screenIndex(id: string): number {
@@ -99,6 +112,23 @@ function isCollegeEmail(val: string): boolean {
   return [".edu", ".ac.in", ".edu.in", ".ac.uk", ".edu.au"].some((d) => v.includes(d));
 }
 
+function normalizeDomain(input: string): string {
+  const v = (input || "").trim().toLowerCase().replace(/^@/, "");
+  return v.startsWith("www.") ? v.slice(4) : v;
+}
+
+function getEmailDomain(email: string): string {
+  const i = email.lastIndexOf("@");
+  if (i === -1) return "";
+  return normalizeDomain(email.slice(i + 1));
+}
+
+function isValidIndianMobile(input: string): boolean {
+  const digits = input.replace(/\D/g, "");
+  const lastTen = digits.length > 10 ? digits.slice(-10) : digits;
+  return /^[6-9]\d{9}$/.test(lastTen);
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -120,6 +150,79 @@ async function getClient(): Promise<SupabaseClient | null> {
   return sb;
 }
 
+async function fetchCollegesIfNeeded(sb: SupabaseClient): Promise<void> {
+  if (signupColleges.length) return;
+  const pageSize = 1000;
+  let from = 0;
+  const merged: Array<{ id: string; name: string; code: string }> = [];
+
+  while (true) {
+    const { data, error } = await sb
+      .from("colleges")
+      .select("id,name,code")
+      .order("name", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      showToast("Unable to load colleges right now.");
+      return;
+    }
+
+    const rows = (data ?? []).filter(
+      (row): row is { id: string; name: string; code: string } =>
+        Boolean(row?.id && row?.name && typeof row?.code === "string"),
+    );
+    merged.push(...rows);
+
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  signupColleges = merged;
+}
+
+function hideCollegeResults(): void {
+  const list = el("college-results");
+  if (list) list.style.display = "none";
+}
+
+function renderCollegeResults(query: string): void {
+  const list = el("college-results");
+  if (!list) return;
+  const q = query.trim().toLowerCase();
+  if (!q || q.length < 2) {
+    list.innerHTML = "";
+    list.style.display = "none";
+    return;
+  }
+  const matches = signupColleges
+    .filter((c) => c.name.toLowerCase().includes(q))
+    .slice(0, 8);
+  if (!matches.length) {
+    list.innerHTML = '<button type="button" class="college-item" disabled>No matching college</button>';
+    list.style.display = "block";
+    return;
+  }
+  list.innerHTML = matches
+    .map(
+      (c) =>
+        `<button type="button" class="college-item" data-college-id="${escapeHtml(c.id)}">${escapeHtml(c.name)}</button>`,
+    )
+    .join("");
+  list.style.display = "block";
+}
+
+function pickCollegeById(collegeId: string): void {
+  const chosen = signupColleges.find((c) => c.id === collegeId) ?? null;
+  selectedCollege = chosen;
+  const input = el<HTMLInputElement>("college-name");
+  const hidden = el<HTMLInputElement>("college-id");
+  if (input) input.value = chosen?.name ?? "";
+  if (hidden) hidden.value = chosen?.id ?? "";
+  hideCollegeResults();
+  if (chosen) setInlineError("err-college", "");
+}
+
 async function syncEmailVerifiedStatus(sb: SupabaseClient, user: { id: string; email_confirmed_at?: string | null }): Promise<void> {
   if (!user.email_confirmed_at) return;
   await sb
@@ -132,7 +235,7 @@ async function syncEmailVerifiedStatus(sb: SupabaseClient, user: { id: string; e
 function renderSignupSummary(): void {
   const name = val("signup-name");
   const email = val("signup-email");
-  const college = val("college-name");
+  const college = selectedCollege?.name ?? val("college-name");
   const yearSel = el<HTMLSelectElement>("study-year");
   const yearText = yearSel?.options[yearSel.selectedIndex]?.text ?? "";
   const major = val("major");
@@ -189,8 +292,22 @@ function updateResendButton(): void {
     btn.textContent = `Resend in ${resendSeconds}s`;
   } else {
     btn.disabled = false;
-    btn.textContent = "Resend email";
+    btn.textContent = "Resend code";
   }
+}
+
+function startResendCooldown(seconds: number): void {
+  resendSeconds = seconds;
+  updateResendButton();
+  if (resendTimer) clearInterval(resendTimer);
+  resendTimer = setInterval(() => {
+    resendSeconds--;
+    updateResendButton();
+    if (resendSeconds <= 0 && resendTimer) {
+      clearInterval(resendTimer);
+      resendTimer = null;
+    }
+  }, 1000);
 }
 
 function clearOtp(): void {
@@ -266,7 +383,7 @@ function redirectAfterAuth(fallbackPath: string): void {
       return;
     }
     const path = u.pathname + u.search + u.hash;
-    if (!path.startsWith("/") || path.includes("//") || path.includes("campx-onboarding.html")) {
+    if (!path.startsWith("/") || path.includes("//") || path.includes("/onboarding") || path.includes("campx-onboarding.html")) {
       window.location.href = fallbackPath;
       return;
     }
@@ -277,9 +394,47 @@ function redirectAfterAuth(fallbackPath: string): void {
 }
 
 function enterAppAfterVerify(): void {
-  const email = val("signup-email") || val("login-email");
-  const fallback = isCollegeEmail(email) ? "/campx-college-feed.html" : "/campx-explore-feed.html";
+  const fallback = "/feed";
   redirectAfterAuth(fallback);
+}
+
+async function detectTierForEmail(sb: SupabaseClient, email: string): Promise<"verified" | "basic"> {
+  const domain = getEmailDomain(email);
+  if (!domain) return "basic";
+  if (!signupColleges.length) {
+    await fetchCollegesIfNeeded(sb);
+  }
+  const matched = signupColleges.some((c) => {
+    const code = normalizeDomain(c.code);
+    return domain === code || domain.endsWith(`.${code}`);
+  });
+  return matched ? "verified" : "basic";
+}
+
+async function upsertProfileFromSignup(sb: SupabaseClient, userId: string, email: string): Promise<void> {
+  const fullName = val("signup-name");
+  const year = el<HTMLSelectElement>("study-year")?.value ?? "";
+  const major = val("major");
+  const phone = val("phone");
+  const marketing = el<HTMLInputElement>("marketing-optin")?.checked ?? false;
+  const tier = await detectTierForEmail(sb, email);
+
+  await sb.from("profiles").upsert(
+    {
+      id: userId,
+      full_name: fullName,
+      college: selectedCollege?.name ?? val("college-name"),
+      program: signupProgram,
+      year_of_study: year,
+      major,
+      phone,
+      tier,
+      verification_status: "email_verified",
+      marketing_opt_in: marketing,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "id" },
+  );
 }
 
 async function initAuthListener(): Promise<void> {
@@ -386,9 +541,25 @@ function wireGlobals(): void {
   window.handleSignupStep2 = () => {
       const college = val("college-name");
       const year = el<HTMLSelectElement>("study-year")?.value ?? "";
+      const major = val("major");
+      const phone = val("phone");
 
-      if (!college) {
-        showToast("Please enter your college or university name.");
+      clearInlineErrors(["err-college", "err-major", "err-phone"]);
+
+      if (!selectedCollege || !college) {
+        setInlineError("err-college", "Please select your college from the list.");
+        return;
+      }
+      if (!major) {
+        setInlineError("err-major", "Please enter your major/course.");
+        return;
+      }
+      if (!phone) {
+        setInlineError("err-phone", "Please enter your mobile number.");
+        return;
+      }
+      if (!isValidIndianMobile(phone)) {
+        setInlineError("err-phone", "Enter a valid Indian mobile (10 digits, starts with 6-9).");
         return;
       }
       if (!year) {
@@ -400,16 +571,15 @@ function wireGlobals(): void {
     };
   window.handleSignupStep3 = async () => {
       const email = val("signup-email");
-      const password = el<HTMLInputElement>("signup-pass")?.value ?? "";
-      const name = val("signup-name");
-      const college = val("college-name");
-      const year = el<HTMLSelectElement>("study-year")?.value ?? "";
-      const major = val("major");
-      const phone = val("phone");
-      const marketing = el<HTMLInputElement>("marketing-optin")?.checked ?? false;
+      const collegeId = selectedCollege?.id ?? "";
+      const college = selectedCollege?.name ?? val("college-name");
 
-      if (!email || !password) {
-        showToast("Missing email or password — go back to step 1.");
+      if (!email) {
+        showToast("Missing email — go back to step 1.");
+        return;
+      }
+      if (!collegeId || !college) {
+        showToast("Please select a college before sending verification.");
         return;
       }
 
@@ -426,19 +596,21 @@ function wireGlobals(): void {
       const sb = await getClient();
       if (!sb) return;
 
-      const { data, error } = await sb.auth.signUp({
+      const { error } = await sb.auth.signInWithOtp({
         email,
-        password,
         options: {
+          shouldCreateUser: true,
           emailRedirectTo: authRedirectBase(),
           data: {
-            full_name: name,
+            full_name: val("signup-name"),
             college,
+            college_id: collegeId,
+            college_code: selectedCollege?.code ?? "",
             program: signupProgram,
-            year_of_study: year,
-            major: major || "",
-            phone: phone || "",
-            marketing_opt_in: marketing,
+            year_of_study: el<HTMLSelectElement>("study-year")?.value ?? "",
+            major: val("major"),
+            phone: val("phone"),
+            marketing_opt_in: el<HTMLInputElement>("marketing-optin")?.checked ?? false,
           },
         },
       });
@@ -448,17 +620,9 @@ function wireGlobals(): void {
         return;
       }
 
-      if (data.session?.user) {
-        await syncEmailVerifiedStatus(sb, data.session.user);
-        prepareVerifiedWelcome();
-        goTo("verified-welcome");
-        resetResendCooldown();
-        return;
-      }
-
       goTo("verify-email");
-      showToast("Check your inbox for the confirmation link or code.");
-      resetResendCooldown();
+      showToast("Verification code sent. Check your email.");
+      startResendCooldown(60);
     };
   window.handleResend = async () => {
       if (resendSeconds > 0) return;
@@ -469,27 +633,20 @@ function wireGlobals(): void {
       }
 
       if (!isSupabaseConfigured()) {
-        showToast("Verification email resent (offline demo).");
-        resendSeconds = 45;
-        updateResendButton();
-        resendTimer = setInterval(() => {
-          resendSeconds--;
-          updateResendButton();
-          if (resendSeconds <= 0 && resendTimer) {
-            clearInterval(resendTimer);
-            resendTimer = null;
-          }
-        }, 1000);
+        showToast("Verification code resent (offline demo).");
+        startResendCooldown(60);
         return;
       }
 
       const sb = await getClient();
       if (!sb) return;
 
-      const { error } = await sb.auth.resend({
-        type: "signup",
+      const { error } = await sb.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: authRedirectBase() },
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: authRedirectBase(),
+        },
       });
 
       if (error) {
@@ -497,17 +654,8 @@ function wireGlobals(): void {
         return;
       }
 
-      showToast("Verification email sent again.");
-      resendSeconds = 45;
-      updateResendButton();
-      resendTimer = setInterval(() => {
-        resendSeconds--;
-        updateResendButton();
-        if (resendSeconds <= 0 && resendTimer) {
-          clearInterval(resendTimer);
-          resendTimer = null;
-        }
-      }, 1000);
+      showToast("Verification code sent again.");
+      startResendCooldown(60);
     };
   window.handleVerifyCode = async () => {
       const code = getOtpValue();
@@ -532,18 +680,11 @@ function wireGlobals(): void {
       const sb = await getClient();
       if (!sb) return;
 
-      let error = (
-        await sb.auth.verifyOtp({
-          email,
-          token: code,
-          type: "signup",
-        })
-      ).error;
-
-      if (error) {
-        const alt = await sb.auth.verifyOtp({ email, token: code, type: "email" });
-        error = alt.error;
-      }
+      const { error } = await sb.auth.verifyOtp({
+        email,
+        token: code,
+        type: "email",
+      });
 
       if (error) {
         showToast(error.message);
@@ -551,11 +692,14 @@ function wireGlobals(): void {
       }
 
       const { data: { user } } = await sb.auth.getUser();
-      if (user) await syncEmailVerifiedStatus(sb, user);
-
+      if (!user) {
+        showToast("Unable to read verified user.");
+        return;
+      }
+      await upsertProfileFromSignup(sb, user.id, email);
+      await syncEmailVerifiedStatus(sb, user);
       showToast("Email verified.");
-      prepareVerifiedWelcome();
-      goTo("verified-welcome");
+      window.location.href = "/feed";
     };
   window.handleLogin = async () => {
       const email = val("login-email");
@@ -596,7 +740,7 @@ function wireGlobals(): void {
       if (!isSupabaseConfigured()) {
         showToast("Signing you in… (no Supabase — redirect demo)");
         setTimeout(() => {
-          redirectAfterAuth("/campx-college-feed.html");
+          redirectAfterAuth("/feed");
         }, 600);
         return;
       }
@@ -624,9 +768,7 @@ function wireGlobals(): void {
 
       showToast("Signed in. Redirecting…");
       const profileEmail = user.email ?? email;
-      const fallback = isCollegeEmail(profileEmail)
-        ? "/campx-college-feed.html"
-        : "/campx-explore-feed.html";
+      const fallback = "/feed";
       setTimeout(() => redirectAfterAuth(fallback), 400);
     };
   window.handleForgotSubmit = async () => {
@@ -689,6 +831,44 @@ function wireGlobals(): void {
       goTo("login", false);
     };
   window.enterAppAfterVerify = enterAppAfterVerify;
+
+  const collegeInput = el<HTMLInputElement>("college-name");
+  const collegeResults = el("college-results");
+  if (collegeInput && collegeResults) {
+    collegeInput.addEventListener("focus", async () => {
+      const sb = await getClient();
+      if (!sb) return;
+      await fetchCollegesIfNeeded(sb);
+      renderCollegeResults(collegeInput.value);
+    });
+    collegeInput.addEventListener("input", () => {
+      selectedCollege = null;
+      const hidden = el<HTMLInputElement>("college-id");
+      if (hidden) hidden.value = "";
+      renderCollegeResults(collegeInput.value);
+    });
+    collegeResults.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement | null;
+      const btn = target?.closest<HTMLButtonElement>(".college-item[data-college-id]");
+      if (!btn) return;
+      const collegeId = btn.dataset.collegeId;
+      if (!collegeId) return;
+      pickCollegeById(collegeId);
+    });
+    document.addEventListener("click", (event) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (!collegeResults.contains(target) && target !== collegeInput) {
+        hideCollegeResults();
+      }
+    });
+  }
+
+  const signup3Form = el<HTMLFormElement>("signup3-form");
+  signup3Form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void window.handleSignupStep3();
+  });
 }
 
 wireGlobals();
@@ -704,4 +884,8 @@ try {
   }
 } catch {
   /* ignore */
+}
+
+if (window.location.pathname === "/auth/login" || window.location.hash === "#login") {
+  goTo("login");
 }

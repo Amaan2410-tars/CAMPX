@@ -1,0 +1,42 @@
+{
+  "redirects": [
+    { "source": "/campx-onboarding.html", "destination": "/onboarding", "permanent": true },
+    { "source": "/campx-college-feed.html", "destination": "/college-feed", "permanent": true },
+    { "source": "/campx-explore-feed.html", "destination": "/explore-feed", "permanent": true },
+    { "source": "/campx-communities.html", "destination": "/communities", "permanent": true },
+    { "source": "/campx-dms.html", "destination": "/messages", "permanent": true },
+    { "source": "/campx-settings.html", "destination": "/settings", "permanent": true },
+    { "source": "/campx-profile.html", "destination": "/profile", "permanent": true },
+    { "source": "/campx-swift-zone.html", "destination": "/swift-zone", "permanent": true },
+    { "source": "/campx-speeddial-nav.html", "destination": "/speeddial-nav", "permanent": true },
+    { "source": "/campx-user-tiers.html", "destination": "/tiers", "permanent": true },
+    { "source": "/campx-notifications-emails.html", "destination": "/notifications", "permanent": true },
+    { "source": "/campx-subscription-billing.html", "destination": "/billing", "permanent": true },
+    { "source": "/campx-founder-dashboard.html", "destination": "/founder-dashboard", "permanent": true },
+    { "source": "/campx-campus-ambassador-dashboard.html", "destination": "/ambassador-dashboard", "permanent": true },
+    { "source": "/campx-college-onboarding.html", "destination": "/college-onboarding", "permanent": true },
+    { "source": "/campx-moderation-system.html", "destination": "/moderation", "permanent": true },
+    { "source": "/campx-events-contests.html", "destination": "/events", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/onboarding", "destination": "/campx-onboarding.html" },
+    { "source": "/college-feed", "destination": "/campx-college-feed.html" },
+    { "source": "/explore-feed", "destination": "/campx-explore-feed.html" },
+    { "source": "/communities", "destination": "/campx-communities.html" },
+    { "source": "/messages", "destination": "/campx-dms.html" },
+    { "source": "/settings", "destination": "/campx-settings.html" },
+    { "source": "/profile", "destination": "/campx-profile.html" },
+    { "source": "/swift-zone", "destination": "/campx-swift-zone.html" },
+    { "source": "/speeddial-nav", "destination": "/campx-speeddial-nav.html" },
+    { "source": "/tiers", "destination": "/campx-user-tiers.html" },
+    { "source": "/notifications", "destination": "/campx-notifications-emails.html" },
+    { "source": "/billing", "destination": "/campx-subscription-billing.html" },
+    { "source": "/founder-dashboard", "destination": "/campx-founder-dashboard.html" },
+    { "source": "/ambassador-dashboard", "destination": "/campx-campus-ambassador-dashboard.html" },
+    { "source": "/college-onboarding", "destination": "/campx-college-onboarding.html" },
+    { "source": "/moderation", "destination": "/campx-moderation-system.html" },
+    { "source": "/events", "destination": "/campx-events-contests.html" },
+    { "source": "/feed", "destination": "/feed.html" },
+    { "source": "/auth/login", "destination": "/auth/login.html" }
+  ]
+}
