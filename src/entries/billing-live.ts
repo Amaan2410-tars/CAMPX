@@ -12,6 +12,13 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+async function getAccessToken(sb: ReturnType<typeof getSupabase>): Promise<string | null> {
+  const { data: sessionData } = await sb.auth.getSession();
+  if (sessionData.session?.access_token) return sessionData.session.access_token;
+  const { data: refreshed } = await sb.auth.refreshSession();
+  return refreshed.session?.access_token ?? null;
+}
+
 async function main(): Promise<void> {
   const host = document.getElementById("campx-billing-live");
   if (!host) return;
@@ -204,8 +211,7 @@ async function main(): Promise<void> {
         `<div style="font-weight:600;margin-bottom:6px;">Starting checkout</div><div style="color:#9ca3af;font-size:13px;line-height:1.6;">Opening Razorpay. After payment, we’ll verify your subscription status.</div>`,
         "info",
       );
-      const { data: sessionData } = await sb.auth.getSession();
-      const token = sessionData.session?.access_token;
+      let token = await getAccessToken(sb);
       if (!token) {
         btnEl.disabled = false;
         btnEl.textContent = prevText || "Pay (Razorpay)";
@@ -215,7 +221,7 @@ async function main(): Promise<void> {
         );
         return;
       }
-      const res = await fetch(`${fnBase}/razorpay-create-order`, {
+      let res = await fetch(`${fnBase}/razorpay-create-order`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -224,6 +230,21 @@ async function main(): Promise<void> {
         },
         body: JSON.stringify({ plan_id: planId }),
       });
+      if (res.status === 401) {
+        const { data: refreshed } = await sb.auth.refreshSession();
+        token = refreshed.session?.access_token ?? null;
+        if (token) {
+          res = await fetch(`${fnBase}/razorpay-create-order`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+            },
+            body: JSON.stringify({ plan_id: planId }),
+          });
+        }
+      }
       const json = (await res.json()) as {
         demo?: boolean;
         error?: string;
