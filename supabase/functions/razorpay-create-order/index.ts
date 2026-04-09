@@ -23,10 +23,17 @@ Deno.serve(async (req) => {
       error: userErr,
     } = await userClient.auth.getUser();
     if (userErr || !user) {
-      return new Response(JSON.stringify({ error: "Invalid session" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Invalid session",
+          detail: userErr?.message ?? "No user",
+          has_auth_header: Boolean(authHeader),
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const body = await req.json().catch(() => ({}));

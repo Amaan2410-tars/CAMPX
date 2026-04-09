@@ -1,0 +1,79 @@
+name: Release Gate
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+      RELEASE_BASE_URL: http://127.0.0.1:4173
+      RELEASE_TEST_EMAIL: ${{ secrets.RELEASE_TEST_EMAIL }}
+      RELEASE_TEST_PASSWORD: ${{ secrets.RELEASE_TEST_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run lint
+        id: lint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Run unit tests
+        id: unit
+        continue-on-error: true
+        run: npm run test
+
+      - name: Build app
+        id: build
+        continue-on-error: true
+        run: npm run build
+
+      - name: Run release E2E smoke tests
+        id: e2e
+        continue-on-error: true
+        run: npx playwright test -c playwright.release.config.ts --reporter=junit,line
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: e2e-junit.xml
+          PLAYWRIGHT_JUNIT_OUTPUT_DIR: artifacts
+
+      - name: Generate release report
+        run: npm run release:report
+        env:
+          LINT_EXIT_CODE: ${{ steps.lint.outcome == 'success' && '0' || '1' }}
+          UNIT_EXIT_CODE: ${{ steps.unit.outcome == 'success' && '0' || '1' }}
+          BUILD_EXIT_CODE: ${{ steps.build.outcome == 'success' && '0' || '1' }}
+          E2E_EXIT_CODE: ${{ steps.e2e.outcome == 'success' && '0' || '1' }}
+
+      - name: Upload release artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-gate-artifacts
+          path: |
+            artifacts/**
+            playwright-report-release/**
+            test-results/**
+
+      - name: Enforce GO/NO-GO
+        if: steps.lint.outcome != 'success' || steps.unit.outcome != 'success' || steps.build.outcome != 'success' || steps.e2e.outcome != 'success'
+        run: |
+          echo "Release gate failed. See artifacts/release-gate-report.md"
+          exit 1
