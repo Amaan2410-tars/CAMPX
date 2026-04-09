@@ -27,13 +27,6 @@
         '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
     },
     {
-      id: "swift",
-      label: "Swift Zone",
-      href: "/swift-zone",
-      icon:
-        '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-    },
-    {
       id: "settings",
       label: "Settings",
       href: "/settings",
@@ -43,11 +36,10 @@
   ];
 
   const FAN_POSITIONS = [
-    { x: -164, y: 110 },
-    { x: -84, y: 168 },
-    { x: 0, y: 190 },
-    { x: 84, y: 168 },
-    { x: 164, y: 110 },
+    { x: -132, y: 124 },
+    { x: -48, y: 182 },
+    { x: 48, y: 182 },
+    { x: 132, y: 124 },
   ];
 
   const phone = document.querySelector(".phone");

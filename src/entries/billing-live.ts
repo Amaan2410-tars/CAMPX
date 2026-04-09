@@ -63,6 +63,9 @@ async function main(): Promise<void> {
     return byName?.id ?? null;
   };
   const selectedPlanId = resolveRequestedPlanId();
+  const selectedPlan =
+    plans?.find((p) => p.id === selectedPlanId) ??
+    null;
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   const fnBase = supabaseUrl ? `${supabaseUrl}/functions/v1` : "";
@@ -80,34 +83,57 @@ async function main(): Promise<void> {
       }
     </div>
     <div class="box">
-      <div style="font-weight:600;margin-bottom:8px;">Choose your plan</div>
+      <div style="font-weight:600;margin-bottom:8px;">Step 2 of 2: billing</div>
       ${
         fromSettings
           ? `<div style="font-size:12px;color:#a5b4fc;margin-bottom:10px;">You came from Settings. Select a plan and continue to Razorpay.</div>`
           : ""
       }
+      <div style="font-size:12px;color:#fbbf24;margin-bottom:10px;">Razorpay account note: if KYC is still under review, live card/UPI capture may fail until Razorpay activates your account.</div>
       ${errMsg ? `<p style="color:#f87171;">${escapeHtml(errMsg)}</p>` : ""}
       ${
         plans?.length
-          ? `<ul style="padding-left:0;list-style:none;display:grid;gap:8px;">${plans
+          ? selectedPlan
+            ? `<div style="padding:12px;border:1px solid rgba(99,102,241,0.45);border-radius:12px;background:rgba(99,102,241,0.08);">
+                <div style="font-size:12px;color:#a5b4fc;margin-bottom:6px;">Selected plan</div>
+                <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+                  <div>
+                    <div style="font-weight:700;font-size:16px;">${escapeHtml(selectedPlan.name)}</div>
+                    <div style="font-size:13px;color:#9ca3af;">${(selectedPlan.price_cents / 100).toFixed(2)} ${escapeHtml(selectedPlan.currency)} / ${escapeHtml(selectedPlan.interval)}</div>
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <a href="/tiers" style="padding:6px 10px;font-size:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);color:#dbe1ff;text-decoration:none;">Change plan</a>
+                    ${
+                      user && fnBase
+                        ? `<button type="button" class="campx-pay-btn" data-plan="${selectedPlan.id}" style="padding:8px 12px;font-size:12px;border-radius:8px;border:none;background:#6366f1;color:#fff;cursor:pointer;">Proceed to Razorpay</button>`
+                        : `<a href="/auth/login?next=%2Fbilling%3Fplan%3D${encodeURIComponent(String(selectedPlan.slug || selectedPlan.id))}" style="padding:8px 12px;font-size:12px;border-radius:8px;border:none;background:#6366f1;color:#fff;text-decoration:none;">Sign in to continue</a>`
+                    }
+                  </div>
+                </div>
+              </div>`
+            : `<div style="padding:10px;border:1px solid rgba(248,113,113,0.35);border-radius:10px;background:rgba(248,113,113,0.08);color:#fecaca;">
+                Selected plan was not found. Please choose a plan first.
+                <div style="margin-top:10px;"><a href="/tiers" style="color:#dbe1ff;">Go to plan selection</a></div>
+              </div>`
+          : "<p style=\"color:#9ca3af;\">Seed the <code>plans</code> table in Supabase.</p>"
+      }
+      ${
+        !selectedPlan && plans?.length
+          ? `<ul style="padding-left:0;list-style:none;display:grid;gap:8px;margin-top:12px;">${plans
               .map(
                 (p) =>
-                  `<li style="padding:10px;border:1px solid ${selectedPlanId === p.id ? "rgba(99,102,241,0.45)" : "rgba(255,255,255,0.12)"};border-radius:10px;background:${selectedPlanId === p.id ? "rgba(99,102,241,0.08)" : "transparent"};">
-                    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+                  `<li style="padding:10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;">
+                    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
                       <div>
                         <div style="font-weight:600;">${escapeHtml(p.name)}</div>
                         <div style="font-size:13px;color:#9ca3af;">${(p.price_cents / 100).toFixed(2)} ${escapeHtml(p.currency)} / ${escapeHtml(p.interval)}</div>
                       </div>
-                      ${
-                        user && fnBase
-                          ? `<button type="button" class="campx-pay-btn" data-plan="${p.id}" style="padding:6px 10px;font-size:12px;border-radius:8px;border:none;background:#6366f1;color:#fff;cursor:pointer;">${selectedPlanId === p.id ? "Pay selected plan" : "Pay now"}</button>`
-                          : ""
-                      }
+                      <a href="/billing?plan=${encodeURIComponent(String(p.slug || p.id))}" style="padding:6px 10px;font-size:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);color:#dbe1ff;text-decoration:none;">Select</a>
                     </div>
                   </li>`,
               )
               .join("")}</ul>`
-          : "<p style=\"color:#9ca3af;\">Seed the <code>plans</code> table in Supabase.</p>"
+          : ""
       }
       <p style="font-size:12px;color:#64748b;margin-top:8px;">Production: deploy Edge Functions <code>razorpay-create-order</code> and <code>razorpay-webhook</code>, then set secrets.</p>
     </div>

@@ -23,7 +23,12 @@ async function verifySignature(
   const digest = Array.from(new Uint8Array(sig))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-  return digest === signature;
+  if (digest.length !== signature.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < digest.length; i += 1) {
+    mismatch |= digest.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return mismatch === 0;
 }
 
 type PaymentEntity = {
@@ -49,7 +54,14 @@ Deno.serve(async (req) => {
     const webhookSecret = Deno.env.get("RAZORPAY_WEBHOOK_SECRET");
     const signature = req.headers.get("x-razorpay-signature");
 
-    if (webhookSecret && !(await verifySignature(rawBody, signature, webhookSecret))) {
+    if (!webhookSecret) {
+      return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!(await verifySignature(rawBody, signature, webhookSecret))) {
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

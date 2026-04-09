@@ -47,12 +47,18 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey);
     const { data: plan, error: planErr } = await admin
       .from("plans")
-      .select("id, price_cents, currency, name")
+      .select("id, price_cents, currency, name, active")
       .eq("id", planId)
       .single();
     if (planErr || !plan) {
       return new Response(JSON.stringify({ error: "Plan not found" }), {
         status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!plan.active) {
+      return new Response(JSON.stringify({ error: "Plan not active" }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -70,7 +76,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const amount = Math.max(plan.price_cents, 100);
+    const amount = Number.isFinite(plan.price_cents) ? Math.max(plan.price_cents, 100) : 100;
     const orderRes = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
