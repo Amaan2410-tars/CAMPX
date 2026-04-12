@@ -73,6 +73,11 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 export default function App() {
+  // Intercept the 'branding' subdomain to serve it as a standalone app openly.
+  if (window.location.hostname.includes('branding')) {
+    return <Branding />;
+  }
+
   return (
     <Routes>
       {/* ---------------- Public / Branding Routes ---------------- */}
