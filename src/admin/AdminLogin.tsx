@@ -13,14 +13,13 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
 
+    const basePath = window.location.hostname.includes('admin') ? '/' : '/admin';
+
     if (!isSupabaseConfigured()) {
       // Mock login for demo
-      if (email.includes("admin")) {
-        localStorage.setItem("campx_admin_role", "admin");
-        navigate("/admin");
-      } else if (email.includes("founder")) {
-        localStorage.setItem("campx_admin_role", "founder");
-        navigate("/admin");
+      if (email.includes("admin") || email.includes("founder")) {
+        localStorage.setItem("campx_admin_role", email.includes("founder") ? "founder" : "admin");
+        navigate(basePath);
       } else {
         alert("Invalid mock credentials. Use 'admin@campx.app' or 'founder@campx.app'");
       }
@@ -49,7 +48,7 @@ export default function AdminLogin() {
       .single();
 
     if (profile?.role === "admin" || profile?.role === "founder") {
-      navigate("/admin");
+      navigate(basePath);
     } else {
       await sb.auth.signOut();
       alert("Unauthorized: You don't have admin access.");

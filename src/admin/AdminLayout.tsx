@@ -7,21 +7,26 @@ import {
 } from "lucide-react";
 import { getSupabase } from "../lib/supabase";
 
+const isAdminDomain = window.location.hostname.includes('admin');
+const basePath = isAdminDomain ? "" : "/admin";
+
 const NAV_ITEMS = [
-  { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
-  { label: "Colleges", path: "/admin/colleges", icon: Building2 },
-  { label: "Users", path: "/admin/users", icon: Users2 },
-  { label: "KYC Queue", path: "/admin/kyc", icon: Video },
-  { label: "Communities", path: "/admin/communities", icon: MessagesSquare },
-  { label: "Posts & Mod", path: "/admin/moderation", icon: ShieldAlert },
-  { label: "Events", path: "/admin/events", icon: CalendarDays },
-  { label: "Brand Ads", path: "/admin/brands", icon: Megaphone },
-  { label: "Subscriptions", path: "/admin/subscriptions", icon: CreditCard },
-  { label: "Ambassadors", path: "/admin/ambassadors", icon: GraduationCap },
-  { label: "Announcements", path: "/admin/announcements", icon: Bell },
-  { label: "Analytics", path: "/admin/analytics", icon: LineChart },
-  { label: "Settings", path: "/admin/settings", icon: Settings },
+  { label: "Dashboard", path: basePath || "/", icon: LayoutDashboard },
+  { label: "Colleges", path: `${basePath}/colleges`, icon: Building2 },
+  { label: "Users", path: `${basePath}/users`, icon: Users2 },
+  { label: "KYC Queue", path: `${basePath}/kyc`, icon: Video },
+  { label: "Communities", path: `${basePath}/communities`, icon: MessagesSquare },
+  { label: "Posts & Mod", path: `${basePath}/moderation`, icon: ShieldAlert },
+  { label: "Events", path: `${basePath}/events`, icon: CalendarDays },
+  { label: "Brand Ads", path: `${basePath}/brands`, icon: Megaphone },
+  { label: "Subscriptions", path: `${basePath}/subscriptions`, icon: CreditCard },
+  { label: "Ambassadors", path: `${basePath}/ambassadors`, icon: GraduationCap },
+  { label: "Announcements", path: `${basePath}/announcements`, icon: Bell },
+  { label: "Analytics", path: `${basePath}/analytics`, icon: LineChart },
+  { label: "Settings", path: `${basePath}/settings`, icon: Settings },
 ];
+
+
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,8 +44,9 @@ export default function AdminLayout() {
 
   const getPageTitle = () => {
     const currentPath = location.pathname;
-    if (currentPath === "/admin") return "Overview Dashboard";
-    const item = NAV_ITEMS.find(n => currentPath.startsWith(n.path) && n.path !== "/admin");
+    const dashboardPath = basePath || "/";
+    if (currentPath === dashboardPath || currentPath === "/admin") return "Overview Dashboard";
+    const item = NAV_ITEMS.find(n => currentPath.startsWith(n.path) && n.path !== dashboardPath && n.path !== "/admin");
     return item ? item.label : "Admin Portal";
   };
 

@@ -78,6 +78,32 @@ export default function App() {
     return <Branding />;
   }
 
+  // Intercept the 'admin' subdomain to serve the admin panel at root.
+  if (window.location.hostname.includes('admin')) {
+    return (
+      <Routes>
+        <Route path="/auth/login" element={<AdminLogin />} />
+        <Route path="/" element={<AdminAuthGuard />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="colleges" element={<Colleges />} />
+            <Route path="users" element={<Users />} />
+            <Route path="kyc" element={<KycQueue />} />
+            <Route path="communities" element={<AdminCommunities />} />
+            <Route path="moderation" element={<PostsModeration />} />
+            <Route path="events" element={<Events />} />
+            <Route path="brands" element={<Brands />} />
+            <Route path="subscriptions" element={<Subscriptions />} />
+            <Route path="ambassadors" element={<Ambassadors />} />
+            <Route path="announcements" element={<Announcements />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+        </Route>
+      </Routes>
+    );
+  }
+
   return (
     <Routes>
       {/* ---------------- Public / Branding Routes ---------------- */}
