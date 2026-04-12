@@ -1,0 +1,1135 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampX ΓÇö Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/campx-web-layout.css?v=4">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: rgba(255,255,255,0.08);
+    --border-active: rgba(255,255,255,0.2);
+    --accent: #6c63ff;
+    --accent2: #ff6b6b;
+    --accent-glow: rgba(108,99,255,0.3);
+    --text: #f0f0f8;
+    --text-muted: rgba(240,240,248,0.45);
+    --text-sub: rgba(240,240,248,0.65);
+    --green: #4ade80;
+    --amber: #fbbf24;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 48px;
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 40px 120px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.5s cubic-bezier(0.77,0,0.175,1), opacity 0.4s ease;
+    will-change: transform, opacity;
+  }
+
+  .screen.hidden-left  { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+  .screen.hidden-right { transform: translateX(100%);  opacity: 0; pointer-events: none; }
+  .screen.active       { transform: translateX(0);     opacity: 1; }
+
+  #splash {
+    background: var(--bg);
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 64px;
+  }
+
+  .splash-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: pulse 6s ease-in-out infinite;
+  }
+
+  .orb-1 {
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(108,99,255,0.35) 0%, transparent 70%);
+    top: -60px; left: -60px;
+    animation-delay: 0s;
+  }
+
+  .orb-2 {
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(255,107,107,0.25) 0%, transparent 70%);
+    top: 120px; right: -40px;
+    animation-delay: 2s;
+  }
+
+  .orb-3 {
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(74,222,128,0.15) 0%, transparent 70%);
+    bottom: 200px; left: 20px;
+    animation-delay: 4s;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50%       { transform: scale(1.12); opacity: 1; }
+  }
+
+  .grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .splash-center {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+  }
+
+  .logo-mark {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--accent) 0%, #9b8fff 100%);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 0 40px rgba(108,99,255,0.5);
+    animation: logo-in 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+  }
+
+  @keyframes logo-in {
+    from { transform: scale(0.6) translateY(20px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .logo-mark svg { width: 44px; height: 44px; fill: white; }
+
+  .brand-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    animation: text-in 0.7s ease 0.4s both;
+    background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.6) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .brand-x {
+    -webkit-text-fill-color: transparent;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .brand-tagline {
+    font-size: 14px;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 10px;
+    font-weight: 400;
+    animation: text-in 0.7s ease 0.55s both;
+  }
+
+  @keyframes text-in {
+    from { transform: translateY(16px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .feature-pills {
+    display: flex;
+    gap: 8px;
+    margin-top: 28px;
+    animation: text-in 0.7s ease 0.7s both;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 32px;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 12px;
+    color: var(--text-sub);
+    letter-spacing: 0.02em;
+  }
+
+  .splash-ctas {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding: 0 28px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: text-in 0.7s ease 0.85s both;
+  }
+
+  .splash-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding-bottom: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 16px 24px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #9b8fff 100%);
+    color: white;
+    box-shadow: 0 8px 32px rgba(108,99,255,0.4);
+  }
+
+  .btn-primary:hover { box-shadow: 0 12px 40px rgba(108,99,255,0.55); }
+
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-primary:disabled {
+    box-shadow: none;
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--border-active); }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    padding: 52px 24px 16px;
+    gap: 12px;
+  }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: var(--surface2); }
+  .back-btn svg { width: 16px; height: 16px; stroke: var(--text-sub); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .topbar-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .topbar-logo .x { color: var(--accent); }
+
+  .form-body {
+    padding: 8px 28px 40px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .form-body::-webkit-scrollbar { display: none; }
+
+  .form-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .form-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .input-group { margin-bottom: 16px; }
+  .field-error {
+    display: none;
+    margin-top: 6px;
+    color: #fda4af;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .input-label {
+    font-size: 12px;
+    color: var(--text-sub);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .input-wrap { position: relative; }
+
+  .college-search-wrap { position: relative; }
+  .college-results {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 12;
+    display: none;
+  }
+  .college-item {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .college-item:last-child { border-bottom: 0; }
+  .college-item:hover:not(:disabled) { background: rgba(255,255,255,0.05); }
+  .college-item:disabled { color: var(--text-muted); cursor: default; }
+
+  .input-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  select.campx-select {
+    width: 100%;
+    padding: 14px 14px 14px 44px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+
+  select.campx-select {
+    padding-left: 14px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+  }
+
+  input.no-icon { padding-left: 14px; }
+
+  input::placeholder { color: var(--text-muted); }
+
+  input:focus,
+  select.campx-select:focus {
+    border-color: rgba(108,99,255,0.6);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+  }
+
+  .eye-btn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .eye-btn svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .checkbox-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    padding: 0;
+    margin-top: 2px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .checkbox-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .checkbox-label a { color: var(--accent); text-decoration: none; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-text { font-size: 12px; color: var(--text-muted); }
+
+  .verify-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+
+  .verify-badge.warn {
+    background: rgba(251,191,36,0.08);
+    border-color: rgba(251,191,36,0.25);
+  }
+
+  .verify-badge.warn .verify-text { color: rgba(251,220,120,0.95); }
+  .verify-badge.warn .verify-dot { background: var(--amber); }
+
+  .verify-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: blink 2s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .verify-text { font-size: 12px; color: rgba(74,222,128,0.9); line-height: 1.4; }
+
+  .form-footer {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .form-footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .forgot-link {
+    font-size: 13px;
+    color: var(--accent);
+    text-align: right;
+    display: block;
+    margin-top: -8px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: 100%;
+    font-family: inherit;
+  }
+
+  .step-indicator {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .step-dot {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: width 0.3s ease, background 0.3s ease;
+    flex: 0 0 8px;
+  }
+
+  .step-dot.active { background: var(--accent); flex-basis: 24px; }
+  .step-dot.done   { background: var(--green); flex-basis: 8px; }
+
+  .tier-cards {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .tier-card {
+    flex: 1;
+    padding: 12px 8px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .tier-card.selected {
+    border-color: rgba(108,99,255,0.5);
+    background: rgba(108,99,255,0.08);
+  }
+
+  .tier-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .tier-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .summary-row:last-child { border-bottom: none; }
+  .summary-k { color: var(--text-muted); flex-shrink: 0; }
+  .summary-v { color: var(--text); text-align: right; word-break: break-all; }
+
+  .otp-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 24px 0;
+  }
+
+  .otp-cell {
+    width: 44px;
+    height: 52px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .otp-cell:focus {
+    border-color: rgba(108,99,255,0.6);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+  }
+
+  .demo-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  .toast {
+    position: absolute;
+    bottom: 100px;
+    left: 28px;
+    right: 28px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-size: 13px;
+    color: var(--text-sub);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    animation: toast-in 0.3s ease;
+  }
+
+  .toast.show { display: flex; }
+  .toast-icon { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .toast-icon svg { width: 11px; height: 11px; stroke: white; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  @keyframes toast-in { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .center-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 28px;
+    text-align: center;
+  }
+
+  .mail-illus {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(108,99,255,0.12);
+    border: 1px solid rgba(108,99,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  @media (max-height: 860px) {
+    .phone { height: 100vh; border-radius: 0; border: none; }
+  }
+  @media (max-width: 420px) {
+    .phone { width: 100vw; height: 100vh; border-radius: 0; border: none; }
+    .app { align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="phone">
+
+    <!-- SPLASH -->
+    <div class="screen active" id="splash">
+      <div class="splash-bg">
+        <div class="grid-lines"></div>
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
+      <div class="splash-center">
+        <div class="logo-mark">
+          <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 36 L22 8 L36 36" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M13 27 L31 27" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <circle cx="32" cy="14" r="5" fill="white" opacity="0.9"/>
+          </svg>
+        </div>
+        <div class="brand-name">Camp<span class="brand-x">X</span></div>
+        <div class="brand-tagline">Your campus, elevated</div>
+        <div class="feature-pills">
+          <span class="pill">Verified students only</span>
+          <span class="pill">Hyderabad ΓåÆ India</span>
+          <span class="pill">College + Community</span>
+        </div>
+      </div>
+      <div class="splash-ctas">
+        <button type="button" class="btn btn-primary" onclick="goTo('login')">Log in</button>
+        <button type="button" class="btn btn-secondary" onclick="goTo('signup')">Create account</button>
+        <div class="splash-note">Only for UG &amp; PG students aged 18+</div>
+      </div>
+    </div>
+
+    <!-- SIGN UP STEP 1: Account -->
+    <div class="screen hidden-right" id="signup">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('splash', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body">
+        <div class="step-indicator" id="steps-1">
+          <div class="step-dot active"></div>
+          <div class="step-dot"></div>
+          <div class="step-dot"></div>
+        </div>
+        <div class="form-title">Create account</div>
+        <div class="form-sub">Use your college email for instant verification when possible.</div>
+
+        <div class="input-group">
+          <label class="input-label" for="signup-name">Full name</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            <input type="text" id="signup-name" autocomplete="name" placeholder="As on your college ID" maxlength="120">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="signup-email">Email</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polyline points="2,4 12,13 22,4"/></svg>
+            <input type="email" id="signup-email" autocomplete="email" placeholder="you@college.edu" inputmode="email" oninput="checkEmailType(this.value)">
+          </div>
+        </div>
+
+        <div class="verify-badge" id="email-hint" style="display:none;" aria-live="polite">
+          <div class="verify-dot"></div>
+          <div class="verify-text" id="email-hint-text"></div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="signup-pass">Password</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <input type="password" id="signup-pass" autocomplete="new-password" placeholder="At least 8 characters" minlength="8">
+            <button type="button" class="eye-btn" onclick="togglePass('signup-pass', this)" tabindex="-1" aria-label="Show password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="signup-pass2">Confirm password</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <input type="password" id="signup-pass2" autocomplete="new-password" placeholder="Re-enter password" minlength="8">
+            <button type="button" class="eye-btn" onclick="togglePass('signup-pass2', this)" tabindex="-1" aria-label="Show password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="terms-check">
+          <label for="terms-check" class="checkbox-label">
+            I agree to CampX's <a href="/terms" target="_blank" rel="noopener noreferrer">Terms</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. I confirm I am a UG/PG student aged 18+.
+          </label>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="handleSignupStep1()">Continue</button>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">already a member?</span>
+          <div class="divider-line"></div>
+        </div>
+        <div class="form-footer">Have an account? <a onclick="goTo('login')">Log in</a></div>
+      </div>
+    </div>
+
+    <!-- SIGN UP STEP 2: College -->
+    <div class="screen hidden-right" id="signup2">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('signup', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body">
+        <div class="step-indicator" id="steps-2">
+          <div class="step-dot done"></div>
+          <div class="step-dot active"></div>
+          <div class="step-dot"></div>
+        </div>
+        <div class="form-title">College details</div>
+        <div class="form-sub">We use this to place you in the right campus feed and verification queue.</div>
+
+        <div class="input-group">
+          <label class="input-label" for="college-name">College / University</label>
+          <div class="college-search-wrap">
+            <input type="text" class="no-icon" id="college-name" placeholder="Type and select your college" maxlength="160" autocomplete="off">
+            <input type="hidden" id="college-id">
+            <div id="college-results" class="college-results" role="listbox" aria-label="College results"></div>
+          </div>
+          <div id="err-college" class="field-error" aria-live="polite"></div>
+        </div>
+
+        <div class="input-group">
+          <span class="input-label">Program</span>
+          <div class="tier-cards" role="group" aria-label="Program level">
+            <div class="tier-card selected" id="prog-ug" onclick="selectProgram('ug')" tabindex="0" onkeydown="if(event.key==='Enter')selectProgram('ug')">
+              <div class="tier-name">Undergrad (UG)</div>
+              <div class="tier-hint">Bachelor's</div>
+            </div>
+            <div class="tier-card" id="prog-pg" onclick="selectProgram('pg')" tabindex="0" onkeydown="if(event.key==='Enter')selectProgram('pg')">
+              <div class="tier-name">Postgrad (PG)</div>
+              <div class="tier-hint">Master's / PhD</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="study-year">Year of study</label>
+          <select class="campx-select no-icon" id="study-year" aria-label="Year of study">
+            <option value="">Select year</option>
+            <option value="1">1st year</option>
+            <option value="2">2nd year</option>
+            <option value="3">3rd year</option>
+            <option value="4">4th year</option>
+            <option value="5">5th year or above</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="major">Branch / major</label>
+          <input type="text" class="no-icon" id="major" placeholder="e.g. Computer Science" maxlength="80" autocomplete="off">
+          <div id="err-major" class="field-error" aria-live="polite"></div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="phone">Mobile</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <input type="tel" id="phone" autocomplete="tel" placeholder="9876543210" inputmode="tel" maxlength="10">
+          </div>
+          <div id="err-phone" class="field-error" aria-live="polite"></div>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="handleSignupStep2()">Continue</button>
+      </div>
+    </div>
+
+    <!-- SIGN UP STEP 3: Review & send verification -->
+    <div class="screen hidden-right" id="signup3">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('signup2', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body">
+        <div class="step-indicator" id="steps-3">
+          <div class="step-dot done"></div>
+          <div class="step-dot done"></div>
+          <div class="step-dot active"></div>
+        </div>
+        <div class="form-title">Review &amp; verify</div>
+        <div class="form-sub">Confirm your details. Next, we will email a verification link and code.</div>
+        <form id="signup3-form">
+          <div class="summary-card" id="summary-card"></div>
+
+          <div class="verify-badge" id="path-badge">
+            <div class="verify-dot"></div>
+            <div class="verify-text" id="path-badge-text"></div>
+          </div>
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="marketing-optin">
+            <label for="marketing-optin" class="checkbox-label">Send me product updates and campus tips (optional).</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Send verification email</button>
+          <p class="demo-hint">With Supabase configured, a real confirmation is sent. Add your site URL under Authentication ΓåÆ URL configuration (redirect allow list).</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- VERIFY EMAIL -->
+    <div class="screen hidden-right" id="verify-email">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('signup3', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body" style="display:flex;flex-direction:column;min-height:0;">
+        <div class="center-block" style="flex:1;padding-top:16px;">
+          <div class="mail-illus" aria-hidden="true">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="form-title" style="margin-bottom:12px;">Check your email</div>
+          <div class="form-sub" style="margin-bottom:8px;">We sent a verification link and a 6-digit code to</div>
+          <div id="verify-email-display" style="font-weight:600;color:var(--text);margin-bottom:20px;word-break:break-all;"></div>
+          <div class="verify-badge" style="width:100%;max-width:280px;margin-left:auto;margin-right:auto;">
+            <div class="verify-dot"></div>
+            <div class="verify-text">Link expires in 24 hours (simulated)</div>
+          </div>
+        </div>
+        <div style="padding-bottom:32px;display:flex;flex-direction:column;gap:10px;">
+          <button type="button" class="btn btn-primary" onclick="goTo('verify-code')">Enter 6-digit code</button>
+          <button type="button" class="btn btn-secondary" id="btn-resend" onclick="handleResend()">Resend email</button>
+          <button type="button" class="btn btn-secondary" onclick="goTo('signup3', false)">Wrong email? Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERIFY CODE -->
+    <div class="screen hidden-right" id="verify-code">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('verify-email', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body">
+        <div class="form-title">Enter code</div>
+        <div class="form-sub">If your project sends a 6-digit code (email OTP / template), enter it here. Magic-link-only projects can confirm by opening the email link instead.</div>
+        <div class="otp-row" role="group" aria-label="Verification code">
+          <input class="otp-cell" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 1" data-otp="0" autocomplete="one-time-code">
+          <input class="otp-cell" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 2" data-otp="1" autocomplete="off">
+          <input class="otp-cell" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 3" data-otp="2" autocomplete="off">
+          <input class="otp-cell" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 4" data-otp="3" autocomplete="off">
+          <input class="otp-cell" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 5" data-otp="4" autocomplete="off">
+          <input class="otp-cell" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 6" data-otp="5" autocomplete="off">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="handleVerifyCode()">Verify &amp; continue</button>
+        <p class="demo-hint">Backend not connected ΓÇö this only checks format and demo code.</p>
+      </div>
+    </div>
+
+    <!-- VERIFIED WELCOME -->
+    <div class="screen hidden-right" id="verified-welcome">
+      <div class="center-block" style="flex:1;padding:40px 28px;">
+        <div style="width:72px;height:72px;border-radius:50%;background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.3);display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="form-title" style="margin-bottom:12px;">Email verified</div>
+        <div class="form-sub" id="verified-message" style="margin-bottom:24px;"></div>
+        <div class="verify-badge warn" id="kyc-callout" style="display:none;width:100%;text-align:left;">
+          <div class="verify-dot"></div>
+          <div class="verify-text">Video KYC is required to unlock College feed and a verified badge. You can start from Settings anytime.</div>
+        </div>
+      </div>
+      <div style="padding:0 28px 48px;display:flex;flex-direction:column;gap:10px;">
+        <button type="button" class="btn btn-primary" id="btn-enter-app" onclick="enterAppAfterVerify()">Continue</button>
+        <button type="button" class="btn btn-secondary" onclick="goTo('splash', false)">Back to start</button>
+      </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="screen hidden-right" id="login">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('splash', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body">
+        <div class="form-title">Welcome back</div>
+        <div class="form-sub">Log in with the email and password you used to sign up.</div>
+
+        <div class="input-group">
+          <label class="input-label" for="login-email">Email</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polyline points="2,4 12,13 22,4"/></svg>
+            <input type="email" id="login-email" autocomplete="username" placeholder="your@email.com" inputmode="email">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="login-pass">Password</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <input type="password" id="login-pass" autocomplete="current-password" placeholder="Enter password">
+            <button type="button" class="eye-btn" onclick="togglePass('login-pass', this)" tabindex="-1" aria-label="Show password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="checkbox-row" style="margin-bottom:12px;">
+          <input type="checkbox" id="remember-me">
+          <label for="remember-me" class="checkbox-label">Stay signed in on this device</label>
+        </div>
+
+        <button type="button" class="forgot-link" onclick="goTo('forgot')">Forgot password?</button>
+
+        <button type="button" class="btn btn-primary" onclick="handleLogin()">Log in</button>
+
+        <p class="demo-hint" style="margin-top:16px;">Demo: use email containing <strong style="color:var(--text);">notverified</strong> to open the email verification flow. Otherwise you land in College feed (prototype).</p>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">new to campx?</span>
+          <div class="divider-line"></div>
+        </div>
+        <div class="form-footer">Don't have an account? <a onclick="goTo('signup')">Sign up</a></div>
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div class="screen hidden-right" id="forgot">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('login', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body">
+        <div class="form-title">Reset password</div>
+        <div class="form-sub">Enter your account email. We will send a link to create a new password.</div>
+
+        <div class="input-group">
+          <label class="input-label" for="forgot-email">Email</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polyline points="2,4 12,13 22,4"/></svg>
+            <input type="email" id="forgot-email" autocomplete="email" placeholder="your@email.com" inputmode="email">
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="handleForgotSubmit()">Send reset link</button>
+        <p class="demo-hint">Supabase sends the reset email when configured; without env vars, only the confirmation screen is shown.</p>
+      </div>
+    </div>
+
+    <!-- FORGOT SENT -->
+    <div class="screen hidden-right" id="forgot-sent">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('forgot', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body" style="display:flex;flex-direction:column;flex:1;">
+        <div class="center-block" style="flex:1;">
+          <div class="mail-illus">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="form-title" style="margin-bottom:12px;">Check your inbox</div>
+          <div class="form-sub" style="margin-bottom:8px;">If an account exists for</div>
+          <div id="forgot-sent-email" style="font-weight:600;margin-bottom:16px;word-break:break-all;"></div>
+          <div class="form-sub">Open the link to set a new password. Did not receive it? Check spam or request again from the previous screen.</div>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="goTo('login', false)" style="margin-bottom:24px;">Back to log in</button>
+      </div>
+    </div>
+
+    <!-- PASSWORD RECOVERY (opened after reset link + PASSWORD_RECOVERY session) -->
+    <div class="screen hidden-right" id="recovery">
+      <div class="topbar">
+        <div class="back-btn" onclick="goTo('login', false)" role="button" tabindex="0" aria-label="Back">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="topbar-logo">Camp<span class="x">X</span></div>
+      </div>
+      <div class="form-body">
+        <div class="form-title">New password</div>
+        <div class="form-sub">Choose a new password for your CampX account.</div>
+        <div class="input-group">
+          <label class="input-label" for="recovery-pass">New password</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <input type="password" id="recovery-pass" autocomplete="new-password" placeholder="At least 8 characters" minlength="8">
+            <button type="button" class="eye-btn" onclick="togglePass('recovery-pass', this)" tabindex="-1" aria-label="Show password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="recovery-pass2">Confirm password</label>
+          <div class="input-wrap">
+            <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <input type="password" id="recovery-pass2" autocomplete="new-password" placeholder="Re-enter password" minlength="8">
+            <button type="button" class="eye-btn" onclick="togglePass('recovery-pass2', this)" tabindex="-1" aria-label="Show password">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="handleRecoverySubmit()">Save password</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <div class="toast-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <span id="toast-msg"></span>
+    </div>
+
+  </div>
+</div>
+
+<script type="module" src="/src/entries/onboarding.ts"></script>
+</body>
+</html>

@@ -1,0 +1,1957 @@
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 1  
+ 
+ 
+ 
+CAMPX 
+Product Specification Document 
+v1.0  ·  Confidential  ·  Internal Use Only 
+ 
+P L A T F O R M 
+CampX 
+V E R S I O N 
+v1.0 — Final 
+ 
+L A U N C H 
+Hyderabad → Pan-India 
+P L A T F O R M S 
+Android · iOS · Web 
+ 
+T A R G E T  U S E R S 
+UG & PG Students (18+) 
+L A N G U A G E 
+English only 
+ 
+S T A T U S 
+COMPLETED 
+U P D A T E D 
+10th March 2026 
+ 
+This document is intended for the development team only. All features described are subject to change before 
+launch. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 2  
+ 
+Table of Contents 
+ 
+1. App Overview & Vision 1.1 What is CampX · 1.2 The Problem · 1.3 Differentiators · 1.4 Target Audience · 
+1.5 Platform Overview · 1.6 Tier System · 1.7 Feature Matrix · 1.8 Monetization 
+2. Tech Basics 2.1 Platform Support · 2.2 Encryption · 2.3 Data Storage · 2.4 Data Privacy · 2.5 
+Notifications 
+3. Onboarding & Signup 
+Flow 
+3.1 Overview · 3.2 Step-by-Step Flow · 3.3 Flow Diagram · 3.4 Login Flow 
+4. Verification Flow 4.1 Overview · 4.2 Path A (College Email) · 4.3 Path B (Video KYC) · 4.4 Status 
+Indicators 
+5. User Tiers 5.1 Overview · 5.2 Basic · 5.3 Verified · 5.4 Pro · 5.5 Plus · 5.6 Upgrade & 
+Downgrade Rules 
+6. Profiles 6.1 Overview · 6.2 Profile Information · 6.3 Follow System · 6.4 Privacy · 6.5 
+Customization 
+7. College Feed 7.1 Overview · 7.2 Feed Structure · 7.3 Post Types · 7.4 Engagement · 7.5 Brand 
+Content · 7.6 Moderation 
+8. Community System 8.1 Overview · 8.2 Types · 8.3 Creation · 8.4 Joining · 8.5 Channel Types · 8.6 Roles · 
+8.7 Admin Actions · 8.8 Feed View · 8.9 Leaving 
+9. Explore Feed 9.1 Overview · 9.2 Access Rules · 9.3 Feed Structure · 9.4 Post Types · 9.5 Posting 
+Destinations · 9.6 Engagement · 9.7 Brand Content · 9.8 Moderation 
+10. Messaging / DMs 10.1 Overview · 10.2 Who Can Message Who · 10.3 Message Types · 10.4 Features 
+· 10.5 Access Points 
+11. Notifications & Emails 11.1 Overview · 11.2 Triggers · 11.3 Channels · 11.4 User Controls 
+12. Subscription & Billing 12.1 Overview · 12.2 Tiers · 12.3 Payment Methods · 12.4 Lifecycle · 12.5 Refund 
+Policy · 12.6 Invoices · 12.7 Pricing Display 
+13. Settings 13.1 Account · 13.2 Privacy · 13.3 Display & UI · 13.4 Billing · 13.5 Communities · 
+13.6 Content & Moderation · 13.7 Security · 13.8 Help & Support 
+14. Admin / Founder 
+Dashboard 
+14.1 Overview · 14.2 Access & Roles · 14.3 Modules · 14.4 Access Points 
+15. Campus Ambassador 
+Dashboard 
+15.1 Overview · 15.2 Ambassador Structure · 15.3 Dashboard Modules · 15.4 Perks 
+& Recognition 
+16. College Onboarding 16.1 Overview · 16.2 College Listing Process · 16.3 College Data Fields · 16.4 
+College Status · 16.5 Going Live · 16.6 College Management Actions · 16.7 Self-
+Listing by Colleges 
+17. Moderation System 17.1 Overview · 17.2 Content Violations · 17.3 Reporting Flow · 17.4 Actions · 17.5 
+Repeat Violations · 17.6 Appeals 
+18. Events & Contests 18.1 Overview · 18.2 Event Types · 18.3 Organizers · 18.4 Access by Tier · 18.5 
+Event Page · 18.6 Notifications 
+19. Swift Zone 19.1 Overview · 19.2 What We Know (Placeholder) 
+ 
+ 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 3  
+ 
+1. App Overview & Vision 
+1.1 What is CampX? 
+CampX (name subject to change) is a student-exclusive social ecosystem platform designed for 
+undergraduate and postgraduate college students aged 18 and above. It is a closed, verified 
+environment where only enrolled students can participate — making it fundamentally different from 
+open platforms like Instagram or LinkedIn. 
+ 
+CampX is not just a social feed. It is a multi-layered platform that combines social networking, 
+academic communities, project collaboration, campus events, and premium identity features — all 
+built exclusively around student life. 
+ 
+One-Line Vision 
+CampX is a platform for students to explore and level up their knowledge, skills and connections, and 
+engage in activities and contests. 
+ 
+1.2 The Problem CampX Solves 
+Students today are scattered across multiple platforms — WhatsApp for college groups, Instagram 
+for social life, LinkedIn for professional identity, and Discord for communities. None of these 
+platforms are: 
+ 
+• Built exclusively for students 
+• Restricted to verified college members only 
+• Designed around both academic and social student life 
+• Capable of connecting students across colleges in a structured way 
+ 
+CampX solves this by bringing everything into one verified, student-only ecosystem. 
+ 
+1.3 What Makes CampX Different 
+The core differentiator of CampX is exclusivity and depth: 
+ 
+• Exclusivity:  Only verified students can access the platform. No alumni, no faculty, no outsiders. 
+• Multi-layer feeds:  College feed, community feed and explore feed serve different purposes and 
+audiences. 
+• Community & project system:  Students can join and collaborate in structured communities, 
+similar to Discord servers but focused on academic and extracurricular work. 
+• Events & contests:  CampX will host and facilitate fests, hackathons and other campus events, 
+giving students a reason to stay engaged beyond casual scrolling. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 4  
+• Verified connections:  Every interaction happens between verified students, making the 
+platform more trustworthy than open social networks. 
+• Swift Zone:  A coming-soon feature for verified student connections (friend-making / dating) — 
+exclusive to Plus users. 
+• Premium tiers:  Paid tiers (Pro & Plus) unlock advanced features like community creation, profile 
+customization and Swift Zone access. 
+ 
+1.4 Target Audience 
+ 
+Attribute Details 
+User Type Undergraduate (UG) and Postgraduate (PG) students only 
+Age 18 years and above 
+Streams All streams — Engineering, Medical, Management, Arts, Commerce, 
+Design, and more 
+Geography (Launch) Hyderabad, Telangana 
+Geography (Future) Pan-India expansion after initial traction 
+Platform Android, iOS, Web (browser) 
+Language English only at launch 
+ 
+1.5 Platform Overview 
+CampX is structured around 5 main sections accessible from the bottom navigation bar: 
+ 
+• College Feed:  — Content and activity from the user's own college only. 
+• Community Feed:  — Content from communities and clubs the user has joined. 
+• Explore Feed:  — A global feed visible to all users, including Basic (unverified) users. Used for 
+discovery across colleges. 
+• Swift Zone:  — Coming soon. A verified connection and friend-making feature exclusive to Plus 
+users. 
+• Settings:  — Account management, privacy, display, subscriptions and more. 
+ 
+Navigation Note 
+Every main page will have a conversation / DM section accessible by swiping left on the main content 
+area. 
+ 
+1.6 User Tier System Overview 
+CampX operates on a 4-tier user system. Tiers define what a user can access and interact with on the 
+platform. The tiers in order from lowest to highest access are: 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 5  
+ 
+• Basic:  — Unverified users. Sign up only. Can only view the Explore Feed. Cannot post, message 
+or join communities. 
+• Verified:  — Students who have completed verification. Access to all feeds, communities (max 5), 
+DMs and posting. Cannot create communities or customize profile. 
+• Pro:  — Paid tier. All Verified features plus community creation (with approval), profile 
+customization, and ability to hide profile from feeds. 
+• Plus:  — Highest paid tier. All Pro features plus Swift Zone access and additional exclusive 
+features (to be defined). 
+ 
+1.7 Feature Access Matrix 
+ 
+Feature Basic Verified Pro Plus 
+Explore Feed 
+(View Only) 
+膆  膆  膆  膆  
+Post / Create 
+Content 
+  膆  膆  膆  
+College Feed   膆  膆  膆  
+Community Feed   膆  膆  膆  
+Join Communities   膆  膆  膆  
+Create 
+Communities (with 
+approval) 
+    膆  膆  
+DMs / Messaging   膆  膆  膆  
+Profile 
+Customization 
+    膆  膆  
+Hide Profile from 
+Feeds 
+    膆  膆  
+Swift Zone       膆  
+Plus Exclusive 
+Features (TBD) 
+      膆  
+ 
+Important Note 
+Community creation for Pro and Plus users requires a formal application and approval from the platform 
+founder before the community goes live. 
+ 
+1.8 Monetization Model 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 6  
+CampX uses a mixed monetization model combining subscriptions, brand advertising and events. 
+Revenue streams include: 
+ 
+• Pro Subscription:  — Paid monthly/annual plan unlocking advanced features. 
+• Plus Subscription:  — Higher paid plan unlocking all Pro features + Swift Zone + exclusives + ad-
+free experience. 
+• Event Tickets:  — Revenue from platform-hosted fests, hackathons and events. 
+• Brand Advertising:  — Brands can advertise on the platform after manual approval by the 
+founder. 
+ 
+Brand Advertising Rules 
+ 
+• Ad Formats:  — Sponcampxed posts in feeds, promotional banners, event sponcampxships, 
+brand profiles and brand communities. 
+• Where Ads Appear:  — College Feed and Explore Feed only. Not in Community Feed. 
+• Labeling:  — All brand content clearly labeled as Sponcampxed or Brand. 
+• Approval Process:  — Every brand must be manually reviewed and approved by the platform 
+founder before going live. 
+• Who Sees Ads:  — Basic, Verified and Pro users see brand content. 
+• Ad-Free Experience:  — Plus users see zero brand content anywhere on the platform. This is a 
+key Plus subscription perk. 
+ 
+Plus Perk — Ad Free Experience 
+Plus users enjoy a completely brand-free experience. No sponcampxed posts, no promotional banners, 
+and no brand communities will appear in their feeds. This is a core selling point of the Plus subscription. 
+ 
+ 
+ 
+End of Section 1 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 7  
+ 
+2. Tech Basics 
+2.1 Platform Support 
+CampX will be available on the following platforms at launch: 
+ 
+• Android:  — Native Android application. 
+• iOS:  — Native iOS application. 
+• Web:  — Browser-based web application accessible on desktop and mobile browsers. 
+ 
+Developer Note 
+All three platforms must maintain feature parity. No platform should have features unavailable on 
+others unless due to OS-level constraints (e.g. push notifications behave differently on web vs mobile). 
+ 
+2.2 Encryption 
+All sensitive data and communications on CampX must be fully encrypted. The following encryption 
+requirements are mandatory: 
+ 
+What How Priority 
+Direct Messages End-to-end encryption (E2EE). Only sender and 
+receiver can read messages. 
+Critical 
+File Transfers Encrypted in transit and at rest. Files must be 
+scanned before delivery. 
+Critical 
+Media (Photos/Videos) Encrypted during upload, transfer and storage. Critical 
+User Data at Rest All user profile data, verification details and activity 
+logs stored encrypted. 
+Critical 
+Video KYC Data KYC recordings and ID card images stored with 
+highest encryption standard. Access limited to 
+admin team only. 
+Critical 
+ 
+2.3 Data Storage 
+The specific cloud infrastructure provider has not been decided yet and will be finalized by the 
+development team. The following requirements must be met regardless of provider: 
+ 
+• All user data must be stored on servers located in India to comply with data localization 
+requirements. 
+• Data must be backed up regularly with clear disaster recovery procedures. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 8  
+• Video KYC recordings and ID card images must be stored in a separate, access-controlled storage 
+environment. 
+• Media files (photos, videos) should be served via CDN for performance across geographies. 
+• Database must support horizontal scaling to handle growth from Hyderabad to Pan-India. 
+ 
+2.4 Data Privacy & User Rights 
+CampX collects and retains user data as part of its platform operations. The following rules govern 
+how data is handled: 
+ 
+Rule Details 
+Data Retention CampX retains all user data. Users cannot download or export their 
+data. 
+Account Deletion Users cannot delete their account or data from the platform. 
+Third Party Sharing User data will never be shared with third parties under any 
+circumstances. 
+KYC Data Access Video KYC recordings and ID card images are accessible only to the 
+internal admin/review team. 
+Brand Data Access Brands approved to advertise on the platform will not have access to 
+any individual user data. 
+Data Usage User data may be used internally for platform improvement, feed 
+personalization and moderation purposes. 
+ 
+2.5 Notifications 
+CampX will support the following notification channels to keep users informed about activity, events 
+and platform updates: 
+ 
+Channel Used For Notes 
+Push Notifications New messages, community activity, 
+event reminders, feed interactions 
+Mobile only (Android & iOS). Users 
+can manage per-category in Settings. 
+In-App Notifications All platform activity — likes, 
+comments, mentions, community 
+updates, tier upgrades 
+Visible inside the app via notification 
+center. Available on all platforms. 
+Email Notifications Account verification, KYC status 
+updates, event announcements, 
+subscription billing 
+Sent to registered email. Users can 
+opt out of non-critical emails in 
+Settings. 
+SMS Notifications OTP for college email verification, 
+critical account alerts 
+Limited use. Only for verification and 
+security-related messages. 
+ 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 9  
+ 
+ 
+End of Section 2 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 10  
+ 
+3. Onboarding & Signup Flow 
+3.1 Overview 
+When a new user opens CampX for the first time, they are taken through a structured signup flow. 
+The flow differs based on whether the user has a college email ID or a personal email ID. Both paths 
+are described in detail below. 
+ 
+3.2 Signup Flow — Step by Step 
+Step 1 — Welcome Screen 
+• User is shown the CampX welcome/splash screen. 
+• Two options displayed: Sign Up and Log In. 
+• User taps Sign Up to begin. 
+ 
+Step 2 — Enter Email & Password 
+• User enters their email address (college email or personal email). 
+• User creates a password. 
+• Terms & Conditions and Privacy Policy are displayed. User must check a box to agree before 
+proceeding. Cannot continue without accepting. 
+• On clicking Continue, a verification email is sent to the entered email address. 
+ 
+Step 3 — Email Verification 
+• User is prompted to check their inbox and click the verification link. 
+• On clicking the link, user is redirected back to the app/web to continue signup. 
+• If college email is detected: user is automatically marked as Verified after profile completion. 
+• If personal email is detected: user proceeds as Basic until Video KYC is completed and approved. 
+ 
+Step 4 — Profile Information (All at Once) 
+After email verification, the user fills in all profile information on a single screen (or a tightly grouped 
+set of screens). The following fields are collected: 
+ 
+Field Notes Required 
+Full Name Legal name of the student Yes 
+Phone Number Indian mobile number. Used for SMS OTP and 
+account security. 
+Yes 
+Date of Birth Must be 18 or above to proceed. Under 18 
+users are rejected. 
+Yes 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 11  
+Gender Options: Male, Female, Prefer not to say Yes 
+Profile Photo User uploads a clear photo of themselves Yes 
+College Details College name, city, state. Mapped to existing 
+college database. 
+Yes 
+Course & Year e.g. B.Tech CSE, 2nd Year / MBA, 1st Year Yes 
+ 
+Age Gate 
+If the user enters a date of birth indicating they are under 18, the signup process is immediately stopped 
+and the user is informed they do not meet the age requirement. No account is created. 
+ 
+Step 5 — Verification Path Split 
+After profile completion, the system checks the email type and routes the user accordingly: 
+ 
+Path A — College Email Path B — Personal Email 
+System auto-detects college email domain. 
+OTP sent to college email for final confirmation. 
+On OTP entry — user is instantly marked as 
+Verified. 
+No further verification required. 
+User is assigned Basic tier immediately. 
+Prompted to complete Video KYC to get Verified. 
+KYC reviewed manually by CampX team. 
+On approval — user is marked as Verified. 
+ 
+Step 6 — Tutorial (Optional) 
+• After verification path is set, user is shown a brief in-app tutorial highlighting the 5 main sections 
+of the app. 
+• User can skip the tutorial at any point. 
+• Tutorial can be revisited later from Settings > Help & Support. 
+ 
+Step 7 — Enter the App 
+• College email users land on the College Feed as their home screen. 
+• Personal email (Basic) users land on the Explore Feed as their home screen since they cannot 
+access College Feed until Verified. 
+• A persistent banner/reminder is shown to Basic users prompting them to complete Video KYC to 
+unlock full access. 
+ 
+3.3 Complete Signup Flow Diagram 
+The following summarizes the full signup flow in sequence: 
+ 
+1 User opens app → Taps Sign Up 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 12  
+2 Enters email + password → Agrees to Terms & CondiƟons 
+3 Verification email sent → User clicks link to conﬁrm email 
+4 Fills in profile info: Full name, Phone, DOB, Gender, Photo, College, Course & Year 
+5A College email detected → OTP sent to college email → OTP veriﬁed → User is Veriﬁed 
+5B Personal email detected → User assigned Basic → Prompted for Video KYC 
+6 Optional tutorial shown → User can skip 
+7 User enters app — College Feed (Verified) or Explore Feed (Basic) 
+ 
+3.4 Login Flow 
+For returning users, the login flow is straightforward: 
+ 
+• User enters registered email and password. 
+• On successful login, user is taken directly to their home feed. 
+• If password is forgotten, a reset link is sent to the registered email. 
+• Two-factor authentication (2FA) can be enabled from Settings for additional security. 
+ 
+ 
+ 
+End of Section 3 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 13  
+ 
+4. Verification Flow 
+4.1 Overview 
+Verification is the process by which a Basic user becomes a Verified user on CampX. There are two 
+distinct verification paths depending on whether the user signed up with a college email or a 
+personal email. Verified status unlocks full platform access including College Feed, Community Feed, 
+posting, messaging and communities. 
+ 
+4.2 Path A — College Email Verification 
+This is the faster, automated verification path for students who have a college-issued email address. 
+ 
+1 User signs up with their college email address. 
+2 System automatically detects the college email domain and maps it to the corresponding 
+college in the database. 
+3 An OTP is sent to the college email address. 
+4 User enters the OTP in the app within the validity window. 
+5 On successful OTP entry, the user is instantly and automatically marked as Verified. 
+6 No manual review is required. No Video KYC is required. 
+7 User gains full Verified tier access immediately. 
+ 
+4.3 Path B — Video KYC Verification 
+This path is for students who signed up with a personal email address. It involves a manual video-
+based identity verification process reviewed by the CampX team. 
+ 
+4.3.1 What the Student Must Do in the Video 
+The Video KYC recording must clearly capture all of the following: 
+ 
+• Face clearly visible:  — Student must face the camera directly with clear lighting. No masks, 
+filters or obstructions. 
+• State name and college:  — Student must verbally state their full name and college name on 
+camera. 
+• Show college ID card:  — Student must hold up their college-issued ID card to the camera. 
+• Hold ID next to face:  — Student must hold the ID card beside their face so both are visible 
+simultaneously for identity matching. 
+• Answer verbal questions:  — Student will be prompted with a few simple questions during the 
+recording (e.g. confirming course and year). 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 14  
+ 
+Developer Note — Video KYC UI 
+The Video KYC screen must guide the user through each step clearly with on-screen prompts. Each 
+requirement (face visible, show ID, hold ID next to face, answer questions) should be shown as a 
+checklist the user works through during recording. The recording should be a single continuous video. 
+ 
+4.3.2 Submission & Review Process 
+1 User completes Video KYC recording in-app and submits it. 
+2 Submission is queued for manual review by the CampX admin team. 
+3 CampX team reviews the video within 48 hours of submission. 
+4 Team checks: face matches ID card, ID card is valid and belongs to a college, verbal answers 
+are consistent, all requirements are met. 
+5 Decision is made: Approved or Rejected. 
+6 User is notified of the result via Push Notification, In-App Notification, Email and SMS 
+simultaneously. 
+7 If Approved: user is instantly upgraded to Verified tier and gains full access. 
+8 If Rejected: user is informed of the reason and can resubmit. Maximum 3 attempts per week. 
+ 
+4.3.3 Rejection & Resubmission Rules 
+Rule Details 
+Max Attempts 3 attempts per week. Counter resets every 7 days from first 
+submission. 
+Rejection Reason User must be informed of the specific reason for rejection (e.g. ID not 
+visible, face not matching, incomplete video). 
+Resubmission User can resubmit a new video after rejection as long as they have 
+attempts remaining. 
+Attempt Exhausted If all 3 attempts in a week are rejected, user must wait until the 
+weekly counter resets before resubmitting. 
+Permanent Rejection If a user is found to be submitting fraudulent or fake ID documents, 
+their account is permanently banned with no appeal. 
+During Review Period User remains as Basic tier while their KYC is under review. A status 
+indicator is shown in-app (e.g. Verification Pending). 
+ 
+4.4 Verification Status Indicators 
+Users should be able to see their verification status clearly at all times. The following status states 
+exist: 
+ 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 15  
+Status Meaning User Action 
+Unverified (Basic) User has signed up but not 
+completed verification. 
+Prompted to submit Video KYC. 
+Verification Pending Video KYC submitted and awaiting 
+review by CampX team. 
+Wait up to 48 hours for result. 
+Verified KYC approved or college email 
+confirmed. 
+Full platform access unlocked. 
+Verification Rejected KYC submission did not meet 
+requirements. 
+Review rejection reason and 
+resubmit (up to 3x/week). 
+Attempts Exhausted All 3 weekly KYC attempts used and 
+rejected. 
+Wait for weekly counter to reset. 
+ 
+Persistent Reminder 
+Basic users must see a persistent but non-intrusive banner on their home screen reminding them to 
+complete verification. This banner should link directly to the Video KYC screen. It should not be 
+dismissible until the user is Verified. 
+ 
+ 
+ 
+End of Section 4 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 16  
+ 
+5. User Tiers 
+5.1 Overview 
+CampX operates on a 4-tier user system. Tiers are ordered from lowest to highest access: Basic → 
+Verified → Pro → Plus. Each Ɵer unlocks progressively more features. Pro and Plus are paid Ɵers. 
+Upgrades happen instantly on payment. Downgrades are allowed with specific consequences for the 
+user data and access. 
+ 
+5.2 Tier 1 — Basic 
+Status Unverified 
+How to Get Sign up with any email. No verification required. 
+Cost Free 
+Feed Access Explore Feed only (view only, cannot post) 
+College Feed No access 
+Community Feed No access 
+Posting Cannot post, comment or react 
+Messaging / DMs No access 
+Communities Cannot join or create communities 
+Profile Customization Not available 
+Swift Zone No access 
+Brand Content Sees brand/sponcampxed content in Explore Feed 
+Upgrade Path Complete Video KYC to become Verified 
+ 
+5.3 Tier 2 — Verified 
+Status Verified Student 
+How to Get College email OTP confirmation OR Video KYC approval by CampX 
+team 
+Cost Free 
+Feed Access Explore Feed, College Feed, Community Feed 
+Posting Can post, comment and react on College Feed and Community Feed 
+Messaging / DMs Can DM users they follow (subject to privacy settings) 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 17  
+Communities Can join up to 5 communities (official and user-created) 
+Create Communities Not allowed 
+Profile Customization Not available 
+Hide from Feeds Not available 
+Swift Zone No access 
+Brand Content Sees brand/sponcampxed content in College Feed and Explore Feed 
+Upgrade Path Pay for Pro or Plus subscription. Upgrade is instant on payment. 
+Downgrade From Cannot downgrade — this is the base free tier above Basic 
+ 
+5.4 Tier 3 — Pro 
+Status Pro Subscriber 
+How to Get Must be Verified. Pay for Pro subscription. Access granted instantly 
+on payment. 
+Cost Paid — monthly or annual billing (pricing TBD) 
+Includes All Verified Features Yes — all Verified tier features are included 
+Communities Can join unlimited communities 
+Create Communities Can apply to create a community. Goes live only after founder 
+approval. 
+Profile Customization Can customize profile appearance, themes and UI 
+Hide from Feeds Can hide their profile from College Feed and/or Explore Feed 
+Swift Zone No access 
+Brand Content Sees brand/sponcampxed content in College Feed and Explore Feed 
+Billing Cycles Monthly or Annual 
+Downgrade To Can downgrade to Verified. Extra communities beyond 5 are auto-
+removed. Created communities remain but ownership rules TBD. 
+ 
+5.5 Tier 4 — Plus 
+Status Plus Subscriber (Highest Tier) 
+How to Get Must be Verified. Pay for Plus subscription. Access granted instantly 
+on payment. 
+Cost Paid — monthly or annual billing (pricing TBD, higher than Pro) 
+Includes All Pro Features Yes — all Pro tier features are included 
+Swift Zone Full access to Swift Zone (friend-making / dating feature) 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 18  
+Brand Content Completely ad-free. No sponcampxed posts, banners, brand profiles 
+or brand communities shown anywhere. 
+Plus Exclusive Features Additional exclusive features to be defined in future updates 
+Billing Cycles Monthly or Annual 
+Downgrade To Can downgrade to Pro or Verified. On downgrade to Pro or Verified: 
+Swift Zone account is hidden (not deleted). Extra communities 
+beyond tier limit are auto-removed. 
+ 
+Plus — Ad Free Experience 
+Plus users see zero brand content anywhere on the platform. This is a core selling point of the Plus 
+subscription and must be enforced across all feeds without exception. 
+ 
+5.6 Upgrade & Downgrade Rules 
+Action How What Happens 
+Verified → Pro Pay for Pro subscription Instant access. All Pro features 
+unlocked immediately. 
+Verified → Plus Pay for Plus subscription Instant access. All Plus features 
+including Swift Zone unlocked 
+immediately. 
+Pro → Plus Pay for Plus subscription Instant upgrade. Swift Zone and ad-
+free experience activated. 
+Plus → Pro Cancel Plus, subscribe to Pro Swift Zone account hidden (not 
+deleted). Ad-free experience 
+removed. Extra communities auto-
+removed if over Pro limit. 
+Plus → Veriϐied Cancel Plus subscription Swift Zone account hidden. Profile 
+customization remains but cannot be 
+edited. Extra communities beyond 5 
+auto-removed. 
+Pro → Veriϐied Cancel Pro subscription Profile customization remains but 
+cannot be edited. Extra communities 
+beyond 5 auto-removed. 
+ 
+ 
+ 
+End of Section 5 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 19  
+ 
+6. Profiles 
+6.1 Overview 
+Every user on CampX has a profile page. The profile is the central identity of a user on the platform. 
+It displays key information about the student and is subject to privacy controls that vary by tier. Pro 
+and Plus users have additional customization options. 
+ 
+6.2 Profile Information 
+The following information is displayed on every user profile: 
+ 
+Field Details Editable 
+Profile Photo A clear photo of the student. Uploaded 
+during signup, can be changed anytime. 
+Yes 
+Full Name Legal name entered during signup. No 
+Bio / About Me Short self-description. Max 150 characters. Yes 
+College & Course Details College name, course and year. Set during 
+signup. 
+No 
+Verification Badge Displays current tier: Basic, Verified, Pro or 
+Plus. Automatically updated. 
+No 
+Tier Tag Visual tag showing user tier level on the 
+profile card. 
+No 
+ 
+6.3 Follow System 
+CampX has a follow-based social graph. Users can follow others to see their content in feeds. Profiles 
+can also be viewed without following, subject to visibility settings. 
+ 
+• Any Verified, Pro or Plus user can follow another user. 
+• Basic users cannot follow others or be followed. 
+• Following is one-directional — you can follow someone without them following back. 
+• Mutual follows (both following each other) unlock DM access between the two users, subject to 
+privacy settings. 
+• Users can view a profile without following it, as long as the profile visibility settings allow it. 
+• Users can remove followers or block specific users from their profile. 
+ 
+6.4 Profile Visibility & Privacy 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 20  
+Profile visibility is controlled through privacy settings. Controls differ by tier: 
+ 
+Tier Privacy Options Notes 
+Basic No privacy controls. Profile is public 
+by default. 
+Basic users have no control over who 
+sees their profile. 
+Verified No privacy controls. Profile is public 
+by default. 
+Verified users have no profile hiding 
+options. 
+Pro Can hide profile from public (Explore 
+Feed). 
+Profile still visible to college feed 
+users. Only hidden from general 
+public / Explore Feed. 
+Plus Can hide profile from public (Explore 
+Feed) AND from college (College 
+Feed). 
+Plus users have the highest level of 
+profile privacy. Can be invisible to 
+both public and college peers. 
+ 
+6.5 Profile Customization (Pro & Plus) 
+Pro and Plus users can personalize their profile appearance beyond the default settings. The 
+following customization options are available: 
+ 
+Customization Details Available To 
+App Theme & Colors User can change the overall color scheme and 
+theme of the app UI. Applies to their view 
+only. 
+Pro & Plus 
+Custom Bio Fonts User can choose from a selection of fonts for 
+their bio/about me section. 
+Pro & Plus 
+Profile Badges User can display special badges on their 
+profile earned through platform activity, 
+events or milestones. 
+Pro & Plus 
+ 
+Downgrade Note 
+If a Pro or Plus user downgrades to a lower tier, their customization settings are preserved but cannot 
+be edited until they re-subscribe to Pro or Plus. 
+ 
+ 
+ 
+End of Section 6 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 21  
+ 
+7. College Feed 
+7.1 Overview 
+The College Feed is the primary social feed on CampX. It shows content exclusively from students of 
+the same college as the logged-in user. It is the most personal and college-specific section of the 
+app. Only Verified, Pro and Plus users can access and post to the College Feed. 
+ 
+Access Rule 
+Basic users cannot access the College Feed. Only Verified, Pro and Plus users can view and post in the 
+College Feed. 
+ 
+7.2 Feed Structure & Sorting 
+• The College Feed displays posts from all students of the same college as the user. 
+• Feed is sorted chronologically — newest posts appear first. 
+• Swiping left on the College Feed opens the DM / conversation section. 
+• DMs on the College Feed are limited to college members only — users cannot DM students from 
+other colleges from this section. 
+ 
+7.3 Post Types 
+The following types of content can be posted on the College Feed: 
+ 
+Post Type Details Who Can Post 
+Text Post A plain text post. Can include mentions and 
+hashtags. 
+Verified, Pro, Plus 
+Photo Post Single or multiple photos with optional caption. Verified, Pro, Plus 
+Video Post Short video upload with optional caption. Verified, Pro, Plus 
+Poll A question with 2-4 options. College students can 
+vote. Poll duration set by poster. 
+Verified, Pro, Plus 
+Accomplishment Post A special post type for sharing achievements 
+(certificates, wins, milestones). Includes an 
+Investigate button so other students can learn how 
+to achieve the same. Links to details and process. 
+Verified, Pro, Plus 
+ 
+Accomplishment Post — Investigate Button 
+When a student posts an accomplishment (e.g. a certification, hackathon win, internship), an Investigate 
+button appears on the post. Other students can tap it to see the full details of how the achievement was 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 22  
+obtained — steps, resources, links, process. This is a unique CampX feature that turns individual wins 
+into learning opportunities for the whole college. 
+ 
+7.4 Engagement Actions 
+All Verified, Pro and Plus users can engage with posts on the College Feed using the following 
+actions: 
+ 
+Action Details 
+Like Tap to like a post. Like count visible to all. 
+React with Emoji Users can react to a post with an emoji beyond just a like. Multiple reaction 
+types available. 
+Comment Users can comment on posts. Comments are visible to all college users. 
+Repost Share a post to your own profile or feed within the college. 
+Share Share a post externally (via link or other apps) or internally to another user via 
+DM. 
+Save / Bookmark Save a post to a private bookmarks section on the user profile for later 
+reference. 
+ 
+7.5 Brand Content in College Feed 
+• Sponsored posts and promotional banners from approved brands may appear in the College 
+Feed. 
+• All brand content is clearly labeled as Sponsored or Brand. 
+• Plus users do not see any brand content in the College Feed. 
+• Basic users cannot access the College Feed and therefore do not see brand content here. 
+ 
+7.6 Content Reporting & Moderation 
+• Any Verified, Pro or Plus user can report a post or comment on the College Feed. 
+• Reports are sent directly to the CampX admin team for review. 
+• The admin team reviews reported content and takes appropriate action — warning, post 
+removal or account suspension. 
+• The reporting user is notified once action has been taken. 
+• Repeated violations by a user may result in permanent account suspension. 
+ 
+ 
+ 
+End of Section 7 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 23  
+ 
+8. Community System 
+8.1 Overview 
+Communities on CampX are not a scrollable feed. They are Discord-style group spaces where 
+students collaborate, communicate and share within a structured channel system. Each community 
+has its own set of channels (text, media, files, voice, announcements) and is managed by a creator 
+and their assigned moderators. 
+ 
+Access Rule 
+Only Verified, Pro and Plus users can join communities. Basic users have no access. Verified users can 
+join up to 5 communities. Pro and Plus users can join unlimited communities. 
+ 
+8.2 Community Types 
+There are two types of communities on CampX, each with different membership scope: 
+ 
+Type Who Can Join Example 
+College Community Only students from the same college 
+as the community creator. 
+CSE Department group, College fest 
+committee, Study group for a specific 
+subject. 
+Open Community Any verified student from any college 
+on CampX. 
+Hackathon team, Interest-based 
+group (e.g. Web Dev, Photography), 
+Cross-college project. 
+ 
+8.3 Community Creation 
+• Only Pro and Plus users can create communities. 
+• To create a community, the user must submit a formal application specifying: community name, 
+type (College or Open), purpose and description. 
+• The application is reviewed and approved or rejected by the CampX platform founder. 
+• Only after founder approval does the community go live on the platform. 
+• The creator becomes the community admin automatically upon approval. 
+ 
+8.4 Joining a Community 
+How a user joins a community depends on the community settings set by the admin: 
+ 
+Join Setting How It Works 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 24  
+Open Any eligible user (based on community type) can join freely without 
+approval. 
+Request to Join User sends a join request. Community admin or moderator reviews and 
+approves or rejects. 
+Invite Only Users can only join if an existing member or admin sends them a direct 
+invite. 
+ 
+8.5 Channel Types 
+Each community is made up of channels. The admin can create and organise channels of the 
+following types: 
+ 
+Channel Type Details 
+Text Channel A real-time group chat where all members can send text messages. 
+Works like a group chat / messaging thread. 
+Announcement Channel Only admins and moderators can post here. Used for important updates, 
+notices and pinned information. Members can read but not reply. 
+Media Channel Dedicated channel for sharing photos and videos. Members can upload 
+and view media files. 
+File Sharing Channel Dedicated channel for sharing documents, PDFs, presentations and other 
+files. 
+Voice Channel Real-time voice communication channel. Members can join and talk live. 
+No recording by default. 
+ 
+8.6 Community Roles & Permissions 
+Every community has a role hierarchy. The following roles exist: 
+ 
+Role Permissions 
+Admin (Creator) Full control. Can create/delete channels, assign roles, kick/ban members, pin 
+messages, delete messages, mute channels and dissolve the community. 
+Moderator Assigned by admin. Can pin messages, delete messages, mute channels, 
+kick/ban members and assign member roles. 
+Member Can send messages, share media and files, join voice channels and view all 
+channels they have access to. 
+ 
+8.7 Admin & Moderator Actions 
+The following management actions are available to admins and moderators: 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 25  
+ 
+• Mute a Channel:  — Temporarily prevent members from sending messages in a channel. 
+• Pin Messages:  — Pin important messages to the top of a channel for easy reference. 
+• Delete Messages:  — Remove any message from a channel. 
+• Assign Roles:  — Promote a member to moderator or assign custom roles within the community. 
+• Kick / Ban Members:  — Remove a member from the community temporarily (kick) or 
+permanently (ban). 
+• Create & Delete Channels:  — Add new channels or remove existing ones from the community. 
+ 
+8.8 Community Feed View 
+When a user opens the Community section from the bottom navigation, they see: 
+ 
+• A list of all communities they have joined, ordered by most recent activity. 
+• Tapping a community opens the community space showing all its channels. 
+• Swiping left on the community list shows all communities and projects the user is part of. 
+• Users can reorder which communities appear first in their list. 
+• Unread message indicators appear on communities with new activity. 
+ 
+8.9 Leaving & Removing Communities 
+• A user can leave a community at any time from community settings. 
+• If a Verified user has joined 5 communities and wants to join a new one, they must leave one 
+first. 
+• If a user downgrades from Pro/Plus to Verified, communities beyond the 5-community limit are 
+auto-removed starting from the least recently active. 
+• If a community is dissolved by the admin or removed by CampX, all members are notified. 
+ 
+ 
+ 
+End of Section 8 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 26  
+ 
+9. Explore Feed 
+9.1 Overview 
+The Explore Feed is the global public feed on CampX. Unlike the College Feed which is restricted to 
+one college, the Explore Feed shows content from all colleges across the platform. It is the only feed 
+accessible to Basic (unverified) users, making it the entry point for new users before they complete 
+verification. 
+ 
+9.2 Access Rules 
+Tier Can View Can Post 
+Basic Yes — view only No 
+Verified Yes Yes 
+Pro Yes Yes 
+Plus Yes (ad-free) Yes 
+ 
+9.3 Feed Structure & Sorting 
+• The Explore Feed displays posts from all verified students across all colleges on CampX. 
+• Feed is sorted chronologically — newest posts appear first. 
+• Swiping left on the Explore Feed opens the DM / conversation section (Verified, Pro and Plus 
+only). 
+• Basic users can view posts but cannot interact (no likes, comments, shares or DMs). 
+ 
+9.4 Post Types 
+The same post types available on the College Feed are available on the Explore Feed: 
+ 
+• Text Post:  — Plain text with optional mentions and hashtags. 
+• Photo Post:  — Single or multiple photos with optional caption. 
+• Video Post:  — Short video with optional caption. 
+• Poll:  — A question with 2-4 voting options. 
+• Accomplishment Post:  — Achievement post with Investigate button so any student on the 
+platform can learn how to achieve the same. 
+ 
+9.5 Posting to Explore Feed vs College Feed 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 27  
+When a Verified, Pro or Plus user creates a post, they choose where it gets published: 
+ 
+Option Result 
+College Feed only Post is visible only to students of the same college. 
+Explore Feed only Post is visible to all CampX users across all colleges. 
+Both Post appears in both the College Feed and the Explore Feed 
+simultaneously. 
+ 
+9.6 Engagement Actions 
+Verified, Pro and Plus users can engage with posts on the Explore Feed using all the same actions as 
+the College Feed: 
+ 
+• Like 
+• React with Emoji 
+• Comment 
+• Repost 
+• Share 
+• Save / Bookmark 
+ 
+Basic User Restriction 
+Basic users can view posts on the Explore Feed but cannot like, comment, react, repost, share or 
+bookmark any content. A prompt encouraging them to complete verification is shown when they 
+attempt to interact. 
+ 
+9.7 Brand Content in Explore Feed 
+• Sponsored posts and promotional banners from approved brands appear in the Explore Feed. 
+• All brand content is clearly labeled as Sponsored or Brand. 
+• Basic, Verified and Pro users see brand content in the Explore Feed. 
+• Plus users do not see any brand content in the Explore Feed. 
+ 
+9.8 Content Reporting & Moderation 
+• Any Verified, Pro or Plus user can report a post or comment on the Explore Feed. 
+• Reports are sent directly to the CampX admin team for review. 
+• The admin team reviews reported content and takes appropriate action. 
+• Basic users cannot report content. 
+ 
+ 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 28  
+ 
+End of Section 9 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 29  
+ 
+10. Messaging / DMs 
+10.1 Overview 
+CampX has a built-in direct messaging system that allows verified students to communicate 
+privately. All messages are end-to-end encrypted. The DM section is accessible by swiping left on any 
+main feed page. Messaging is not available to Basic users. 
+ 
+Encryption 
+All direct messages on CampX are end-to-end encrypted. Only the sender and receiver(s) can read the 
+messages. CampX cannot access message content. 
+ 
+10.2 Who Can Message Who 
+CampX allows flexible messaging with the following rules: 
+ 
+Rule Details 
+Basic Users Cannot send or receive DMs. No messaging access. 
+Same College Users Verified, Pro and Plus users from the same college can DM each other 
+directly. 
+Mutual Follows (Any College) Verified, Pro and Plus users who mutually follow each other across 
+any college can DM each other. 
+Privacy Settings Users can restrict who can message them in Settings (Everyone / 
+Mutual follows only / Nobody). 
+Blocking A user can block another user. Blocked users cannot send messages 
+and existing conversation is hidden. 
+ 
+10.3 Message Types 
+Users can send the following content types in a DM: 
+ 
+Type Details 
+Text Messages Standard text messages. Supports mentions and emojis. 
+Photos Send single or multiple photos in a conversation. 
+Videos Send short video clips. 
+Files / Documents Send documents, PDFs, presentations and other file types. Files are encrypted 
+in transit and at rest. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 30  
+Voice Messages Record and send voice notes directly in the chat. 
+Emojis & Reactions Send emojis in messages and react to individual messages with emoji 
+reactions. 
+ 
+10.4 Messaging Features 
+Feature Details 
+Reply to a Message Users can reply to a specific message in a conversation. The replied-to 
+message is quoted above the reply. 
+Forward a Message Users can forward a message to another conversation or user. 
+Delete Message for Self Users can delete a message from their own view only. The message 
+remains visible to the other party. 
+Read Receipts Messages show Delivered and Seen status indicators. Users can disable 
+read receipts in Settings. 
+Online / Offline Status Users can see if a contact is currently online or when they were last 
+active. Can be disabled in Settings. 
+Disappearing Messages Not supported. All messages are permanent unless manually deleted by 
+the sender. 
+Group DMs Users can create group conversations with multiple participants. All 
+group DM rules apply (same college or mutual follows). 
+ 
+10.5 DM Access Points 
+The DM section can be accessed from multiple places across the app: 
+ 
+• College Feed:  — Swipe left on the College Feed to open DMs restricted to college users. 
+• Community Feed:  — Swipe left to open community channels and group conversations. 
+• Explore Feed:  — Swipe left to open DMs with mutual follows across all colleges. 
+• Profile Page:  — Tap the Message button on any user profile to start or continue a DM. 
+ 
+ 
+ 
+End of Section 10 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 31  
+ 
+11. Notifications & Emails 
+11.1 Overview 
+CampX notifies users about key activity through four channels: Push Notifications (mobile), In-App 
+Notifications, Email and SMS. Users have per-category control over which notifications they receive. 
+Critical notifications like KYC status and billing cannot be disabled. 
+ 
+11.2 Notification Triggers 
+The following events trigger notifications on CampX: 
+ 
+Event Channels Can Be Disabled? 
+New Message / DM Push, In-App Yes — user can turn off per category 
+Community Activity (new 
+messages, announcements) Push, In-App Yes — per community in Settings 
+Event Announcements Push, In-App, Email Yes — user can opt out of event emails 
+KYC Status Update 
+(approved/rejected) Push, In-App, Email, 
+SMS 
+No — critical notification, always sent 
+Subscription & Billing Email No — critical notification, always sent 
+OTP / Verification SMS, Email No — required for account security 
+ 
+11.3 Notification Channels 
+Channel Available On Notes 
+Push Notifications Android & iOS only Real-time alerts when app is in 
+background or closed. Managed per 
+category in Settings. 
+In-App Notifications Android, iOS, Web Notification bell/center inside the 
+app. Always active when app is open. 
+Email Notifications All platforms Sent to registered email. Used for 
+events, KYC updates and billing. Non-
+critical emails can be opted out. 
+SMS Notifications All platforms Used only for OTP verification and 
+critical account security alerts. 
+Cannot be disabled. 
+ 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 32  
+11.4 User Notification Controls 
+Users can manage their notification preferences from Settings > Notifications. The following 
+categories can be individually toggled: 
+ 
+• Messages & DMs:  — Push and in-app notifications for new messages. 
+• Community Activity:  — Per-community toggle for new messages and announcements. Managed 
+from Settings or directly inside each community. 
+• Event Announcements:  — Push, in-app and email notifications for upcoming platform events. 
+ 
+Critical Notifications 
+KYC status updates, subscription billing alerts and OTP/verification messages cannot be disabled by the 
+user. These are always delivered regardless of notification settings. 
+ 
+ 
+ 
+End of Section 11 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 33  
+ 
+12. Subscription & Billing 
+12.1 Overview 
+CampX offers two paid subscription tiers — Pro and Plus — on top of the free Basic and Verified 
+tiers. Subscriptions are available on monthly and annual billing cycles. All payments are processed 
+securely. Pricing is displayed only in the Settings > Subscription & Billing section of the app. 
+ 
+12.2 Subscription Tiers 
+Plan Billing Cycles Pricing 
+Pro Monthly & Annual TBD — to be set by founder before 
+launch 
+Plus Monthly & Annual TBD — higher than Pro, to be set by 
+founder 
+ 
+12.3 Payment Methods 
+CampX will support the following payment methods at launch: 
+ 
+• UPI:  — Google Pay, PhonePe, Paytm UPI and all UPI-enabled apps. 
+• Credit / Debit Card:  — Visa, Mastercard, RuPay and other major card networks. 
+• Net Banking:  — All major Indian banks supported. 
+• Wallets:  — Paytm, PhonePe and other popular Indian wallets. 
+• International Cards:  — Visa and Mastercard issued outside India. 
+ 
+12.4 Subscription Lifecycle 
+Event What Happens 
+Subscribing User pays for Pro or Plus. Access is granted instantly on successful 
+payment. 
+Auto-Renewal Subscription auto-renews at the end of each billing cycle (monthly or 
+annual). User is notified 3 days before renewal via email. 
+Failed Payment If auto-renewal payment fails, user is notified immediately. A grace 
+period of 3 days is given to update payment method before access is 
+downgraded. 
+Cancellation User can cancel anytime from Settings > Subscription & Billing. Access 
+continues until the end of the current billing period. No refund is 
+issued. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 34  
+Expiry After Cancellation When the billing period ends after cancellation, user is automatically 
+downgraded to Verified tier. Downgrade rules apply (extra 
+communities removed, Swift Zone hidden). 
+Upgrading User can upgrade from Pro to Plus at any time. New billing starts 
+immediately. Previous Pro cycle is not refunded. 
+Downgrading User can switch from Plus to Pro at any time. Change takes effect at 
+the end of the current billing cycle. 
+ 
+12.5 Refund Policy 
+No Refunds 
+CampX does not offer refunds under any circumstance. All payments are final. Users are advised to 
+review the features of each plan before subscribing. This policy applies to both monthly and annual 
+plans, cancellations and upgrades. 
+ 
+12.6 Invoices & Billing History 
+• Users can view their full billing history in Settings > Subscription & Billing. 
+• A downloadable invoice is generated for every successful payment. 
+• Invoices include: plan name, billing period, amount paid, payment method and transaction ID. 
+• Upcoming renewal date and current plan status are clearly displayed in the billing section. 
+ 
+12.7 Pricing Display 
+Pricing Visibility 
+Subscription pricing is not shown publicly on the app or any feed. Pricing is only visible inside Settings > 
+Subscription & Billing. This allows CampX to update pricing without affecting the general app 
+experience. 
+ 
+ 
+ 
+End of Section 12 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 35  
+ 
+13. Settings 
+13.1 Overview 
+The Settings page is accessible from the bottom navigation bar. It is divided into 8 sections covering 
+account management, privacy, display, subscriptions, communities, moderation, security and 
+support. A search bar at the top allows users to quickly find specific settings. 
+ 
+13.2 Section 1 — Account Settings 
+Located at the top of the Settings page. Covers all profile and account management options. 
+ 
+• Edit full name, username and profile photo. 
+• Bio / About Me section (max 150 characters). 
+• Update college details and roll number. 
+• Change email address (requires re-verification). 
+• Change password (requires current password confirmation). 
+• Verification Status — displays current tier (Basic / Verified / Pro / Plus), verification progress bar 
+and quick link to complete verification. 
+• Account Management — Two-factor authentication, login activity history, connected devices and 
+delete account option (permanent, with warning). 
+ 
+13.3 Section 2 — Privacy & Permissions 
+Controls who can see the user profile and interact with them. 
+ 
+• Profile Visibility — Public / College Only / Hidden from public (Pro) / Hidden from public and 
+college (Plus). 
+• Who can see activity status (online/offline) — Everyone / Mutual follows / Nobody. 
+• Who can send DMs — Everyone / Mutual follows / Nobody. 
+• Block / Unblock specific users. Block list management. 
+• College Feed Privacy — Control visibility of posts in college feed. 
+• Community Privacy — Auto-accept community invites on/off. Control which communities appear 
+on profile. 
+ 
+13.4 Section 3 — Display & UI Customization 
+Controls the visual appearance of the app. 
+ 
+Setting Options Available To 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 36  
+Theme Light mode / Dark mode / Auto (follows system 
+setting) 
+All users 
+Font Size Small / Medium / Large All users 
+Custom Color Schemes Choose from preset color themes for the app UI Pro & Plus only 
+Language English only at launch. More languages in future 
+updates. 
+All users 
+Feed Content Filters Filter Explore Feed by college, topic or content type All users 
+ 
+13.5 Section 4 — Subscription & Billing 
+Displays the current subscription plan and billing management options. 
+ 
+• Current plan display — tier name, status (active/expiring), renewal date and billing cycle. 
+• Upgrade or change billing cycle option. 
+• View benefits of current plan. 
+• Billing information — payment method on file, billing history and downloadable invoices. 
+• Cancel subscription option (with confirmation prompt and reminder that no refund will be 
+issued). 
+• View upcoming charges. 
+ 
+13.6 Section 5 — Community & College Settings 
+Manages community memberships and college-related settings. 
+ 
+• List of all joined communities with membership status. 
+• Mute / unmute specific communities. 
+• Leave community option. 
+• Per-community notification settings. 
+• View pending community invitations with accept / decline options. 
+• View college details and report college-related issues. 
+ 
+13.7 Section 6 — Content & Moderation 
+Manages blocked users and reported content. 
+ 
+• View full block list with unblock options. 
+• Report a user or community directly from this section. 
+• View status of previously submitted reports. 
+ 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 37  
+13.8 Section 7 — Security 
+Manages account security settings. 
+ 
+Setting Details 
+Two-Factor Authentication 
+(2FA) Enable or disable 2FA. When enabled, a code is required on every 
+new login in addition to the password. 
+Login Activity History View a log of all recent logins with timestamp, device and location. 
+Connected Devices See all devices currently logged into the account. Option to log out 
+from individual or all devices remotely. 
+Security Checkup A guided review of the account security status highlighting any weak 
+points (no 2FA, old password etc). 
+Session Management View and manage active sessions. Force-end any session remotely. 
+Encryption Status View confirmation that messages are end-to-end encrypted. 
+ 
+13.9 Section 8 — Help & Support 
+Provides access to support resources and feedback channels. 
+ 
+• FAQs — Searchable frequently asked questions. 
+• Tutorial videos — How to use key features of the app. 
+• Contact support form — Submit a support ticket directly to the CampX team. 
+• Send bug report — Report technical issues with the app. 
+• Feature request submission — Suggest new features or improvements. 
+• App version, build number and check for updates. 
+• Credits and acknowledgements. 
+ 
+ 
+ 
+End of Section 13 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 38  
+ 
+14. Admin / Founder Dashboard 
+14.1 Overview 
+The CampX Admin Dashboard is the control centre for the platform founder and admin team. It is 
+accessible both from inside the app (special admin view) and from a separate web-based admin 
+panel. Access is restricted to the founder and a small, trusted admin team. No other users have any 
+access to the dashboard. 
+ 
+14.2 Access & Roles 
+Role Access Level 
+Founder Full access to all dashboard features. Final authority on all approvals, 
+suspensions and platform decisions. 
+Admin Team Access to KYC review queue, user management and moderation tools. 
+Cannot approve brand or community requests without founder sign-off 
+(configurable). 
+ 
+14.3 Dashboard Modules 
+KYC Review Queue 
+• View all pending Video KYC submissions in order of submission time. 
+• Play the KYC video recording and review student face, ID card and verbal responses. 
+• Approve or reject each submission with a mandatory rejection reason if rejected. 
+• System automatically notifies the user of the decision via all channels (Push, In-App, Email, SMS). 
+• Track attempt count per user. Flag users who have exhausted weekly attempts. 
+• Permanently ban users found submitting fraudulent documents. 
+ 
+Community Creation Requests 
+• View all pending community creation applications from Pro and Plus users. 
+• Review application details: community name, type (College or Open), purpose and description. 
+• Approve or reject with a reason. Approved communities go live immediately. 
+• User is notified of the decision via in-app and email notification. 
+ 
+Brand Advertising Requests 
+• View all pending brand advertising applications. 
+• Review brand details, proposed ad format and target audience. 
+• Approve or reject. Approved brands can begin posting sponsored content. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 39  
+• Manage active brand accounts — suspend or remove brands violating platform guidelines. 
+ 
+User Account Management 
+• Search and view any user account on the platform. 
+• View user tier, verification status, activity history and reported content. 
+• Warn, suspend (temporary) or permanently ban user accounts. 
+• Override user tier manually if required (e.g. reverting a fraudulent upgrade). 
+ 
+College Database Management 
+• Add new colleges to the platform database. 
+• Edit or remove existing college entries. 
+• Map college email domains to college entries for auto-verification. 
+• View number of registered users per college. 
+ 
+Platform Analytics 
+• Total registered users, verified users, Pro users and Plus users. 
+• Daily / weekly / monthly active users. 
+• New signups and KYC completion rates. 
+• College-wise user breakdown. 
+• Community growth and activity metrics. 
+• Subscription revenue overview. 
+ 
+Platform-Wide Announcements 
+• Send announcements to all users via in-app notification and email. 
+• Target announcements by tier (e.g. only Plus users) or by college. 
+• Schedule announcements for future delivery. 
+ 
+14.4 Access Points 
+• In-App Admin View:  — Accessible from a hidden admin menu visible only to accounts with 
+admin privileges. Used for quick actions on the go. 
+• Web Admin Panel:  — A separate browser-based dashboard at an admin URL. Full feature 
+access. Recommended for KYC reviews and detailed analytics. 
+ 
+ 
+ 
+End of Section 14 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 40  
+ 
+15. Campus Ambassador Dashboard 
+17.1 Overview 
+The Campus Ambassador Dashboard is a dedicated interface accessible to approved Campus 
+Ambassadors (Reps) and their Subject Leads at each college. It is separate from the Admin 
+Dashboard and gives ambassadors the tools they need to manage their college community on 
+CampX. Ambassadors report directly to the founder. 
+ 
+Access Note 
+The Campus Ambassador Dashboard is only accessible to users who have been officially onboarded as 
+Campus Ambassadors by the CampX founder. It is not visible to regular users. 
+ 
+17.2 Ambassador Structure 
+Role Scope Reports To 
+CampX Founder Full platform oversight — Top of hierarchy 
+Campus Ambassador 
+(Rep) 1 per college. Manages overall 
+college community on CampX. 
+CampX Founder 
+Subject Lead 1 per department (CSE, ECE, MBA 
+etc.). Manages department-level 
+community. 
+Campus Ambassador 
+ 
+17.3 Dashboard Modules 
+College Overview 
+• View total registered students from their college on CampX. 
+• View breakdown by department, course and year. 
+• View verification status split — how many are Verified, Basic, Pro and Plus. 
+• Track weekly growth in new signups from their college. 
+ 
+Student Onboarding & KYC Support 
+• View list of Basic (unverified) students from their college who have not completed KYC. 
+• Send a nudge/reminder notification to unverified students to complete KYC. 
+• Cannot approve or reject KYC — that remains with the CampX admin team only. 
+ 
+Community Management 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 41  
+• View all official communities linked to their college. 
+• Submit a request to create a new official college community (reviewed by founder). 
+• View member counts and activity levels per community. 
+• Escalate community moderation issues to the CampX admin team. 
+ 
+Event Management 
+• Submit event proposals for college fests, hackathons and inter-college events to the CampX 
+founder for approval. 
+• View status of submitted event proposals (pending / approved / rejected). 
+• Once approved, view event registrations and attendee list for their college’s events. 
+• Post event announcements and updates through the dashboard. 
+ 
+Announcements 
+• Send college-wide announcements to all CampX users from their college. 
+• Announcements appear as in-app notifications and in the College Feed. 
+• Announcement history viewable in the dashboard. 
+ 
+Weekly Check-In & Reporting 
+• Submit a weekly activity report to the CampX founder directly from the dashboard. 
+• Report includes: new signups, KYC completions, community activity, events submitted, issues 
+escalated. 
+• Founder can view all ambassador reports from the Admin Dashboard. 
+ 
+Subject Lead Management 
+• View all Subject Leads assigned under them. 
+• Add or remove Subject Leads from the dashboard (subject to founder approval). 
+• View activity and contributions of each Subject Lead. 
+ 
+17.4 Ambassador Perks & Recognition 
+Perk Details 
+Internship Certificate Official CampX internship certificate issued to all active campus 
+ambassadors. 
+Platform Badge Exclusive Campus Ambassador badge displayed on their CampX 
+profile. 
+Title Official Campus Ambassador title on their profile, visible to all users. 
+First Pick for Full-Time Roles Top performing ambassadors get priority consideration for full-time 
+roles as CampX scales. 
+Direct Access to Founder Weekly check-in directly with the CampX founder. No intermediary. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 42  
+ 
+ 
+ 
+End of Section 15 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 43  
+ 
+16. College Onboarding 
+16.1 Overview 
+College Onboarding is the process by which a college is added to the CampX platform and made 
+available to students for sign-up. Every student on CampX belongs to a college — so the college must 
+exist in the system before any student from that college can register. This entire process is managed 
+from the Admin / Founder Dashboard. 
+ 
+Two-Phase Model 
+Phase 1 (Launch): Founder manually adds colleges. Phase 2 (Scale): Colleges can submit a self-listing 
+request via a public form. All requests are reviewed and approved by the founder before going live. 
+ 
+16.2 College Listing Process 
+Phase 1 — Founder Adds Manually 
+During the initial launch phase, all colleges on the platform are added directly by the founder from 
+the Admin Dashboard. No external application is needed. 
+ 
+1 Founder opens College Management module in Admin Dashboard. 
+2 Clicks “Add New College” and fills in all required fields (see Section 16.3). 
+3 College is saved with status: Hidden — not yet visible to students. 
+4 Founder assigns a Campus Ambassador (Rep) to the college. 
+5 Once a Rep is assigned, founder manually sets status to Active / Live. 
+6 College is now visible on the platform. Students from that college can sign up and select it during 
+registration. 
+ 
+Phase 2 — College Self-Listing Request 
+Once CampX scales beyond the initial launch colleges, any college in India can submit a request to be 
+listed on the platform through a public-facing form. 
+ 
+1 College representative (typically principal, admin or student welfare officer) fills out the CampX 
+College Listing Request form. 
+2 Request is received in the Admin Dashboard under College Management > Listing Requests 
+queue. 
+3 Founder reviews the submission — verifies details, checks legitimacy. 
+4 Founder approves or rejects the request. Submitter is notified by email either way. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 44  
+5 If approved: college is added to the system with status Hidden pending campus rep assignment. 
+6 Founder assigns a Campus Rep. College goes Live once rep is in place. 
+ 
+Eligibility 
+Any college in India can apply to be listed — there are no geographic restrictions. However, CampX is 
+only operationally active in Hyderabad at launch. Colleges outside active cities will be added to a waitlist 
+and activated as CampX expands. 
+ 
+16.3 College Data Fields 
+The following information is collected and stored for every college added to CampX, whether by the 
+founder or via self-listing: 
+ 
+Field Notes Required 
+College Name Full official name of the college. Yes 
+City & State Location of the college. Yes 
+Affiliated University The university the college is affiliated to (e.g. 
+JNTUH, Osmania). 
+Yes 
+Official Email Domain The college-issued email domain (e.g. 
+@lords.ac.in). Used for automatic student 
+verification via OTP. 
+Yes 
+College Logo Used on student profiles and college feed header. Yes 
+Courses Offered List of UG and PG courses available (e.g. B.Tech 
+CSE, MBA, B.Com). Used in student signup 
+dropdowns. 
+Yes 
+Principal / Contact Name Name of the primary contact at the college. Yes 
+Contact Email & Phone Used for official CampX communications with the 
+college. 
+Yes 
+College Type Engineering / Medical / Management / Arts & 
+Commerce / Multi-discipline etc. 
+Yes 
+Established Year Year the college was founded. Informational. No 
+College Website Official website URL. Informational. No 
+ 
+16.4 College Status System 
+Every college in the CampX database has a status that determines how it behaves on the platform: 
+ 
+Status Meaning Student Can Select? 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 45  
+Hidden College has been added but no campus rep is 
+assigned yet. Not visible to students. 
+No 
+Active / Live Campus rep assigned. College is visible and 
+students can select it during signup. 
+Yes 
+Suspended College temporarily removed from platform 
+by founder due to a policy issue or 
+investigation. Existing student accounts are 
+frozen. 
+No 
+Deactivated College permanently removed from platform. 
+Existing student accounts are deactivated. 
+No 
+ 
+16.5 Going Live — The Trigger 
+Key Rule 
+A college will NEVER go live on CampX without a Campus Ambassador assigned. The campus rep 
+assignment is the mandatory trigger that activates a college. This ensures every live college has a 
+responsible student representative managing the community from day one. 
+ 
+• Founder adds college → status is Hidden automaƟcally. 
+• Founder recruits and onboards a Campus Rep for that college (via the Ambassador application 
+process). 
+• Founder assigns the Rep to the college in Admin Dashboard > College Management. 
+• Founder manually flips college status from Hidden → AcƟve. 
+• College is now live. Students can select it at signup. College Feed is activated. 
+ 
+16.6 College Management Actions 
+From the Admin Dashboard, the founder can perform the following actions on any college in the 
+system: 
+ 
+Action What It Does 
+Edit College Details Update any field — name, location, email domain, logo, courses, contact 
+info. 
+View All Students See a full list of registered students from that college — name, tier, join 
+date, verification status. 
+Reassign Campus Rep Remove current campus rep and assign a new one. Previous rep loses 
+ambassador access immediately. 
+Suspend College Temporarily deactivates the college. College Feed is frozen. No new 
+signups allowed from that college. Existing accounts cannot post or 
+interact. Reversible by founder. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 46  
+Deactivate / Remove 
+College Permanently removes the college from the platform. All student 
+accounts from that college are deactivated. This action is irreversible. 
+ 
+Deactivation Warning 
+Deactivating a college is a permanent and irreversible action. It must require a confirmation step in the 
+admin UI (e.g. type the college name to confirm). All student accounts from that college will be 
+deactivated simultaneously. 
+ 
+16.7 Self-Listing by Colleges — Request Form Fields 
+When Phase 2 opens and colleges can apply to be listed, the public-facing request form will collect: 
+ 
+• College name, city, state and type. 
+• Name and designation of the person submitting the request (e.g. Principal, Student Welfare 
+Officer). 
+• Official contact email and phone number of the submitter. 
+• Affiliated university name. 
+• Approximate number of currently enrolled students. 
+• Courses currently offered (UG and PG). 
+• College official email domain (e.g. @collegename.ac.in) if available. 
+• College website URL. 
+• A brief note on why they want to be listed on CampX (optional). 
+ 
+Review Timeline 
+All college self-listing requests are reviewed personally by the CampX founder. Submitters will receive an 
+email confirmation within 7 business days with the decision. Approved colleges will be contacted to 
+coordinate campus rep recruitment before going live. 
+ 
+ 
+ 
+End of Section 16 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 47  
+ 
+17. Moderation System 
+15.1 Overview 
+CampX operates a structured content moderation system to ensure the platform remains safe, 
+respectful and authentic for all students. Reports are submitted by users and reviewed by the 
+CampX admin team. Actions are applied based on the nature and severity of the violation. All 
+moderation decisions are communicated to the affected user. 
+ 
+15.2 Content Violations 
+The following types of content are subject to moderation on CampX: 
+ 
+Violation Description 
+Hate Speech Content that promotes hatred, discrimination or violence against any 
+individual or group based on identity, religion, gender, caste or 
+ethnicity. 
+Nudity / Sexual Content Any explicit or suggestive content not appropriate for a student 
+platform. Strictly prohibited. 
+Spam or Fake Content Repetitive, misleading or artificially amplified content. Includes fake 
+accounts and bot activity. 
+Harassment or Bullying Content targeting an individual to intimidate, threaten or humiliate. 
+Includes direct messages used for harassment. 
+Impersonation Creating an account or posting content that falsely represents 
+another student, faculty member or public figure. 
+Misinformation Deliberately false or misleading information presented as fact, 
+especially content that could cause real-world harm. 
+Copyright Violation Posting content that infringes on intellectual property rights without 
+authorisation. 
+ 
+15.3 Reporting Flow 
+• Any Verified, Pro or Plus user can report a post, comment or user from the feed, profile or DM 
+section. 
+• The reporting user selects a violation category from the list above and optionally adds a note. 
+• The report is submitted to the CampX admin team queue for review. 
+• The reporting user receives a confirmation that the report has been received. 
+• The reporting user is notified once the admin team has reviewed and taken action. 
+• Reports are anonymous — the reported user is not told who reported them. 
+ 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 48  
+15.4 Moderation Actions 
+Based on the severity and frequency of the violation, the admin team can take the following actions: 
+ 
+Action Details Appealable? 
+Warning A formal warning is issued to the user with 
+details of the violation. Recorded on the 
+account. 
+No 
+Post Removed The violating post, comment or media is 
+removed from the platform. 
+No 
+Account Downgraded User tier is reduced (e.g. Pro → Veriﬁed) as a 
+consequence of serious or repeated 
+violations. 
+No 
+Temporary Suspension Account is suspended for a set period (e.g. 7 
+days, 30 days). User cannot access the app 
+during this time. 
+No 
+Permanent Ban Account is permanently deactivated. User 
+cannot create a new account with the same 
+identity. Applied for the most serious 
+violations (e.g. fraud, nudity, impersonation). 
+Yes 
+ 
+15.5 Repeat Violations 
+• Every moderation action is recorded on the user account history. 
+• Repeat violations result in escalating consequences — a user with multiple warnings moves to 
+suspension, and a user with multiple suspensions moves to a permanent ban. 
+• The admin team has full discretion to escalate directly to a permanent ban for severe first-time 
+violations. 
+ 
+15.6 Appeals Process 
+Appeals — Permanent Bans Only 
+Only permanent bans can be appealed. All other moderation decisions (warnings, post removals, 
+suspensions, downgrades) are final and cannot be contested. 
+ 
+• A permanently banned user can submit an appeal through the Help & Support section or via a 
+direct email to the CampX support address. 
+• The appeal must include: the banned account details, reason for appeal and any supporting 
+evidence. 
+• The founder personally reviews all permanent ban appeals. 
+• The decision on the appeal is final. If the appeal is rejected, no further appeals are accepted. 
+• Appeals are reviewed within 7 business days of submission. 
+ 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 49  
+ 
+ 
+End of Section 18 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 50  
+ 
+18. Events & Contests 
+16.1 Overview 
+CampX hosts and facilitates student events including college fests, hackathons, inter-college events 
+and contests. Events can be organized directly by the CampX platform or submitted by colleges for 
+approval. Events are a core engagement and monetization driver for the platform. 
+ 
+16.2 Event Types 
+Event Type Description 
+College Fests Platform-hosted or college-submitted annual and seasonal fests. Can be 
+single-college or inter-college. 
+Hackathons Technical competitions where students build projects within a set 
+timeframe. Can be college-level or pan-platform. 
+Inter-College Events Events that bring together students from multiple colleges on CampX. 
+Hosted under the CampX brand. 
+Contests & Competitions Skill-based contests (coding, design, writing, quizzes etc.) open to eligible 
+students on the platform. 
+ 
+16.3 Event Organizers 
+Organizer Process 
+CampX Platform Events planned and hosted directly by CampX. Founder has full control 
+over event details, registration and prizes. 
+Colleges / Ambassadors Colleges or campus ambassadors can submit an event proposal to 
+CampX. Proposal reviewed and approved by the founder before the 
+event goes live on the platform. 
+ 
+16.4 Event Access by Tier 
+Tier Event Access 
+Basic Cannot register for any events. Can view event announcements on Explore 
+Feed only. 
+Verified Can register for paid ticketed events at standard pricing. No early access or 
+special perks. 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 51  
+Pro Early access to event registration before general opening. Standard ticket 
+pricing. 
+Plus Early access to registration + special access/perks at events (e.g. reserved 
+spots, exclusive sessions, priority seating, meet & greet access where 
+applicable). 
+ 
+16.5 Event Page 
+Every event on CampX has a dedicated event page accessible from the Explore Feed and College 
+Feed. The event page contains: 
+ 
+• Event Details:  — Name, date, time, venue (online/offline), organizer, description and rules. 
+• Registration / Ticket Purchase:  — Registration form or ticket purchase flow. Paid events 
+integrate with the CampX payment system. 
+• Leaderboard / Results:  — Live or post-event leaderboard showing rankings, scores or standings 
+for competitive events. 
+• Winner Announcements:  — Official winner posts published by CampX after event conclusion. 
+Visible on the event page and in feeds. 
+• Post-Event Highlights Feed:  — A curated highlights section on the event page showing photos, 
+videos and notable moments from the event. 
+ 
+16.6 Event Notifications 
+• All Verified, Pro and Plus users are notified of new events via Push, In-App and Email. 
+• Pro users receive early access notifications before general registration opens. 
+• Plus users receive early access notifications and special perk details. 
+• Registered participants receive reminders as the event approaches. 
+• Winner announcements are sent as platform-wide notifications. 
+ 
+ 
+ 
+End of Section 18 
+
+---PAGE---
+
+CampX — Product Specification Document C O N F I D E N T I A L  
+For internal use only. Not to be distributed. Page 52  
+ 
+19. Swift Zone 
+18.1 Overview 
+Swift Zone is a coming-soon feature exclusive to Plus users on CampX. It is a verified student 
+connection feature designed for friend-making and social discovery within the student community. 
+Full feature specifications will be defined in a future update to this document. 
+ 
+Status: Coming Soon 
+Swift Zone is not part of the initial launch. It will be built and released as a future update. This section is 
+a placeholder. Do not include Swift Zone in the initial development scope. 
+ 
+18.2 What We Know So Far 
+• Swift Zone is accessible only to Plus tier users. 
+• It is a verified connection feature — all participants are confirmed students. 
+• It will be campus-aware — connections are student-to-student. 
+• If a Plus user downgrades to Pro or Verified, their Swift Zone account is hidden but not deleted. It 
+is restored if they re-subscribe to Plus. 
+• Full feature definition (matching mechanics, interaction model, discovery flow) to be specified in 
+a future session. 
+ 
+ 
+ 
+End of Section 19 — End of Document (v1.0) 

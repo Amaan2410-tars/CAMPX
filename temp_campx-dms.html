@@ -1,0 +1,963 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-campx-pill="Messages">
+<head>
+<meta charset="UTF-8">
+<script type="module" src="/src/entries/session-gate.ts"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampX ΓÇö Messages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/campx-speed-dial.css?v=4">
+<link rel="stylesheet" href="/campx-web-layout.css?v=4">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c27;
+  --surface3: #22222f;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --accent: #6c63ff;
+  --accent-dim: rgba(108,99,255,0.15);
+  --accent2: #ff6b6b;
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.12);
+  --amber: #fbbf24;
+  --teal: #2dd4bf;
+  --text: #f0f0f8;
+  --text-sub: rgba(240,240,248,0.6);
+  --text-muted: rgba(240,240,248,0.38);
+  --bubble-me: #6c63ff;
+  --bubble-them: #1c1c27;
+}
+
+html, body { height: 100%; background: #070709; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+.app { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg); border-radius: 48px;
+  border: 1px solid rgba(255,255,255,0.09); overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 40px 120px rgba(0,0,0,0.85);
+  display: flex; flex-direction: column;
+}
+
+/* ΓöÇΓöÇ SCREEN TRANSITIONS ΓöÇΓöÇ */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  transition: transform 0.42s cubic-bezier(0.77,0,0.175,1), opacity 0.3s ease;
+  will-change: transform;
+}
+.screen.active   { transform: translateX(0);    opacity: 1; }
+.screen.offright { transform: translateX(100%); opacity: 0; pointer-events: none; }
+.screen.offleft  { transform: translateX(-30%); opacity: 0; pointer-events: none; }
+
+/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+   SCREEN 1 ΓÇö INBOX
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+#inbox { background: var(--bg); }
+
+.topbar {
+  flex-shrink: 0;
+  padding: 52px 20px 14px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.topbar-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
+.topbar-right { display: flex; gap: 8px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s;
+}
+.icon-btn:hover { background: var(--surface2); }
+.icon-btn svg { width: 17px; height: 17px; stroke: var(--text-sub); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* E2EE notice */
+.e2ee-notice {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.e2ee-notice svg { width: 13px; height: 13px; stroke: var(--green); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.e2ee-notice span { font-size: 11px; color: var(--text-muted); }
+.e2ee-notice strong { color: var(--green); font-weight: 500; }
+
+/* Search bar */
+.search-bar {
+  flex-shrink: 0; padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.search-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 8px 12px;
+}
+.search-wrap svg { width: 15px; height: 15px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.search-wrap input { flex: 1; background: transparent; border: none; outline: none; font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text); }
+.search-wrap input::placeholder { color: var(--text-muted); }
+
+/* Conversation list */
+.conv-list { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.conv-list::-webkit-scrollbar { display: none; }
+
+.section-label {
+  padding: 12px 20px 4px;
+  font-size: 10px; color: var(--text-muted);
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500;
+}
+
+.conv-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px; cursor: pointer;
+  transition: background 0.15s; position: relative;
+}
+.conv-item:hover { background: var(--surface); }
+.conv-item:active { background: var(--surface2); }
+
+.conv-avatar-wrap { position: relative; flex-shrink: 0; }
+
+.conv-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 600; color: var(--text);
+  font-family: 'Syne', sans-serif;
+  border: 1px solid var(--border2);
+}
+
+.online-ring {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--green); border: 2px solid var(--bg);
+}
+.offline-ring {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--text-muted); border: 2px solid var(--bg);
+}
+
+.conv-body { flex: 1; min-width: 0; }
+
+.conv-name-row {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 2px;
+}
+.conv-name { font-size: 14px; font-weight: 500; color: var(--text); }
+
+.tier-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-verified { background: var(--green); }
+.dot-pro      { background: var(--accent); }
+.dot-plus     { background: var(--amber); }
+
+.conv-college { font-size: 11px; color: var(--text-muted); }
+
+.conv-preview {
+  font-size: 12px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 4px;
+}
+.conv-preview svg { width: 12px; height: 12px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.preview-bold { color: var(--text-sub); font-weight: 400; }
+
+.conv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.conv-time { font-size: 11px; color: var(--text-muted); }
+.unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.unread-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); font-size: 10px; font-weight: 600; color: white; display: flex; align-items: center; justify-content: center; }
+
+.conv-divider { height: 1px; background: var(--border); margin: 0 20px; }
+
+/* Request row */
+.request-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px; cursor: pointer;
+  background: rgba(108,99,255,0.05);
+  border-bottom: 1px solid rgba(108,99,255,0.12);
+  transition: background 0.15s;
+}
+.request-row:hover { background: rgba(108,99,255,0.1); }
+.req-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-dim); border: 1px solid rgba(108,99,255,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.req-icon svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.req-body { flex: 1; }
+.req-title { font-size: 13px; font-weight: 500; color: var(--accent); }
+.req-sub { font-size: 11px; color: var(--text-muted); }
+.req-count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); font-size: 11px; font-weight: 600; color: white; display: flex; align-items: center; justify-content: center; }
+
+/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+   SCREEN 2 ΓÇö CHAT VIEW
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+#chat { background: var(--bg); }
+
+/* Chat topbar */
+.chat-topbar {
+  flex-shrink: 0;
+  padding: 52px 14px 12px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+  width: 34px; height: 34px; border-radius: 11px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+}
+.back-btn:hover { background: var(--surface3); }
+.back-btn svg { width: 16px; height: 16px; stroke: var(--text-sub); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.chat-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  font-family: 'Syne', sans-serif;
+  border: 1px solid var(--border2); flex-shrink: 0;
+  position: relative;
+}
+.chat-online { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); }
+
+.chat-info { flex: 1; min-width: 0; }
+.chat-name { font-size: 15px; font-weight: 600; color: var(--text); font-family: 'Syne', sans-serif; display: flex; align-items: center; gap: 6px; }
+.chat-status { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.chat-status.online { color: var(--green); }
+
+.chat-topbar-actions { display: flex; gap: 6px; }
+.chat-action-btn {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s;
+}
+.chat-action-btn:hover { background: var(--surface3); }
+.chat-action-btn svg { width: 15px; height: 15px; stroke: var(--text-sub); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* E2EE chip in chat */
+.chat-e2ee {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.chat-e2ee svg { width: 11px; height: 11px; stroke: var(--green); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.chat-e2ee span { font-size: 11px; color: var(--text-muted); }
+.chat-e2ee strong { color: var(--green); font-weight: 500; }
+
+/* Messages area */
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 12px 16px 8px;
+  scrollbar-width: none; display: flex; flex-direction: column; gap: 4px;
+}
+.chat-messages::-webkit-scrollbar { display: none; }
+
+/* Date divider */
+.date-div {
+  text-align: center; font-size: 11px; color: var(--text-muted);
+  padding: 6px 0 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.date-div::before, .date-div::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Bubble rows */
+.bubble-row { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+.bubble-row.me { flex-direction: row-reverse; }
+.bubble-row.them { flex-direction: row; }
+
+.bubble-row .mini-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 600; color: var(--text);
+  font-family: 'Syne', sans-serif; flex-shrink: 0; margin-bottom: 2px;
+}
+.bubble-row.me .mini-avatar { display: none; }
+
+.bubble-group { display: flex; flex-direction: column; gap: 2px; max-width: 78%; }
+.bubble-row.me .bubble-group { align-items: flex-end; }
+.bubble-row.them .bubble-group { align-items: flex-start; }
+
+.bubble {
+  padding: 9px 13px;
+  font-size: 14px; line-height: 1.5;
+  border-radius: 18px; word-break: break-word;
+  position: relative; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.bubble:hover { opacity: 0.92; }
+
+.bubble.me {
+  background: var(--bubble-me);
+  color: rgba(255,255,255,0.95);
+  border-bottom-right-radius: 5px;
+}
+.bubble.them {
+  background: var(--bubble-them);
+  color: var(--text-sub);
+  border-bottom-left-radius: 5px;
+  border: 1px solid var(--border2);
+}
+.bubble.first-them { border-top-left-radius: 18px; }
+.bubble.last-them  { border-bottom-left-radius: 5px; }
+.bubble.first-me   { border-top-right-radius: 18px; }
+.bubble.last-me    { border-bottom-right-radius: 5px; }
+
+/* Tail gap for consecutive */
+.bubble-row + .bubble-row.me   { margin-top: 2px; }
+.bubble-row + .bubble-row.them { margin-top: 2px; }
+.bubble-row.me   + .bubble-row.them { margin-top: 10px; }
+.bubble-row.them + .bubble-row.me   { margin-top: 10px; }
+
+/* Reply quote inside bubble */
+.reply-quote {
+  background: rgba(255,255,255,0.1);
+  border-left: 2px solid rgba(255,255,255,0.4);
+  border-radius: 6px; padding: 4px 8px;
+  margin-bottom: 4px; font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  font-style: italic;
+}
+.reply-quote.them-q {
+  background: rgba(108,99,255,0.1);
+  border-left-color: var(--accent);
+  color: var(--text-muted);
+}
+
+/* Image bubble */
+.img-bubble {
+  width: 200px; height: 140px; border-radius: 14px;
+  overflow: hidden; cursor: pointer;
+  position: relative;
+}
+.img-bubble-inner {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+}
+.img-bubble-inner.style1 { background: linear-gradient(135deg, #1a1030, #2d1f5e); }
+.img-bubble-inner.style2 { background: linear-gradient(135deg, #0f2e1e, #1a5c2e); }
+.img-bubble svg { opacity: 0.2; }
+
+/* File bubble */
+.file-bubble {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  cursor: pointer; max-width: 220px;
+  transition: background 0.15s;
+}
+.file-bubble:hover { background: rgba(255,255,255,0.12); }
+.file-bubble svg { width: 18px; height: 18px; stroke: rgba(255,255,255,0.7); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.file-bubble-info .file-name { font-size: 12px; color: rgba(255,255,255,0.9); font-weight: 500; }
+.file-bubble-info .file-size { font-size: 10px; color: rgba(255,255,255,0.5); }
+
+.file-bubble.them-file { background: var(--surface2); border-color: var(--border2); }
+.file-bubble.them-file svg { stroke: var(--accent); }
+.file-bubble.them-file .file-name { color: var(--text); }
+.file-bubble.them-file .file-size { color: var(--text-muted); }
+
+/* Voice note bubble */
+.voice-bubble {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 22px;
+  min-width: 160px; max-width: 220px;
+}
+.voice-bubble.me { background: rgba(255,255,255,0.1); }
+.voice-bubble.them-v { background: var(--surface2); border: 1px solid var(--border2); }
+
+.voice-play {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.voice-play:hover { opacity: 0.8; }
+.voice-play.me-play { background: rgba(255,255,255,0.2); }
+.voice-play.them-play { background: var(--accent-dim); }
+.voice-play svg { width: 14px; height: 14px; stroke: white; fill: white; stroke-width: 0; }
+.voice-play.them-play svg { stroke: var(--accent); fill: var(--accent); }
+
+.voice-waveform { flex: 1; height: 28px; display: flex; align-items: center; gap: 2px; }
+.wave-bar { border-radius: 1px; background: rgba(255,255,255,0.35); transition: height 0.15s; }
+.voice-bubble.them-v .wave-bar { background: rgba(108,99,255,0.5); }
+
+.voice-dur { font-size: 11px; color: rgba(255,255,255,0.5); flex-shrink: 0; }
+.voice-bubble.them-v .voice-dur { color: var(--text-muted); }
+
+/* Msg meta (time + receipt) */
+.msg-meta {
+  font-size: 10px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 3px;
+  padding: 0 4px;
+}
+.bubble-row.me .msg-meta { justify-content: flex-end; }
+.receipt svg { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.receipt.seen svg { stroke: var(--teal); }
+
+/* Emoji reactions on bubble */
+.bubble-reactions {
+  display: flex; gap: 3px; flex-wrap: wrap; padding: 2px 0;
+}
+.b-react {
+  display: flex; align-items: center; gap: 2px;
+  padding: 2px 6px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  font-size: 12px; cursor: pointer;
+}
+.b-react.active { background: var(--accent-dim); border-color: rgba(108,99,255,0.3); }
+.b-react span { font-size: 10px; color: var(--text-muted); }
+
+/* Typing indicator */
+.typing-indicator {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 0 4px;
+}
+.typing-dots {
+  display: flex; gap: 3px; align-items: center;
+  padding: 8px 12px; background: var(--bubble-them);
+  border: 1px solid var(--border2); border-radius: 18px; border-bottom-left-radius: 5px;
+}
+.typing-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-muted);
+  animation: bounce 1.2s ease infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+.typing-name { font-size: 11px; color: var(--text-muted); }
+
+/* Reply preview strip */
+.reply-strip {
+  flex-shrink: 0;
+  display: none; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--border2);
+}
+.reply-strip.visible { display: flex; }
+.reply-strip-bar { width: 3px; height: 32px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
+.reply-strip-text { flex: 1; }
+.reply-strip-author { font-size: 11px; color: var(--accent); font-weight: 500; }
+.reply-strip-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reply-strip-close { width: 24px; height: 24px; border-radius: 8px; background: var(--surface2); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.reply-strip-close svg { width: 12px; height: 12px; stroke: var(--text-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Input bar */
+.input-bar {
+  flex-shrink: 0;
+  padding: 8px 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.input-row {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.input-action {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: transparent; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; flex-shrink: 0;
+}
+.input-action:hover { background: var(--surface); }
+.input-action svg { width: 18px; height: 18px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.input-wrap {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 22px; padding: 8px 14px;
+  transition: border-color 0.2s;
+}
+.input-wrap:focus-within { border-color: rgba(108,99,255,0.4); }
+
+.msg-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+}
+.msg-input::placeholder { color: var(--text-muted); }
+
+.emoji-btn { background: none; border: none; cursor: pointer; font-size: 18px; line-height: 1; padding: 0; opacity: 0.6; transition: opacity 0.15s; }
+.emoji-btn:hover { opacity: 1; }
+
+.send-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--accent); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(108,99,255,0.4);
+  transition: transform 0.15s, box-shadow 0.15s; flex-shrink: 0;
+}
+.send-btn:hover { transform: scale(1.07); box-shadow: 0 6px 18px rgba(108,99,255,0.5); }
+.send-btn svg { width: 16px; height: 16px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-height: 860px) { .phone { height: 100vh; border-radius: 0; border: none; } }
+@media (max-width: 420px)  { .phone { width: 100vw; height: 100vh; border-radius: 0; border: none; } .app { align-items: flex-start; } }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="phone">
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+       SCREEN 1 ΓÇö INBOX
+  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div class="screen active" id="inbox">
+
+    <div class="topbar">
+      <div class="topbar-title">Messages</div>
+      <div class="topbar-right">
+        <div class="icon-btn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></div>
+        <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="11"/></svg></div>
+      </div>
+    </div>
+
+    <!-- E2EE notice -->
+    <div class="e2ee-notice">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>All messages are <strong>end-to-end encrypted</strong> ΓÇö only you and the recipient can read them</span>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+        <input type="text" placeholder="Search messages">
+      </div>
+    </div>
+
+    <div id="campx-dms-live" style="padding:8px 16px;border-bottom:1px solid var(--border);"></div>
+
+    <div class="conv-list">
+
+      <!-- Message requests -->
+      <div class="request-row" onclick="openChat('req')">
+        <div class="req-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        </div>
+        <div class="req-body">
+          <div class="req-title">Message requests</div>
+          <div class="req-sub">From students not in your follows</div>
+        </div>
+        <div class="req-count">3</div>
+      </div>
+
+      <div class="section-label">Recent</div>
+
+      <!-- Conv 1 ΓÇö Neha (active) -->
+      <div class="conv-item" onclick="openChat('neha')">
+        <div class="conv-avatar-wrap">
+          <div class="conv-avatar" style="background:linear-gradient(135deg,#2d1b4e,#3d2b6e);">NP</div>
+          <div class="online-ring"></div>
+        </div>
+        <div class="conv-body">
+          <div class="conv-name-row">
+            <span class="conv-name">Neha Patel</span>
+            <div class="tier-dot dot-pro"></div>
+          </div>
+          <div class="conv-college">CSE ┬╖ CBIT</div>
+          <div class="conv-preview">
+            <span class="preview-bold">You:</span> That's amazing, congrats again! ≡ƒÄë
+          </div>
+        </div>
+        <div class="conv-meta">
+          <div class="conv-time">2m</div>
+          <div class="unread-dot"></div>
+        </div>
+      </div>
+      <div class="conv-divider"></div>
+
+      <!-- Conv 2 ΓÇö Aryan -->
+      <div class="conv-item" onclick="openChat('aryan')">
+        <div class="conv-avatar-wrap">
+          <div class="conv-avatar" style="background:linear-gradient(135deg,#0f2e1e,#1a4a30);">AK</div>
+          <div class="online-ring"></div>
+        </div>
+        <div class="conv-body">
+          <div class="conv-name-row">
+            <span class="conv-name">Aryan Kumar</span>
+            <div class="tier-dot dot-verified"></div>
+          </div>
+          <div class="conv-college">ECE ┬╖ CBIT</div>
+          <div class="conv-preview">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            DSA_Practice_Sheet.pdf
+          </div>
+        </div>
+        <div class="conv-meta">
+          <div class="conv-time">1h</div>
+          <div class="unread-badge">2</div>
+        </div>
+      </div>
+      <div class="conv-divider"></div>
+
+      <!-- Conv 3 ΓÇö Rohan (mutual follow, diff college) -->
+      <div class="conv-item" onclick="openChat('rohan')">
+        <div class="conv-avatar-wrap">
+          <div class="conv-avatar" style="background:linear-gradient(135deg,#1a1a3e,#2d2d6e);">RV</div>
+          <div class="offline-ring"></div>
+        </div>
+        <div class="conv-body">
+          <div class="conv-name-row">
+            <span class="conv-name">Rohan Verma</span>
+            <div class="tier-dot dot-plus"></div>
+          </div>
+          <div class="conv-college">CSE ┬╖ BITS Pilani</div>
+          <div class="conv-preview">
+            <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            Voice message ┬╖ 0:24
+          </div>
+        </div>
+        <div class="conv-meta">
+          <div class="conv-time">3h</div>
+        </div>
+      </div>
+      <div class="conv-divider"></div>
+
+      <!-- Conv 4 ΓÇö Priya -->
+      <div class="conv-item" onclick="openChat('priya')">
+        <div class="conv-avatar-wrap">
+          <div class="conv-avatar" style="background:linear-gradient(135deg,#2e1a2e,#4e2d4e);">PS</div>
+          <div class="offline-ring"></div>
+        </div>
+        <div class="conv-body">
+          <div class="conv-name-row">
+            <span class="conv-name">Priya Sharma</span>
+            <div class="tier-dot dot-verified"></div>
+          </div>
+          <div class="conv-college">MBA ┬╖ CBIT</div>
+          <div class="conv-preview">Sounds good, see you in the library ≡ƒæì</div>
+        </div>
+        <div class="conv-meta">
+          <div class="conv-time">Yesterday</div>
+        </div>
+      </div>
+      <div class="conv-divider"></div>
+
+      <!-- Conv 5 ΓÇö Karthik -->
+      <div class="conv-item" onclick="openChat('karthik')">
+        <div class="conv-avatar-wrap">
+          <div class="conv-avatar" style="background:linear-gradient(135deg,#0f1e2e,#1a304a);">KM</div>
+          <div class="offline-ring"></div>
+        </div>
+        <div class="conv-body">
+          <div class="conv-name-row">
+            <span class="conv-name">Karthik Menon</span>
+            <div class="tier-dot dot-verified"></div>
+          </div>
+          <div class="conv-college">IT ┬╖ IIIT Hyd</div>
+          <div class="conv-preview">Bro that post got 300 likes ≡ƒÆÇ</div>
+        </div>
+        <div class="conv-meta">
+          <div class="conv-time">Mon</div>
+        </div>
+      </div>
+      <div class="conv-divider"></div>
+
+      <!-- Mutual follow note -->
+      <div style="padding:16px 20px;display:flex;align-items:flex-start;gap:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span style="font-size:12px;color:var(--text-muted);line-height:1.5;">You can DM students from your college anytime. DMs with students from other colleges require a <strong style="color:var(--text-sub);">mutual follow</strong>.</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+       SCREEN 2 ΓÇö CHAT
+  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div class="screen offright" id="chat">
+
+    <div class="chat-topbar">
+      <div class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </div>
+      <div class="chat-avatar" id="chat-avatar" style="background:linear-gradient(135deg,#2d1b4e,#3d2b6e);">
+        NP
+        <div class="chat-online"></div>
+      </div>
+      <div class="chat-info">
+        <div class="chat-name" id="chat-name">Neha Patel <span style="font-size:10px;padding:1px 6px;border-radius:5px;background:var(--accent-dim);color:#a89fff;font-weight:600;letter-spacing:0.04em;">Pro</span></div>
+        <div class="chat-status online" id="chat-status">Online now</div>
+      </div>
+      <div class="chat-topbar-actions">
+        <div class="chat-action-btn"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.1 19.79 19.79 0 0 1 1.61 4.5 2 2 0 0 1 3.6 2.32h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <div class="chat-action-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      </div>
+    </div>
+
+    <!-- E2EE chip -->
+    <div class="chat-e2ee">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>Messages are <strong>end-to-end encrypted</strong></span>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chat-messages">
+
+      <div class="date-div">Today</div>
+
+      <!-- Them: text -->
+      <div class="bubble-row them">
+        <div class="mini-avatar" style="background:linear-gradient(135deg,#2d1b4e,#3d2b6e);">NP</div>
+        <div class="bubble-group">
+          <div class="bubble them">Hey! Did you see my post on the feed? ≡ƒæÇ</div>
+          <div class="msg-meta">10:04 AM</div>
+        </div>
+      </div>
+
+      <!-- Me: text -->
+      <div class="bubble-row me">
+        <div class="bubble-group">
+          <div class="bubble me">Yes omg!! Google internship!! That's insane ≡ƒöÑ≡ƒöÑ</div>
+          <div class="msg-meta">10:06 AM <span class="receipt seen"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/><polyline points="20 6 9 17 4 12" transform="translate(4 0)"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- Them: text -->
+      <div class="bubble-row them">
+        <div class="mini-avatar" style="background:linear-gradient(135deg,#2d1b4e,#3d2b6e);">NP</div>
+        <div class="bubble-group">
+          <div class="bubble them">Hahaha thank you!! It still feels surreal tbh ≡ƒÿ¡</div>
+          <div class="bubble them">4 rounds in one day was absolutely brutal though</div>
+          <div class="msg-meta">10:07 AM</div>
+        </div>
+      </div>
+
+      <!-- Me: reply bubble -->
+      <div class="bubble-row me">
+        <div class="bubble-group">
+          <div class="bubble me">
+            <div class="reply-quote">4 rounds in one day was absolutely brutal</div>
+            How did you manage the system design round? That's the one I'm most scared of
+          </div>
+          <div class="msg-meta">10:09 AM <span class="receipt seen"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/><polyline points="20 6 9 17 4 12" transform="translate(4 0)"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- Them: image -->
+      <div class="bubble-row them">
+        <div class="mini-avatar" style="background:linear-gradient(135deg,#2d1b4e,#3d2b6e);">NP</div>
+        <div class="bubble-group">
+          <div class="img-bubble">
+            <div class="img-bubble-inner style1">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+          </div>
+          <div class="msg-meta">10:12 AM</div>
+        </div>
+      </div>
+
+      <!-- Them: text -->
+      <div class="bubble-row them">
+        <div class="mini-avatar" style="background:linear-gradient(135deg,#2d1b4e,#3d2b6e);">NP</div>
+        <div class="bubble-group">
+          <div class="bubble them">These are the resources I actually used ΓÇö Gaurav Sen's playlist is a lifesaver</div>
+          <div class="bubble-reactions">
+            <div class="b-react active">Γ¥ñ∩╕Å <span>1</span></div>
+          </div>
+          <div class="msg-meta">10:13 AM</div>
+        </div>
+      </div>
+
+      <!-- Me: file -->
+      <div class="bubble-row me">
+        <div class="bubble-group">
+          <div class="file-bubble">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <div class="file-bubble-info">
+              <div class="file-name">My_SDE_Prep_Notes.pdf</div>
+              <div class="file-size">2.4 MB</div>
+            </div>
+          </div>
+          <div class="msg-meta">10:18 AM <span class="receipt seen"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/><polyline points="20 6 9 17 4 12" transform="translate(4 0)"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- Them: voice note -->
+      <div class="bubble-row them">
+        <div class="mini-avatar" style="background:linear-gradient(135deg,#2d1b4e,#3d2b6e);">NP</div>
+        <div class="bubble-group">
+          <div class="voice-bubble them-v">
+            <div class="voice-play them-play">
+              <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg>
+            </div>
+            <div class="voice-waveform" id="waveform-them"></div>
+            <div class="voice-dur">0:18</div>
+          </div>
+          <div class="msg-meta">10:21 AM</div>
+        </div>
+      </div>
+
+      <!-- Me: text -->
+      <div class="bubble-row me">
+        <div class="bubble-group">
+          <div class="bubble me">That's amazing, congrats again! ≡ƒÄë</div>
+          <div class="msg-meta">10:23 AM <span class="receipt"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+        </div>
+      </div>
+
+      <!-- Typing indicator -->
+      <div class="typing-indicator" id="typing">
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+        <div class="typing-name">Neha is typing...</div>
+      </div>
+
+    </div>
+
+    <!-- Reply strip -->
+    <div class="reply-strip" id="reply-strip">
+      <div class="reply-strip-bar"></div>
+      <div class="reply-strip-text">
+        <div class="reply-strip-author">Replying to Neha</div>
+        <div class="reply-strip-preview" id="reply-preview">message preview</div>
+      </div>
+      <button class="reply-strip-close" onclick="cancelReply()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Input bar -->
+    <div class="input-bar">
+      <div class="input-row">
+        <button class="input-action"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+        <div class="input-wrap">
+          <input class="msg-input" id="chat-input" placeholder="Message Neha..." onkeydown="handleKey(event)">
+          <button class="emoji-btn">≡ƒÿè</button>
+        </div>
+        <button class="input-action"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+        <button class="send-btn" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="dial-backdrop" id="campx-backdrop"></div>
+  <div class="campx-nav-dock" id="campx-navDock">
+  <div class="hold-hint" id="campx-holdHint">Swipe up to open menu</div>
+  <div class="speed-dial-wrap" id="campx-speedDial">
+    <div class="screen-chip" id="campx-screenChip">Messages</div>
+  </div>
+  <div class="nav-pill" id="campx-navPill">
+    <div class="pill-arrows"><span></span><span></span></div>
+    <span class="pill-label" id="campx-pillLabel">Messages</span>
+    <div class="pill-dot"></div>
+  </div>
+  </div>
+  <script src="/campx-speed-dial.js?v=4" defer></script>
+
+</div>
+</div>
+
+<script type="module" src="/src/entries/dms-live.ts"></script>
+<script>
+// Generate waveform bars
+function buildWaveform(id) {
+  const heights = [4,7,12,18,14,9,20,16,11,8,18,22,15,10,6,14,19,12,8,16,11,7,13,18,10];
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = heights.map(h =>
+    `<div class="wave-bar" style="width:3px;height:${h}px"></div>`
+  ).join('');
+}
+buildWaveform('waveform-them');
+
+// Animate typing indicator hide
+setTimeout(() => {
+  const t = document.getElementById('typing');
+  if (t) { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; setTimeout(() => t.remove(), 400); }
+}, 4000);
+
+// Navigation
+function openChat(person) {
+  const configs = {
+    neha:    { avatar: 'NP', bg: 'linear-gradient(135deg,#2d1b4e,#3d2b6e)', name: 'Neha Patel', badge: 'Pro', badgeBg: 'var(--accent-dim)', badgeColor: '#a89fff', status: 'Online now', statusClass: 'online', placeholder: 'Message Neha...' },
+    aryan:   { avatar: 'AK', bg: 'linear-gradient(135deg,#0f2e1e,#1a4a30)',  name: 'Aryan Kumar', badge: 'Verified', badgeBg: 'var(--green-dim)', badgeColor: 'var(--green)', status: 'Online now', statusClass: 'online', placeholder: 'Message Aryan...' },
+    rohan:   { avatar: 'RV', bg: 'linear-gradient(135deg,#1a1a3e,#2d2d6e)',  name: 'Rohan Verma', badge: 'Plus', badgeBg: 'var(--amber-dim)', badgeColor: 'var(--amber)', status: 'Last seen 3h ago', statusClass: '', placeholder: 'Message Rohan...' },
+    priya:   { avatar: 'PS', bg: 'linear-gradient(135deg,#2e1a2e,#4e2d4e)',  name: 'Priya Sharma', badge: 'Verified', badgeBg: 'var(--green-dim)', badgeColor: 'var(--green)', status: 'Last seen yesterday', statusClass: '', placeholder: 'Message Priya...' },
+    karthik: { avatar: 'KM', bg: 'linear-gradient(135deg,#0f1e2e,#1a304a)',  name: 'Karthik Menon', badge: 'Verified', badgeBg: 'var(--green-dim)', badgeColor: 'var(--green)', status: 'Last seen Monday', statusClass: '', placeholder: 'Message Karthik...' },
+    req:     { avatar: '3', bg: 'var(--accent-dim)', name: 'Message Requests', badge: '', badgeBg: '', badgeColor: '', status: '3 pending requests', statusClass: '', placeholder: 'Search requests...' },
+  };
+  const c = configs[person] || configs.neha;
+
+  const av = document.getElementById('chat-avatar');
+  av.childNodes[0].textContent = c.avatar;
+  av.style.background = c.bg;
+
+  document.getElementById('chat-name').innerHTML = c.name +
+    (c.badge ? ` <span style="font-size:10px;padding:1px 6px;border-radius:5px;background:${c.badgeBg};color:${c.badgeColor};font-weight:600;letter-spacing:0.04em;">${c.badge}</span>` : '');
+
+  const st = document.getElementById('chat-status');
+  st.textContent = c.status;
+  st.className = 'chat-status ' + c.statusClass;
+  document.getElementById('chat-input').placeholder = c.placeholder;
+
+  document.getElementById('inbox').classList.replace('active','offleft');
+  document.getElementById('chat').classList.replace('offright','active');
+}
+
+function goBack() {
+  document.getElementById('chat').classList.replace('active','offright');
+  document.getElementById('inbox').classList.replace('offleft','active');
+}
+
+// Send message
+function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const msgs = document.getElementById('chat-messages');
+  const replying = document.getElementById('reply-strip').classList.contains('visible');
+  const replyPreview = document.getElementById('reply-preview').textContent;
+
+  const row = document.createElement('div');
+  row.className = 'bubble-row me';
+  row.innerHTML = `
+    <div class="bubble-group">
+      <div class="bubble me">
+        ${replying ? `<div class="reply-quote">${replyPreview}</div>` : ''}
+        ${text}
+      </div>
+      <div class="msg-meta">Just now <span class="receipt"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+    </div>`;
+
+  // remove typing if still there
+  const typing = document.getElementById('typing');
+  if (typing) typing.remove();
+
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+  input.value = '';
+  cancelReply();
+}
+
+function handleKey(e) { if (e.key === 'Enter') sendMsg(); }
+
+// Reply
+let replyActive = false;
+document.querySelectorAll('.bubble.them').forEach(b => {
+  b.addEventListener('click', () => {
+    const strip = document.getElementById('reply-strip');
+    document.getElementById('reply-preview').textContent = b.textContent.trim().slice(0, 60);
+    strip.classList.add('visible');
+    document.getElementById('chat-input').focus();
+  });
+});
+
+function cancelReply() {
+  document.getElementById('reply-strip').classList.remove('visible');
+}
+</script>
+</body>
+</html>

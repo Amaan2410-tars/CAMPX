@@ -4,14 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CampX</title>
-    <meta http-equiv="refresh" content="0;url=/feed" />
-    <script>
-      location.replace("/feed");
-    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/campx-speed-dial.css?v=4">
+    <link rel="stylesheet" href="/campx-web-layout.css?v=4">
   </head>
-  <body
-    style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a0f;color:#9b9bab;font-family:system-ui,sans-serif"
-  >
-    <p><a href="/feed" style="color:#a89fff">Opening CampX…</a></p>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

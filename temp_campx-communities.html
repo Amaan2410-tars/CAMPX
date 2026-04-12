@@ -1,0 +1,896 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-campx-nav="community">
+<head>
+<meta charset="UTF-8">
+<script type="module" src="/src/entries/session-gate.ts"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampX ΓÇö Communities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/campx-speed-dial.css?v=4">
+<link rel="stylesheet" href="/campx-web-layout.css?v=4">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c27;
+  --surface3: #22222f;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --accent: #6c63ff;
+  --accent-dim: rgba(108,99,255,0.15);
+  --accent2: #ff6b6b;
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.12);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251,191,36,0.1);
+  --teal: #2dd4bf;
+  --teal-dim: rgba(45,212,191,0.1);
+  --coral: #f97316;
+  --coral-dim: rgba(249,115,22,0.1);
+  --pink: #e879f9;
+  --pink-dim: rgba(232,121,249,0.1);
+  --text: #f0f0f8;
+  --text-sub: rgba(240,240,248,0.6);
+  --text-muted: rgba(240,240,248,0.38);
+}
+
+html, body { height: 100%; background: #070709; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+.app { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+.phone {
+  width: 390px; height: 844px;
+  background: var(--bg);
+  border-radius: 48px;
+  border: 1px solid rgba(255,255,255,0.09);
+  overflow: hidden; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 40px 120px rgba(0,0,0,0.85);
+  display: flex; flex-direction: column;
+}
+
+/* ΓöÇΓöÇ SCREENS ΓöÇΓöÇ */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  transition: transform 0.42s cubic-bezier(0.77,0,0.175,1), opacity 0.3s ease;
+}
+.screen.active   { transform: translateX(0); opacity: 1; }
+.screen.offright { transform: translateX(100%); opacity: 0; pointer-events: none; }
+.screen.offleft  { transform: translateX(-30%); opacity: 0; pointer-events: none; }
+
+/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+   SCREEN 1 ΓÇö COMMUNITY LIST
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+#list-screen { background: var(--bg); }
+
+.topbar {
+  flex-shrink: 0;
+  padding: 52px 20px 14px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px; font-weight: 800;
+  letter-spacing: -0.5px; color: var(--text);
+}
+
+.topbar-right { display: flex; gap: 8px; }
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s;
+}
+.icon-btn:hover { background: var(--surface2); }
+.icon-btn svg { width: 17px; height: 17px; stroke: var(--text-sub); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Quota bar */
+.quota-bar {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.quota-text { font-size: 12px; color: var(--text-muted); flex: 1; }
+.quota-text strong { color: var(--text-sub); }
+.quota-track { flex: 1; height: 4px; border-radius: 2px; background: var(--surface3); }
+.quota-fill  { height: 100%; border-radius: 2px; background: var(--accent); width: 60%; }
+
+/* Section label */
+.section-label {
+  padding: 14px 20px 6px;
+  font-size: 11px; color: var(--text-muted);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Community list */
+.community-list { flex: 1; overflow-y: auto; padding-bottom: 80px; scrollbar-width: none; }
+.community-list::-webkit-scrollbar { display: none; }
+
+.community-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.community-item:hover { background: var(--surface); }
+.community-item:active { background: var(--surface2); }
+
+.community-icon {
+  width: 48px; height: 48px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+  border: 1px solid var(--border2);
+  position: relative;
+}
+
+.online-indicator {
+  position: absolute; bottom: 2px; right: 2px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--green);
+  border: 2px solid var(--bg);
+}
+
+.community-info { flex: 1; min-width: 0; }
+
+.community-name {
+  font-size: 14px; font-weight: 500; color: var(--text);
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 2px;
+}
+
+.comm-type-badge {
+  font-size: 9px; padding: 1px 6px; border-radius: 5px;
+  font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.badge-college { background: var(--teal-dim); color: var(--teal); }
+.badge-open    { background: var(--pink-dim); color: var(--pink); }
+
+.community-preview {
+  font-size: 12px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.community-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.community-time { font-size: 11px; color: var(--text-muted); }
+
+.unread-badge {
+  min-width: 18px; height: 18px;
+  padding: 0 5px; border-radius: 9px;
+  background: var(--accent);
+  font-size: 11px; font-weight: 600;
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.community-divider { height: 1px; background: var(--border); margin: 0 20px; }
+
+/* Discover section */
+.discover-card {
+  margin: 0 16px 10px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.discover-card:hover { background: var(--surface2); }
+
+.discover-icon {
+  width: 42px; height: 42px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+
+.discover-info { flex: 1; }
+.discover-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.discover-sub  { font-size: 11px; color: var(--text-muted); }
+
+.join-btn {
+  padding: 6px 14px; border-radius: 8px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(108,99,255,0.3);
+  color: var(--accent); font-size: 12px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  transition: background 0.15s; white-space: nowrap;
+}
+.join-btn:hover { background: rgba(108,99,255,0.25); }
+
+/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+   SCREEN 2 ΓÇö CHANNEL VIEW
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+#channel-screen { background: var(--bg); }
+
+.ch-topbar {
+  flex-shrink: 0;
+  padding: 52px 16px 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.ch-topbar-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+
+.back-btn {
+  width: 34px; height: 34px; border-radius: 11px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+}
+.back-btn:hover { background: var(--surface3); }
+.back-btn svg { width: 16px; height: 16px; stroke: var(--text-sub); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.ch-comm-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+  border: 1px solid var(--border2);
+}
+
+.ch-comm-info { flex: 1; min-width: 0; }
+.ch-comm-name { font-size: 15px; font-weight: 600; color: var(--text); font-family: 'Syne', sans-serif; }
+.ch-comm-members { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.online-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+.ch-topbar-icons { display: flex; gap: 6px; }
+.ch-icon-btn {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s;
+}
+.ch-icon-btn:hover { background: var(--surface3); }
+.ch-icon-btn svg { width: 15px; height: 15px; stroke: var(--text-sub); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Channel tabs */
+.ch-tabs {
+  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
+}
+.ch-tabs::-webkit-scrollbar { display: none; }
+
+.ch-tab {
+  display: flex; align-items: center; gap: 5px;
+  padding: 10px 14px;
+  font-size: 13px; color: var(--text-muted);
+  cursor: pointer; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.ch-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.ch-tab:hover:not(.active) { color: var(--text-sub); }
+.ch-tab svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ch-tab .ch-unread { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent2); font-size: 10px; color: white; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+
+/* ΓöÇΓöÇ CHANNEL PANEL ΓöÇΓöÇ */
+.channel-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Announcement banner */
+.announce-banner {
+  flex-shrink: 0;
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 16px;
+  background: rgba(108,99,255,0.07);
+  border-bottom: 1px solid rgba(108,99,255,0.15);
+}
+.announce-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+.announce-text { font-size: 12px; color: var(--text-sub); line-height: 1.5; }
+.announce-text strong { color: var(--text); font-weight: 500; }
+
+/* Messages */
+.messages {
+  flex: 1; overflow-y: auto;
+  padding: 12px 16px; scrollbar-width: none;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.messages::-webkit-scrollbar { display: none; }
+
+.msg-date-divider {
+  text-align: center; font-size: 11px;
+  color: var(--text-muted); padding: 8px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.msg-date-divider::before, .msg-date-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.msg { display: flex; gap: 10px; padding: 4px 0; }
+.msg:hover { background: transparent; }
+
+.msg-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--text);
+  font-family: 'Syne', sans-serif; flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.msg-body { flex: 1; min-width: 0; }
+.msg-header { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; }
+.msg-author { font-size: 13px; font-weight: 500; color: var(--text); }
+.msg-role { font-size: 10px; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
+.role-admin { background: var(--accent-dim); color: #a89fff; }
+.role-mod   { background: var(--green-dim); color: var(--green); }
+.msg-time { font-size: 11px; color: var(--text-muted); }
+.msg-text { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+.msg-text .mention { color: var(--accent); font-weight: 500; }
+.msg-text .code { font-family: monospace; font-size: 12px; background: var(--surface2); padding: 1px 5px; border-radius: 4px; color: var(--teal); }
+
+/* Continued message (no avatar repeat) */
+.msg.continued { padding-left: 42px; }
+.msg.continued .msg-avatar { display: none; }
+
+/* File attachment */
+.msg-file {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; margin-top: 4px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 10px; cursor: pointer;
+  transition: background 0.15s; width: fit-content; max-width: 100%;
+}
+.msg-file:hover { background: var(--surface2); }
+.msg-file svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.msg-file-info { min-width: 0; }
+.msg-file-name { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.msg-file-size { font-size: 10px; color: var(--text-muted); }
+
+/* Emoji reactions on message */
+.msg-reactions { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.msg-react-pill {
+  display: flex; align-items: center; gap: 3px;
+  padding: 2px 7px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border2);
+  font-size: 12px; cursor: pointer; transition: background 0.15s;
+}
+.msg-react-pill:hover { background: var(--surface2); }
+.msg-react-pill.active { background: var(--accent-dim); border-color: rgba(108,99,255,0.3); }
+.msg-react-count { font-size: 11px; color: var(--text-muted); }
+
+/* Voice channel panel */
+.voice-panel {
+  padding: 16px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+.voice-panel.active { display: flex; }
+
+.voice-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); }
+.voice-sub { font-size: 13px; color: var(--text-muted); }
+
+.voice-members { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; padding: 8px 0; }
+.voice-member { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.voice-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 600; color: var(--text);
+  font-family: 'Syne', sans-serif;
+  border: 2px solid var(--border2);
+  position: relative;
+}
+.voice-avatar.speaking { border-color: var(--green); box-shadow: 0 0 12px rgba(74,222,128,0.3); }
+.voice-avatar.muted::after {
+  content: ''; position: absolute;
+  bottom: 0; right: 0;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface2); border: 2px solid var(--bg);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='1' y1='1' x2='23' y2='23' stroke='%23888' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M9 9v3a3 3 0 0 0 5.12 2.12' stroke='%23888' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3Cpath d='M15 9.34V4a3 3 0 0 0-5.94-.6' stroke='%23888' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+  background-size: 10px; background-position: center; background-repeat: no-repeat;
+}
+.voice-name { font-size: 11px; color: var(--text-muted); }
+
+.voice-controls { display: flex; gap: 12px; margin-top: 8px; }
+.v-ctrl {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s;
+}
+.v-ctrl:hover { background: var(--surface2); }
+.v-ctrl.danger { background: rgba(255,107,107,0.15); border-color: rgba(255,107,107,0.3); }
+.v-ctrl svg { width: 20px; height: 20px; stroke: var(--text-sub); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.v-ctrl.danger svg { stroke: var(--accent2); }
+
+/* ΓöÇΓöÇ MSG INPUT ΓöÇΓöÇ */
+.msg-input-bar {
+  flex-shrink: 0;
+  padding: 10px 16px 16px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.msg-input-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 8px 12px;
+  transition: border-color 0.2s;
+}
+.msg-input-wrap:focus-within { border-color: rgba(108,99,255,0.4); }
+
+.msg-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+}
+.msg-input::placeholder { color: var(--text-muted); }
+
+.input-actions { display: flex; gap: 6px; }
+.input-action-btn {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: transparent; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.input-action-btn:hover { background: var(--surface2); }
+.input-action-btn svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.send-btn {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: var(--accent); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.send-btn:hover { opacity: 0.9; transform: scale(1.05); }
+.send-btn svg { width: 15px; height: 15px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-height: 860px) { .phone { height: 100vh; border-radius: 0; border: none; } }
+@media (max-width: 420px)  { .phone { width: 100vw; height: 100vh; border-radius: 0; border: none; } .app { align-items: flex-start; } }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="phone">
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+       SCREEN 1 ΓÇö COMMUNITY LIST
+  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div class="screen active" id="list-screen">
+    <div class="topbar">
+      <div class="topbar-title">Communities</div>
+      <div class="topbar-right">
+        <div class="icon-btn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></div>
+        <div class="icon-btn"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      </div>
+    </div>
+
+    <!-- Quota bar (Verified = 5 max) -->
+    <div class="quota-bar">
+      <div class="quota-text">Joined <strong>3 of 5</strong> communities</div>
+      <div class="quota-track"><div class="quota-fill"></div></div>
+      <div style="font-size:11px;color:var(--text-muted);">Verified</div>
+    </div>
+
+    <div id="campx-communities-live" style="padding:8px 16px 4px;"></div>
+
+    <div class="community-list">
+
+      <div class="section-label">Your communities</div>
+
+      <!-- Community 1 -->
+      <div class="community-item" onclick="openCommunity('cse-hub')">
+        <div class="community-icon" style="background: linear-gradient(135deg,#1a1a3e,#2d2d6e); font-size:22px;">≡ƒÆ╗</div>
+        <div class="community-info">
+          <div class="community-name">
+            CSE Hub ΓÇö CBIT
+            <span class="comm-type-badge badge-college">College</span>
+          </div>
+          <div class="community-preview">Aryan: Has anyone started the OS assignment yet? The...</div>
+        </div>
+        <div class="community-meta">
+          <div class="community-time">2m</div>
+          <div class="unread-badge">12</div>
+        </div>
+      </div>
+      <div class="community-divider"></div>
+
+      <!-- Community 2 -->
+      <div class="community-item" onclick="openCommunity('webdev')">
+        <div class="community-icon" style="background: linear-gradient(135deg,#1a2e1a,#2d4e2d); font-size:22px;">≡ƒîÉ</div>
+        <div class="community-info">
+          <div class="community-name">
+            Web Dev India
+            <span class="comm-type-badge badge-open">Open</span>
+          </div>
+          <div class="community-preview">≡ƒôÄ react-hooks-cheatsheet.pdf was shared</div>
+        </div>
+        <div class="community-meta">
+          <div class="community-time">18m</div>
+          <div class="unread-badge">5</div>
+        </div>
+      </div>
+      <div class="community-divider"></div>
+
+      <!-- Community 3 -->
+      <div class="community-item" onclick="openCommunity('hackteam')">
+        <div class="community-icon" style="background: linear-gradient(135deg,#2e1a1a,#4e2d2d); font-size:22px;">ΓÜí</div>
+        <div class="community-info">
+          <div class="community-name">
+            HackIndia Team
+            <span class="comm-type-badge badge-open">Open</span>
+          </div>
+          <div class="community-preview">Priya: Let's sync at 8 PM today for the backend review</div>
+        </div>
+        <div class="community-meta">
+          <div class="community-time">1h</div>
+        </div>
+      </div>
+      <div class="community-divider"></div>
+
+      <div class="section-label" style="padding-top:16px;">Discover communities</div>
+
+      <!-- Discover 1 -->
+      <div class="discover-card">
+        <div class="discover-icon" style="background: linear-gradient(135deg,#1a1a2e,#2d2d4e);">≡ƒÄ¿</div>
+        <div class="discover-info">
+          <div class="discover-name">Design & UI Craft</div>
+          <div class="discover-sub">Open ┬╖ 2.4k members</div>
+        </div>
+        <button class="join-btn">Join</button>
+      </div>
+
+      <!-- Discover 2 -->
+      <div class="discover-card">
+        <div class="discover-icon" style="background: linear-gradient(135deg,#2e1a2e,#4e2d4e);">≡ƒñû</div>
+        <div class="discover-info">
+          <div class="discover-name">AI & ML Students</div>
+          <div class="discover-sub">Open ┬╖ 5.1k members</div>
+        </div>
+        <button class="join-btn">Join</button>
+      </div>
+
+      <!-- Discover 3 (locked ΓÇö 5 max) -->
+      <div class="discover-card" style="opacity:0.6;">
+        <div class="discover-icon" style="background: linear-gradient(135deg,#1a2e2e,#2d4e4e);">≡ƒô╕</div>
+        <div class="discover-info">
+          <div class="discover-name">Campus Photography</div>
+          <div class="discover-sub">College ┬╖ CBIT ┬╖ 312 members</div>
+        </div>
+        <button class="join-btn" style="background:var(--surface2);color:var(--text-muted);border-color:var(--border);">Limit</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+       SCREEN 2 ΓÇö CHANNEL VIEW
+  ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div class="screen offright" id="channel-screen">
+
+    <div class="ch-topbar">
+      <div class="ch-topbar-row">
+        <div class="back-btn" onclick="goBack()">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="ch-comm-icon" id="ch-icon" style="background: linear-gradient(135deg,#1a1a3e,#2d2d6e);">≡ƒÆ╗</div>
+        <div class="ch-comm-info">
+          <div class="ch-comm-name" id="ch-name">CSE Hub ΓÇö CBIT</div>
+          <div class="ch-comm-members">
+            <div class="online-dot"></div>
+            <span id="ch-members">248 members ┬╖ 34 online</span>
+          </div>
+        </div>
+        <div class="ch-topbar-icons">
+          <div class="ch-icon-btn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg></div>
+          <div class="ch-icon-btn"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Channel type tabs -->
+      <div class="ch-tabs">
+        <div class="ch-tab active" onclick="switchChannel('text', this)">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          General
+          <span class="ch-unread">12</span>
+        </div>
+        <div class="ch-tab" onclick="switchChannel('announce', this)">
+          <svg viewBox="0 0 24 24"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>
+          Announcements
+        </div>
+        <div class="ch-tab" onclick="switchChannel('files', this)">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Files
+        </div>
+        <div class="ch-tab" onclick="switchChannel('voice', this)">
+          <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          Voice
+        </div>
+      </div>
+    </div>
+
+    <!-- TEXT CHANNEL -->
+    <div class="channel-panel" id="panel-text">
+      <div class="announce-banner">
+        <div class="announce-icon">≡ƒôî</div>
+        <div class="announce-text"><strong>Pinned:</strong> Mid-sem timetable released ΓÇö check Files channel for PDF. DSA lab viva on Friday 10 AM.</div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="msg-date-divider">Today</div>
+
+        <div class="msg">
+          <div class="msg-avatar" style="background:linear-gradient(135deg,#1a1a3e,#2d2d6e);">RK</div>
+          <div class="msg-body">
+            <div class="msg-header">
+              <span class="msg-author">Rahul K</span>
+              <span class="msg-role role-admin">Admin</span>
+              <span class="msg-time">9:42 AM</span>
+            </div>
+            <div class="msg-text">Morning everyone! ≡ƒîà Reminder ΓÇö DSA lab viva is this Friday. Make sure you've revised linked lists, trees and sorting algorithms. Good luck!</div>
+            <div class="msg-reactions">
+              <div class="msg-react-pill active">≡ƒæì <span class="msg-react-count">24</span></div>
+              <div class="msg-react-pill">≡ƒöÑ <span class="msg-react-count">11</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="msg">
+          <div class="msg-avatar" style="background:linear-gradient(135deg,#0f2e1e,#1a4a30);">PS</div>
+          <div class="msg-body">
+            <div class="msg-header">
+              <span class="msg-author">Priya S</span>
+              <span class="msg-role role-mod">Mod</span>
+              <span class="msg-time">10:15 AM</span>
+            </div>
+            <div class="msg-text">Has anyone solved the OS assignment question 4? The semaphore implementation is confusing me ≡ƒÿà</div>
+          </div>
+        </div>
+
+        <div class="msg">
+          <div class="msg-avatar" style="background:linear-gradient(135deg,#2e1a1a,#4e2d2d);">AM</div>
+          <div class="msg-body">
+            <div class="msg-header">
+              <span class="msg-author">Aryan M</span>
+              <span class="msg-time">10:18 AM</span>
+            </div>
+            <div class="msg-text"><span class="mention">@Priya S</span> Yes! Use a mutex with <span class="code">pthread_mutex_lock()</span> ΓÇö wrapping the critical section. I'll share my code snippet after lab.</div>
+          </div>
+        </div>
+
+        <div class="msg continued">
+          <div class="msg-avatar"></div>
+          <div class="msg-body">
+            <div class="msg-text">Also check the NPTEL lecture 14 ΓÇö it explains it way better than the textbook tbh</div>
+          </div>
+        </div>
+
+        <div class="msg">
+          <div class="msg-avatar" style="background:linear-gradient(135deg,#1a2e2e,#2d4e4e);">SK</div>
+          <div class="msg-body">
+            <div class="msg-header">
+              <span class="msg-author">Sneha K</span>
+              <span class="msg-time">11:30 AM</span>
+            </div>
+            <div class="msg-text">Shared the CN notes from last year's topper ΓÇö super helpful for the upcoming exam!</div>
+            <div class="msg-file">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <div class="msg-file-info">
+                <div class="msg-file-name">CN_Notes_Final_2024.pdf</div>
+                <div class="msg-file-size">3.2 MB ┬╖ PDF</div>
+              </div>
+            </div>
+            <div class="msg-reactions">
+              <div class="msg-react-pill active">Γ¥ñ∩╕Å <span class="msg-react-count">31</span></div>
+              <div class="msg-react-pill">≡ƒÖÅ <span class="msg-react-count">18</span></div>
+              <div class="msg-react-pill">≡ƒöÑ <span class="msg-react-count">9</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="msg">
+          <div class="msg-avatar" style="background:linear-gradient(135deg,#2e2a1a,#4e3e2a);">VR</div>
+          <div class="msg-body">
+            <div class="msg-header">
+              <span class="msg-author">Vikram R</span>
+              <span class="msg-time">2:05 PM</span>
+            </div>
+            <div class="msg-text">Anyone joining the voice channel for group study tonight? Planning 8ΓÇô10 PM</div>
+            <div class="msg-reactions">
+              <div class="msg-react-pill">Γ£ï <span class="msg-react-count">7</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="msg-input-bar">
+        <div class="msg-input-wrap">
+          <input class="msg-input" placeholder="Message #general" id="msg-input">
+          <div class="input-actions">
+            <button class="input-action-btn"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+            <button class="input-action-btn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+          </div>
+          <button class="send-btn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS CHANNEL -->
+    <div class="channel-panel" id="panel-announce" style="display:none; flex:1; overflow-y:auto; padding:16px; flex-direction:column; gap:12px;">
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--text-muted);">Rahul K (Admin) ┬╖ Nov 18</div>
+        </div>
+        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;">≡ƒôó Mid-sem timetable released</div>
+        <div style="font-size:13px;color:var(--text-sub);line-height:1.6;">The mid-semester examination timetable has been released. Check the Files channel for the PDF. DSA viva is this Friday at 10 AM in Lab 3.</div>
+      </div>
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--text-muted);">Rahul K (Admin) ┬╖ Nov 15</div>
+        </div>
+        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;">≡ƒÄë Welcome to CSE Hub!</div>
+        <div style="font-size:13px;color:var(--text-sub);line-height:1.6;">This is the official community for all CSE students at CBIT. Share notes, ask questions, collaborate on projects and keep up with department news here.</div>
+      </div>
+    </div>
+
+    <!-- FILES CHANNEL -->
+    <div class="channel-panel" id="panel-files" style="display:none; flex:1; overflow-y:auto; padding:16px; flex-direction:column; gap:8px;">
+      <div style="font-size:11px;color:var(--text-muted);padding:4px 0 8px;letter-spacing:0.05em;text-transform:uppercase;">Recent files</div>
+      <div class="msg-file" style="width:100%;max-width:100%;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="msg-file-info">
+          <div class="msg-file-name">Mid_Sem_Timetable_Nov2025.pdf</div>
+          <div class="msg-file-size">1.1 MB ┬╖ Shared by Rahul K ┬╖ 2 days ago</div>
+        </div>
+      </div>
+      <div class="msg-file" style="width:100%;max-width:100%;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="msg-file-info">
+          <div class="msg-file-name">CN_Notes_Final_2024.pdf</div>
+          <div class="msg-file-size">3.2 MB ┬╖ Shared by Sneha K ┬╖ Today</div>
+        </div>
+      </div>
+      <div class="msg-file" style="width:100%;max-width:100%;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--teal);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <div class="msg-file-info">
+          <div class="msg-file-name">OS_Lab_Semaphore_Solution.c</div>
+          <div class="msg-file-size">4 KB ┬╖ Shared by Aryan M ┬╖ Today</div>
+        </div>
+      </div>
+      <div class="msg-file" style="width:100%;max-width:100%;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--amber);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="3 9 21 9"/><polyline points="9 21 9 9"/></svg>
+        <div class="msg-file-info">
+          <div class="msg-file-name">DSA_Practice_Sheet_2025.xlsx</div>
+          <div class="msg-file-size">890 KB ┬╖ Shared by Priya S ┬╖ Yesterday</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOICE CHANNEL -->
+    <div class="voice-panel" id="panel-voice">
+      <div style="height:24px;"></div>
+      <div class="voice-title">Study Room ≡ƒÄº</div>
+      <div class="voice-sub">4 members in voice</div>
+      <div class="voice-members">
+        <div class="voice-member">
+          <div class="voice-avatar speaking" style="background:linear-gradient(135deg,#1a1a3e,#2d2d6e);">RK</div>
+          <div class="voice-name">Rahul K</div>
+        </div>
+        <div class="voice-member">
+          <div class="voice-avatar" style="background:linear-gradient(135deg,#0f2e1e,#1a4a30);">PS</div>
+          <div class="voice-name">Priya S</div>
+        </div>
+        <div class="voice-member">
+          <div class="voice-avatar muted" style="background:linear-gradient(135deg,#2e1a1a,#4e2d2d);">AM</div>
+          <div class="voice-name">Aryan M</div>
+        </div>
+        <div class="voice-member">
+          <div class="voice-avatar" style="background:linear-gradient(135deg,#1a2e2e,#2d4e4e);">SK</div>
+          <div class="voice-name">Sneha K</div>
+        </div>
+      </div>
+      <div class="voice-controls">
+        <div class="v-ctrl"><svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+        <div class="v-ctrl"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></div>
+        <div class="v-ctrl danger"><svg viewBox="0 0 24 24"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07C9.44 16.29 7.62 14.48 6.29 12.37A19.79 19.79 0 0 1 3.22 3.74 2 2 0 0 1 5.21 1.55h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11z"/></svg></div>
+      </div>
+      <button style="padding:13px 28px;background:var(--accent);border:none;border-radius:14px;color:white;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(108,99,255,0.4);margin-top:8px;">Join voice channel</button>
+    </div>
+
+  </div>
+
+  <div class="dial-backdrop" id="campx-backdrop"></div>
+  <div class="campx-nav-dock" id="campx-navDock">
+  <div class="hold-hint" id="campx-holdHint">Swipe up to open menu</div>
+  <div class="speed-dial-wrap" id="campx-speedDial">
+    <div class="screen-chip" id="campx-screenChip">Community</div>
+  </div>
+  <div class="nav-pill" id="campx-navPill">
+    <div class="pill-arrows"><span></span><span></span></div>
+    <span class="pill-label" id="campx-pillLabel">Community</span>
+    <div class="pill-dot"></div>
+  </div>
+  </div>
+  <script src="/campx-speed-dial.js?v=4" defer></script>
+
+</div>
+</div>
+
+<script type="module" src="/src/entries/communities-live.ts"></script>
+<script>
+const communities = {
+  'cse-hub': { icon: '≡ƒÆ╗', name: 'CSE Hub ΓÇö CBIT', members: '248 members ┬╖ 34 online', bg: 'linear-gradient(135deg,#1a1a3e,#2d2d6e)' },
+  'webdev':  { icon: '≡ƒîÉ', name: 'Web Dev India',   members: '2.4k members ┬╖ 128 online', bg: 'linear-gradient(135deg,#1a2e1a,#2d4e2d)' },
+  'hackteam':{ icon: 'ΓÜí', name: 'HackIndia Team',  members: '12 members ┬╖ 5 online',    bg: 'linear-gradient(135deg,#2e1a1a,#4e2d2d)' },
+};
+
+function openCommunity(id) {
+  const c = communities[id];
+  document.getElementById('ch-icon').textContent = c.icon;
+  document.getElementById('ch-icon').style.background = c.bg;
+  document.getElementById('ch-name').textContent = c.name;
+  document.getElementById('ch-members').textContent = c.members;
+
+  document.getElementById('list-screen').classList.replace('active','offleft');
+  document.getElementById('channel-screen').classList.replace('offright','active');
+
+  // reset to text channel
+  switchChannel('text', document.querySelector('.ch-tab'));
+}
+
+function goBack() {
+  document.getElementById('channel-screen').classList.replace('active','offright');
+  document.getElementById('list-screen').classList.replace('offleft','active');
+}
+
+const panels = { text:'panel-text', announce:'panel-announce', files:'panel-files', voice:'panel-voice' };
+
+function switchChannel(type, tab) {
+  document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  Object.values(panels).forEach(p => {
+    const el = document.getElementById(p);
+    el.style.display = 'none';
+  });
+  const target = document.getElementById(panels[type]);
+  target.style.display = type === 'voice' ? 'flex' : 'flex';
+  target.style.flexDirection = 'column';
+  if (type !== 'text') target.style.flex = '1';
+  target.style.overflowY = type === 'text' ? '' : 'auto';
+  if (type === 'voice') { target.style.alignItems = 'center'; target.style.gap = '16px'; target.style.padding = '16px'; }
+}
+
+function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `
+    <div class="msg-avatar" style="background:linear-gradient(135deg,#2d1b4e,#3d2b6e);">You</div>
+    <div class="msg-body">
+      <div class="msg-header">
+        <span class="msg-author">You</span>
+        <span class="msg-time">Just now</span>
+      </div>
+      <div class="msg-text">${text}</div>
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  input.value = '';
+}
+
+document.getElementById('msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+</script>
+</body>
+</html>

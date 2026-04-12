@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script type="module" src="/src/entries/session-gate.ts"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampX - Founder Dashboard</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, Arial, sans-serif; background: #08090d; color: #eef0ff; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 56px; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+h1 { margin: 0; font-size: 26px; }
+a { color: #b9b9ff; text-decoration: none; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 20px; }
+.card { background: #121524; border: 1px solid #272b45; border-radius: 14px; padding: 14px; }
+.k { color: #95a0d9; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.v { font-size: 24px; margin-top: 8px; font-weight: 700; }
+.section { background: #111322; border: 1px solid #252946; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.section h2 { margin: 0 0 10px; font-size: 18px; }
+ul { margin: 0; padding-left: 18px; color: #ced3f3; }
+li { margin: 6px 0; }
+.table-wrap { overflow: auto; border: 1px solid #272b45; border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; min-width: 720px; }
+th, td { text-align: left; padding: 10px; border-bottom: 1px solid #1f2440; font-size: 13px; }
+th { color: #95a0d9; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.btn { border: 1px solid #30365b; background: #171b31; color: #eef0ff; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
+.btn:hover { border-color: #46508b; }
+.btn.ok { background: #123022; border-color: #266546; }
+.btn.bad { background: #33181d; border-color: #7a2f3c; }
+.muted { color: #95a0d9; font-size: 13px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Founder Dashboard</h1>
+      <a href="/feed">Back to app</a>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="k">Daily Active Users</div><div class="v" id="campx-metric-dau">ΓÇö</div></div>
+      <div class="card"><div class="k">New Signups (24h)</div><div class="v" id="campx-metric-signups">ΓÇö</div></div>
+      <div class="card"><div class="k">KYC Pending</div><div class="v" id="campx-metric-kyc">ΓÇö</div></div>
+      <div class="card"><div class="k">Reported Content</div><div class="v" id="campx-metric-reports">ΓÇö</div></div>
+    </div>
+
+    <div class="section">
+      <h2>Access and Roles</h2>
+      <ul>
+        <li>Founder-level overview with global moderation and product controls.</li>
+        <li>Role separation for operations, moderation and growth functions.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Modules</h2>
+      <ul>
+        <li>User growth analytics and verification funnel.</li>
+        <li>Content health and trust/safety metrics.</li>
+        <li>Billing, payout and subscription overview.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Verification Requests (Founder Approval)</h2>
+      <p class="muted">Users with pending verification can be approved or rejected here.</p>
+      <div id="campx-verify-queue" class="table-wrap"></div>
+    </div>
+
+    <div class="section">
+      <h2>Access Points</h2>
+      <ul>
+        <li>Primary web dashboard for founder/admin controls.</li>
+        <li>Fast links to college onboarding and ambassador modules.</li>
+      </ul>
+    </div>
+  </div>
+  <script type="module" src="/src/entries/founder-dashboard-live.ts"></script>
+</body>
+</html>
