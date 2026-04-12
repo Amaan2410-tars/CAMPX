@@ -71,12 +71,12 @@ const NAV_ITEMS = [
 ];
 
 const FAN_POSITIONS = [
-  { x: -150, y: 100 },
-  { x: -100, y: 170 },
-  { x: -50,  y: 240 },
-  { x: 50,   y: 240 },
-  { x: 100,  y: 170 },
-  { x: 150,  y: 100 },
+  { x: -153, y: 91 },
+  { x: -112, y: 162 },
+  { x: -41,  y: 203 },
+  { x: 41,   y: 203 },
+  { x: 112,  y: 162 },
+  { x: 153,  y: 91 },
 ];
 
 export default function SpeedDialNav() {
