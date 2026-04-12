@@ -7,6 +7,73 @@ interface FormErrors {
   [key: string]: string;
 }
 
+const COLLEGE_CATALOG: Record<string, string[]> = {
+  "Shadan College Of Engineering and Technology": [
+    "Computer Science and Engineering (CSE)",
+    "Information Technology (IT)",
+    "CSE (AI & ML)",
+    "CSE (Data Science)",
+    "Electronics and Communication Engineering (ECE)",
+    "Electrical and Electronics Engineering (EEE)",
+    "Mechanical Engineering",
+    "Civil Engineering",
+    "MBA"
+  ],
+  "Lords College of Engineering and Technology": [
+    "Computer Science and Engineering (CSE)",
+    "Information Technology (IT)",
+    "CSE (AI & ML)",
+    "CSE (Data Science)",
+    "Electronics and Communication Engineering (ECE)",
+    "Electrical and Electronics Engineering (EEE)",
+    "Mechanical Engineering",
+    "Civil Engineering",
+    "MBA"
+  ],
+  "M.J College of Engineering and Technology": [
+    "Computer Science and Engineering (CSE)",
+    "Information Technology (IT)",
+    "CSE (AI & ML)",
+    "Artificial Intelligence and Data Science",
+    "Electronics and Communication Engineering (ECE)",
+    "Electrical Engineering (EE)",
+    "Mechanical Engineering",
+    "Civil Engineering",
+    "Production Engineering"
+  ],
+  "Methodist College of Engineering and Technology": [
+    "Computer Science and Engineering (CSE)",
+    "CSE (AI & ML)",
+    "Electronics and Communication Engineering (ECE)",
+    "Electrical and Electronics Engineering (EEE)",
+    "Mechanical Engineering",
+    "Civil Engineering"
+  ],
+  "Anwar-ul-uloom Degree College": [
+    "B.Sc (Computer Science)",
+    "B.Sc (Physical Sciences)",
+    "B.Sc (Life Sciences)",
+    "B.Com (General)",
+    "B.Com (Computers)",
+    "B.Com (Honors)",
+    "BBA",
+    "B.A."
+  ],
+  "St Joseph College of Degree": [
+    "B.Com (General)",
+    "B.Com (Computers)",
+    "B.Com (Honors)",
+    "B.Com (IT)",
+    "BBA (Business Administration)",
+    "BBA (IT)",
+    "B.Sc (Maths, Physics, Computer Science)",
+    "B.Sc (Electronics)",
+    "B.A. (Mass Communication)"
+  ]
+};
+
+const MOCK_COLLEGES = Object.keys(COLLEGE_CATALOG).map((name, idx) => ({ id: `c-${idx}`, name }));
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const [currentScreen, setCurrentScreen] = useState('splash');
@@ -550,27 +617,25 @@ export default function Onboarding() {
               <div className="form-title">College details</div>
               <div className="form-sub">We use this to place you in the right campus feed.</div>
 
-              <div className="input-group" style={{position: 'relative'}}>
+              <div className="input-group">
                 <label className="input-label" htmlFor="college-name">College / University</label>
-                <input type="text" className={`no-icon ${errors.college ? 'has-error' : ''}`} id="college-name" placeholder="Type and select your college" value={collegeName} onChange={e => { setCollegeName(e.target.value); setCollegeId(null); setErrors(p => ({...p, college: ''})); searchColleges(e.target.value); }} onFocus={() => { if (collegeResults.length) setCollegeDropdownOpen(true); }} />
-                {collegeDropdownOpen && collegeResults.length > 0 && (
-                  <div className="college-dropdown">
-                    {collegeResults.map(c => (
-                      <div key={c.id} className="college-dropdown-item" onClick={() => { setCollegeName(c.name); setCollegeId(c.id); setCollegeDropdownOpen(false); }}>
-                        {c.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <select className={`year-select ${errors.college ? 'has-error' : ''}`} id="college-name" value={collegeName} onChange={e => { setCollegeName(e.target.value); setMajor(''); setErrors(p => ({...p, college: ''})); }}>
+                  <option value="">Select your college</option>
+                  {MOCK_COLLEGES.map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
                 {renderInlineError('college')}
               </div>
 
               <div className="input-group">
                 <label className="input-label" htmlFor="signup-major">Major / Branch</label>
-                <div className={`input-wrap ${errors.major ? 'has-error' : ''}`}>
-                  <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                  <input type="text" id="signup-major" placeholder="e.g. Computer Science" value={major} onChange={e => { setMajor(e.target.value); setErrors(p => ({...p, major: ''})); }} />
-                </div>
+                <select className={`year-select ${errors.major ? 'has-error' : ''}`} id="signup-major" value={major} onChange={e => { setMajor(e.target.value); setErrors(p => ({...p, major: ''})); }} disabled={!collegeName}>
+                  <option value="">Select major</option>
+                  {collegeName && COLLEGE_CATALOG[collegeName] ? COLLEGE_CATALOG[collegeName].map((m, i) => (
+                    <option key={i} value={m}>{m}</option>
+                  )) : null}
+                </select>
                 {renderInlineError('major')}
               </div>
 
