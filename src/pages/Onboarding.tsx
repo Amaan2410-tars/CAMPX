@@ -29,7 +29,8 @@ export default function Onboarding() {
 
   // Loading / UI state
   const [loading, setLoading] = useState(false);
-  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [otpLength, setOtpLength] = useState(8); 
+  const [otpDigits, setOtpDigits] = useState(Array(8).fill(''));
   const [otpError, setOtpError] = useState('');
   const [otpShake, setOtpShake] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(true);
@@ -157,7 +158,7 @@ export default function Onboarding() {
     newDigits[index] = value.slice(-1);
     setOtpDigits(newDigits);
     setOtpError('');
-    if (value && index < 5) {
+    if (value && index < otpLength - 1) {
       otpRefs.current[index + 1]?.focus();
     }
   };
@@ -170,11 +171,12 @@ export default function Onboarding() {
 
   const handleOtpPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (pasted.length === 6) {
-      const newDigits = pasted.split('');
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, otpLength);
+    if (pasted.length === otpLength || pasted.length === 6) { // support both 6 and 8 for backward combability
+      const newDigits = Array(otpLength).fill('');
+      pasted.split('').forEach((char, i) => newDigits[i] = char);
       setOtpDigits(newDigits);
-      otpRefs.current[5]?.focus();
+      otpRefs.current[pasted.length - 1]?.focus();
     }
   };
 
@@ -223,8 +225,8 @@ export default function Onboarding() {
 
   const handleVerifyOtp = async () => {
     const code = otpDigits.join('');
-    if (code.length < 6) {
-      setOtpError('Enter all 6 digits');
+    if (code.length < 6) { // Accept 6 or 8 based on supabase settings
+      setOtpError('Enter the complete verification code');
       return;
     }
     setLoading(true);
@@ -642,12 +644,12 @@ export default function Onboarding() {
               <div className="topbar-logo">Camp<span className="x">X</span></div>
             </div>
             <div className="form-body">
-              <div className="center-block">
+                <div className="center-block">
                 <div className="mail-illus">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 </div>
                 <div className="form-title">Enter code</div>
-                <div className="form-sub">We sent a 6-digit code to <strong>{verifyEmail}</strong></div>
+                <div className="form-sub">We sent a verification code to <strong>{verifyEmail}</strong></div>
               </div>
               <div className={`otp-row ${otpShake ? 'shake' : ''}`}>
                 {otpDigits.map((digit, i) => (
