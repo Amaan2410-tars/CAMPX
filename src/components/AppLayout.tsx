@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import SpeedDialNav from "./SpeedDialNav";
 
 interface ToastProps {
@@ -16,6 +16,9 @@ export const triggerGlobalToast = (message: string, type: "success" | "info" | "
 
 export default function AppLayout() {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
+  const navigate = useNavigate();
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
 
   useEffect(() => {
     const handleToast = (e: Event) => {
@@ -37,8 +40,26 @@ export default function AppLayout() {
     return () => window.removeEventListener("campx-toast", handleToast);
   }, []);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    const diffX = touchEndX - touchStartX.current;
+    const diffY = touchEndY - touchStartY.current;
+    
+    // Check if it's a clear horizontal right swipe
+    if (diffX > 100 && Math.abs(diffX) > Math.abs(diffY) * 2) {
+      navigate('/dms');
+    }
+  };
+
   return (
-    <div className="app">
+    <div className="app" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <style>{`
         .toast-container {
           position: absolute;
