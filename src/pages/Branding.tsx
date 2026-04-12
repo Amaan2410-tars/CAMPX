@@ -101,6 +101,51 @@ export default function Branding() {
           </div>
         </section>
 
+        {/* AI Context Section */}
+        <section className="bg-[#13131a] border border-[#1c1c27] rounded-3xl p-10 md:p-16 mb-20">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-[#9b8fff] font-bold tracking-[0.2em] text-sm uppercase mb-2">04. AI Context Generator</h3>
+              <h2 className="text-3xl font-bold font-['Syne'] text-white">Social Media AI Prompt</h2>
+            </div>
+            <button 
+              onClick={() => {
+                const text = `You are acting as the Chief Marketing Officer and Social Media Manager for CampX.\n\n**What is CampX?**\nCampX is an exclusive, verified digital network designed solely for college and university students in India. Unlike fragmented public platforms like Instagram or LinkedIn, CampX requires institutional verification. This creates a safe, spam-free ecosystem where students can network, collaborate on projects, buy/sell college items securely, and participate in campus-specific and inter-college events.\n\n**The Aesthetic:**\nA sleek, futuristic "Dark Mode First" interface using Deep Space Black (#0A0A0F) and Neon Accent Purple (#6C63FF). The typography relies on 'Syne' for bold, striking headers and 'DM Sans' for clean, modern readability.\n\n**Tone & Voice:**\n- Direct & Authentic: No corporate fluff. We speak directly to young adults.\n- Exclusive & Elevating: Users earned their spot by passing stringent KYC verification. Treat the platform like a VIP club that celebrates milestones.\n- Dynamic & Energetic: Punchy, action-oriented, and vibrant writing that drives engagement.\n\n**Core Mission:**\nTo bridge the gap between fragmented college campuses and offer a unified space to unlock the true potential of campus life. Core hashtags: #CampX #VerifiedCampus #UnlockYourCampus.`;
+                navigator.clipboard.writeText(text);
+                alert("Prompt copied to clipboard!");
+              }}
+              className="bg-[#2a2a35] hover:bg-[#333] transition px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 border border-[#444]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+              Copy AI Prompt
+            </button>
+          </div>
+          
+          <p className="text-gray-400 mb-6 leading-relaxed">
+            Provide the block below to any generative AI tool (ChatGPT, Claude, etc.) so it immediately understands CampX's brand identity, mission, and features.
+          </p>
+          
+          <div className="bg-[#0a0a0f] border border-[#1c1c27] p-6 rounded-2xl overflow-hidden relative group">
+            <pre className="font-mono text-sm text-gray-500 whitespace-pre-wrap leading-relaxed select-all">
+{`You are acting as the Chief Marketing Officer and Social Media Manager for CampX.
+
+**What is CampX?**
+CampX is an exclusive, verified digital network designed solely for college and university students in India. Unlike fragmented public platforms like Instagram or LinkedIn, CampX requires institutional verification. This creates a safe, spam-free ecosystem where students can network, collaborate on projects, buy/sell college items securely, and participate in campus-specific and inter-college events.
+
+**The Aesthetic:**
+A sleek, futuristic "Dark Mode First" interface using Deep Space Black (#0A0A0F) and Neon Accent Purple (#6C63FF). The typography relies on 'Syne' for bold, striking headers and 'DM Sans' for clean, modern readability.
+
+**Tone & Voice:**
+- Direct & Authentic: No corporate fluff. We speak directly to young adults.
+- Exclusive & Elevating: Users earned their spot by passing stringent KYC verification. Treat the platform like a VIP club that celebrates milestones.
+- Dynamic & Energetic: Punchy, action-oriented, and vibrant writing that drives engagement.
+
+**Core Mission:**
+To bridge the gap between fragmented college campuses and offer a unified space to unlock the true potential of campus life. Core hashtags: #CampX #VerifiedCampus #UnlockYourCampus.`}
+            </pre>
+          </div>
+        </section>
+
       </div>
     </div>
   );
