@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import SettingsSubPage from "./pages/SettingsSubPage";
 import SubscriptionBilling from "./pages/SubscriptionBilling";
 import UserTiers from "./pages/UserTiers";
+import Branding from "./pages/Branding";
 
 // Import Admin App pages
 import AdminAuthGuard from "./admin/AdminAuthGuard";
@@ -74,6 +75,9 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 export default function App() {
   return (
     <Routes>
+      {/* ---------------- Public / Branding Routes ---------------- */}
+      <Route path="/branding" element={<Branding />} />
+
       {/* ---------------- Admin Panel Routes ---------------- */}
       <Route path="/auth/login" element={<AdminLogin />} />
       <Route path="/admin" element={<AdminAuthGuard />}>
