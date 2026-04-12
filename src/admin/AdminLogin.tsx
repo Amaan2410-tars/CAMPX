@@ -62,11 +62,7 @@ export default function AdminLogin() {
       <div className="w-full max-w-md rounded-2xl bg-[#13131a] p-8 shadow-2xl border border-[#1c1c27]">
         <div className="mb-8 text-center flex flex-col items-center">
           <div className="mb-4 flex items-center justify-center">
-            <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" className="h-12 w-12">
-              <path d="M8 36 L22 8 L36 36" stroke="#6c63ff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-              <path d="M13 27 L31 27" stroke="#6c63ff" strokeWidth="4" strokeLinecap="round" fill="none"/>
-              <circle cx="32" cy="14" r="5" fill="#6c63ff" opacity="0.9"/>
-            </svg>
+            <img src="/campx-logo.png" alt="CampX Logo" className="h-16 w-16 object-contain" />
           </div>
           <h1 className="text-2xl font-bold">Admin Portal</h1>
           <p className="mt-2 text-sm text-gray-400">Sign in to manage CampX</p>

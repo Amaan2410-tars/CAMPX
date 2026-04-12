@@ -505,12 +505,8 @@ export default function Onboarding() {
               <div className="orb orb-3"></div>
             </div>
             <div className="splash-center">
-              <div className="logo-mark">
-                <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 36 L22 8 L36 36" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                  <path d="M13 27 L31 27" stroke="white" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
-                  <circle cx="32" cy="14" r="5" fill="white" opacity="0.9"/>
-                </svg>
+              <div className="logo-mark" style={{ background: 'transparent', border: 'none' }}>
+                <img src="/campx-logo.png" alt="CampX Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
               <div className="brand-name">Camp<span className="brand-x">X</span></div>
               <div className="brand-tagline">Your campus, elevated</div>

@@ -61,10 +61,7 @@ export default function AdminLayout() {
       >
         <div className="flex h-16 items-center justify-between px-6 border-b border-[#1c1c27]">
           <div className="flex items-center gap-2">
-            <svg viewBox="0 0 44 44" className="h-8 w-8">
-              <path d="M8 36 L22 8 L36 36" stroke="#6c63ff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-              <path d="M13 27 L31 27" stroke="#6c63ff" strokeWidth="4" strokeLinecap="round" fill="none"/>
-            </svg>
+            <img src="/campx-logo.png" alt="CampX Logo" className="h-8 w-8 object-contain" />
             <span className="text-lg font-bold tracking-tight text-white">CampX<span className="text-[#6c63ff] font-black">.</span> Admin</span>
           </div>
           <button className="lg:hidden text-gray-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
