@@ -77,10 +77,19 @@ export default function Dms() {
   return (
     <>
       <style>{`
+        .dms-wrapper {
+          display: grid;
+          flex: 1;
+          width: 100%;
+          min-height: 100%; /* Ensure it spans the mobile view */
+        }
         .screen {
-          position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+          grid-area: 1 / 1;
           transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
-          background-color: var(--bg, #000); z-index: 10; overflow-y: hidden;
+          background-color: var(--bg, #000); 
+          z-index: 10; 
+          display: flex;
+          flex-direction: column;
         }
         .screen.hidden-right { transform: translateX(100%); opacity: 0; pointer-events: none; }
         .screen.hidden-left { transform: translateX(-30%); opacity: 0; pointer-events: none; }
@@ -123,7 +132,8 @@ export default function Dms() {
       `}</style>
       
       {/* INBOX SCREEN */}
-      <div className={`screen ${activeScreen === 'inbox' ? 'active' : 'hidden-left'}`} style={{overflowY: 'auto'}} id="inbox">
+      <div className="dms-wrapper">
+        <div className={`screen ${activeScreen === 'inbox' ? 'active' : 'hidden-left'}`} style={{overflowY: 'auto'}} id="inbox">
         <div className="topbar">
           <div className="topbar-title">Messages</div>
           <div className="topbar-right">
@@ -331,6 +341,7 @@ export default function Dms() {
               </button>
             )}
           </div>
+        </div>
         </div>
       </div>
     </>
