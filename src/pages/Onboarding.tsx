@@ -684,7 +684,7 @@ export default function Onboarding() {
                 <div className={`terms-checkbox ${termsAccepted ? 'checked' : ''}`}>
                   {termsAccepted && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
                 </div>
-                <div className="terms-text">I agree to the <a href="/terms.html" onClick={e => e.stopPropagation()}>Terms of Service</a> and <a href="/privacy.html" onClick={e => e.stopPropagation()}>Privacy Policy</a></div>
+                <div className="terms-text">I agree to the <a href="/policies#terms" target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>Terms of Service</a> and <a href="/policies#privacy" target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>Privacy Policy</a></div>
               </div>
               {renderInlineError('terms')}
 

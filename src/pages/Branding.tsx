@@ -146,6 +146,21 @@ To bridge the gap between fragmented college campuses and offer a unified space 
           </div>
         </section>
 
+        {/* Footer for Razorpay/Legal Compliance */}
+        <footer className="text-center pb-12 pt-4">
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500 mb-4">
+            <a href="/policies#terms" target="_blank" rel="noreferrer" className="hover:text-white transition">Terms &amp; Conditions</a>
+            <a href="/policies#privacy" target="_blank" rel="noreferrer" className="hover:text-white transition">Privacy Policy</a>
+            <a href="/policies#refunds" target="_blank" rel="noreferrer" className="hover:text-white transition">Refunds/Cancellations</a>
+            <a href="/policies#pricing" target="_blank" rel="noreferrer" className="hover:text-white transition">Pricing</a>
+            <a href="/policies#shipping" target="_blank" rel="noreferrer" className="hover:text-white transition">Shipping Policy</a>
+            <a href="/policies#contact" target="_blank" rel="noreferrer" className="hover:text-white transition">Contact Us</a>
+          </div>
+          <p className="text-gray-600 text-xs">
+            © {new Date().getFullYear()} CampX Technologies Pvt Ltd. All rights reserved.
+          </p>
+        </footer>
+
       </div>
     </div>
   );

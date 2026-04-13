@@ -22,6 +22,7 @@ import SettingsSubPage from "./pages/SettingsSubPage";
 import SubscriptionBilling from "./pages/SubscriptionBilling";
 import UserTiers from "./pages/UserTiers";
 import Branding from "./pages/Branding";
+import LegalPolicies from "./pages/LegalPolicies";
 
 // Import Admin App pages
 import AdminAuthGuard from "./admin/AdminAuthGuard";
@@ -108,6 +109,7 @@ export default function App() {
     <Routes>
       {/* ---------------- Public / Branding Routes ---------------- */}
       <Route path="/branding" element={<Branding />} />
+      <Route path="/policies" element={<LegalPolicies />} />
 
       {/* ---------------- Admin Panel Routes ---------------- */}
       <Route path="/auth/login" element={<AdminLogin />} />
