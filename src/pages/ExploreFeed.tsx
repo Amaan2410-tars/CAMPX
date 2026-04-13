@@ -234,7 +234,7 @@ export default function ExploreFeed() {
             <div className="unlock-item"><div className="unlock-dot"></div>DM other verified students</div>
             <div className="unlock-item"><div className="unlock-dot"></div>Join communities</div>
           </div>
-          <button className="nudge-btn" onClick={() => { setNudgeOpen(false); triggerGlobalToast('Opening verification...', 'info'); }}>Verify my college email</button>
+          <button className="nudge-btn" onClick={() => { setNudgeOpen(false); window.location.href = '/onboarding'; }}>Verify my college email</button>
           <button className="nudge-close" onClick={() => setNudgeOpen(false)}>Maybe later</button>
         </div>
       </div>

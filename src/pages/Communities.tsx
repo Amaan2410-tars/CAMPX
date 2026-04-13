@@ -27,6 +27,7 @@ export default function Communities() {
   const [activeCommunity, setActiveCommunity] = useState<CommunityData | null>(null);
   const [activeTab, setActiveTab] = useState<ChannelTab>('text');
   const [msgInput, setMsgInput] = useState('');
+  const [inVoice, setInVoice] = useState(false);
   const [messages, setMessages] = useState([
     { id: '1', author: 'Rahul K', role: 'admin', initials: 'RK', time: '9:42 AM', text: 'Morning everyone! 🌅 Reminder — DSA lab viva is this Friday. Make sure you\'ve revised linked lists, trees and sorting algorithms. Good luck!', reactions: [{ emoji: '👍', count: 24, active: true }, { emoji: '🔥', count: 11, active: false }] },
     { id: '2', author: 'Priya S', role: 'mod', initials: 'PS', time: '10:15 AM', text: 'Has anyone solved the OS assignment question 4? The semaphore implementation is confusing me 😅', reactions: [] },
@@ -294,9 +295,9 @@ export default function Communities() {
         {/* VOICE PANEL */}
         <div className="voice-panel" style={{display: activeTab === 'voice' ? 'flex' : 'none', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center', padding: '24px'}}>
           <div className="voice-title">Study Room 🎧</div>
-          <div className="voice-sub">4 members in voice</div>
+          <div className="voice-sub">{inVoice ? 5 : 4} members in voice</div>
           <div className="voice-members">
-            {[{ initials: 'RK', name: 'Rahul K', speaking: true }, { initials: 'PS', name: 'Priya S' }, { initials: 'AM', name: 'Aryan M', muted: true }, { initials: 'SK', name: 'Sneha K' }].map((m, i) => (
+            {[{ initials: 'RK', name: 'Rahul K', speaking: true }, { initials: 'PS', name: 'Priya S' }, { initials: 'AM', name: 'Aryan M', muted: true }, { initials: 'SK', name: 'Sneha K' }, ...(inVoice ? [{ initials: 'YK', name: 'You (YK)', speaking: false }] : [])].map((m, i) => (
               <div key={i} className="voice-member">
                 <div className={`voice-avatar ${m.speaking ? 'speaking' : ''} ${m.muted ? 'muted' : ''}`}>{m.initials}</div>
                 <div className="voice-name">{m.name}</div>
@@ -308,7 +309,12 @@ export default function Communities() {
             <div className="v-ctrl"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></div>
             <div className="v-ctrl danger"><svg viewBox="0 0 24 24"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07C9.44 16.29 7.62 14.48 6.29 12.37A19.79 19.79 0 0 1 3.22 3.74 2 2 0 0 1 5.21 1.55h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11z"/></svg></div>
           </div>
-          <button style={{marginTop: '20px', padding: '12px 32px', borderRadius: '14px', background: 'var(--accent)', border: 'none', color: 'white', fontSize: '15px', fontWeight: 600, cursor: 'pointer'}} onClick={() => triggerGlobalToast('Joining voice channel...', 'success')}>Join voice channel</button>
+          <button 
+            style={{marginTop: '20px', padding: '12px 32px', borderRadius: '14px', background: inVoice ? '#EF4444' : 'var(--accent)', border: 'none', color: 'white', fontSize: '15px', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s, transform 0.1s'}} 
+            onClick={() => setInVoice(!inVoice)}
+          >
+            {inVoice ? 'Disconnect' : 'Join voice channel'}
+          </button>
         </div>
       </div>
     </>
