@@ -19,6 +19,12 @@ html.campx-admin body {
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
+/* Disable global decorative overlays from `campx-pages.css` (noise gradients, etc). */
+html.campx-admin body::before,
+html.campx-admin body::after {
+  content: none !important;
+}
+
 /* Ensure prototype “phone app” styles never affect admin. */
 html.campx-admin .app,
 html.campx-admin .phone {
