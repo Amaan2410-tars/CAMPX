@@ -1,6 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Shield, Users, Server, Mail, Activity, ToggleLeft, ToggleRight, Search } from "lucide-react";
+import { Shield, Users, Server, Mail, Activity, ToggleLeft, ToggleRight, Search, X } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
+
+type Role = "founder" | "admin" | "moderator";
+type TeamRow = {
+  user_id: string;
+  role: Role;
+  full_name: string | null;
+  email: string | null;
+};
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("Team");
@@ -13,6 +21,81 @@ export default function Settings() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditErr, setAuditErr] = useState<string | null>(null);
   const [auditLogs, setAuditLogs] = useState<Array<{ id: string; actor_id: string | null; action: string; entity: string; created_at: string }>>([]);
+
+  const [me, setMe] = useState<{ id: string; full_name: string | null; email: string | null } | null>(null);
+  const [myNameDraft, setMyNameDraft] = useState("");
+  const [mySaving, setMySaving] = useState(false);
+  const [myErr, setMyErr] = useState<string | null>(null);
+  const [myOk, setMyOk] = useState<string | null>(null);
+
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [teamErr, setTeamErr] = useState<string | null>(null);
+  const [team, setTeam] = useState<TeamRow[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<Role>("admin");
+  const [inviteSaving, setInviteSaving] = useState(false);
+
+  const loadMe = async () => {
+    const sb = getSupabase();
+    if (!sb) return;
+    const { data } = await sb.auth.getUser();
+    const user = data.user;
+    if (!user) return;
+    const { data: prof } = await sb.from("profiles").select("id, full_name, email").eq("id", user.id).maybeSingle();
+    setMe((prof as any) ?? { id: user.id, full_name: null, email: user.email ?? null });
+    setMyNameDraft((prof as any)?.full_name ?? "");
+  };
+
+  const loadTeam = async () => {
+    const sb = getSupabase();
+    if (!sb) {
+      setTeamErr("Supabase is not configured.");
+      return;
+    }
+    try {
+      setTeamLoading(true);
+      setTeamErr(null);
+      const { data: roles, error } = await sb
+        .from("user_roles")
+        .select("user_id, role")
+        .in("role", ["founder", "admin", "moderator"]);
+      if (error) throw error;
+
+      const userIds = Array.from(new Set((roles ?? []).map((r: any) => String(r.user_id))));
+      const { data: profs } = userIds.length
+        ? await sb.from("profiles").select("id, full_name, email").in("id", userIds)
+        : { data: [] as any[] };
+
+      const profMap = new Map<string, any>((profs ?? []).map((p: any) => [String(p.id), p]));
+      const rows: TeamRow[] = (roles ?? []).map((r: any) => {
+        const p = profMap.get(String(r.user_id));
+        return {
+          user_id: String(r.user_id),
+          role: String(r.role) as Role,
+          full_name: (p?.full_name as string | null) ?? null,
+          email: (p?.email as string | null) ?? null,
+        };
+      });
+
+      const order = { founder: 0, admin: 1, moderator: 2 } as const;
+      rows.sort((a, b) => (order[a.role] ?? 9) - (order[b.role] ?? 9) || (a.full_name ?? "").localeCompare(b.full_name ?? ""));
+      setTeam(rows);
+    } catch (e: any) {
+      setTeamErr(e?.message ?? "Failed to load admin team.");
+    } finally {
+      setTeamLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadMe();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "Team") return;
+    void loadTeam();
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab !== "Audit") return;
@@ -92,14 +175,200 @@ export default function Settings() {
             <div className="space-y-6">
               <div className="flex justify-between items-center pb-4 border-b border-[#2a2a35]">
                 <h2 className="text-lg font-bold text-white">Admin Team Management</h2>
-                <button className="px-4 py-2 bg-[#6c63ff] hover:bg-[#5b54e5] text-white text-sm font-semibold rounded-lg transition">Invite Admin</button>
+                <button
+                  onClick={() => setInviteOpen(true)}
+                  className="px-4 py-2 bg-[#6c63ff] hover:bg-[#5b54e5] text-white text-sm font-semibold rounded-lg transition"
+                >
+                  Invite Admin
+                </button>
               </div>
 
-              <div className="bg-[#13131a] rounded-xl border border-[#2a2a35] divide-y divide-[#2a2a35]">
-                <div className="p-6 text-sm text-gray-400">
-                  Admin roster is backed by `user_roles` and is not wired into this UI yet.
+              {/* My admin details */}
+              <div className="bg-[#13131a] rounded-xl border border-[#2a2a35] p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-white">Your admin details</div>
+                    <div className="text-xs text-gray-500 mt-0.5">Update how your name appears across the admin panel.</div>
+                  </div>
                 </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs text-gray-400 mb-1">Display name</label>
+                    <input
+                      value={myNameDraft}
+                      onChange={(e) => setMyNameDraft(e.target.value)}
+                      className="w-full bg-[#0b0b10] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                      placeholder="e.g. Yash Kumar"
+                    />
+                    <div className="text-[11px] text-gray-500 mt-1">{me?.email ?? ""}</div>
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      disabled={mySaving}
+                      onClick={async () => {
+                        try {
+                          setMyErr(null);
+                          setMyOk(null);
+                          const sb = getSupabase();
+                          if (!sb || !me) throw new Error("Not signed in.");
+                          setMySaving(true);
+                          const { error } = await sb.from("profiles").update({ full_name: myNameDraft.trim() }).eq("id", me.id);
+                          if (error) throw error;
+                          setMyOk("Saved.");
+                          await loadMe();
+                        } catch (e: any) {
+                          setMyErr(e?.message ?? "Failed to save.");
+                        } finally {
+                          setMySaving(false);
+                        }
+                      }}
+                      className="w-full px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+                    >
+                      {mySaving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </div>
+
+                {myErr && <div className="mt-3 text-sm text-red-300">{myErr}</div>}
+                {myOk && <div className="mt-3 text-sm text-emerald-300">{myOk}</div>}
               </div>
+
+              {/* Team roster */}
+              <div className="bg-[#13131a] rounded-xl border border-[#2a2a35] overflow-hidden">
+                {teamErr && <div className="p-4 text-sm text-red-300 border-b border-[#2a2a35]">{teamErr}</div>}
+                <table className="w-full text-left text-sm text-gray-300">
+                  <thead className="bg-[#1c1c27] text-xs text-gray-500 uppercase border-b border-[#2a2a35]">
+                    <tr>
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Email</th>
+                      <th className="px-4 py-3">Role</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#2a2a35]">
+                    {teamLoading ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-10 text-center text-gray-500">
+                          Loading…
+                        </td>
+                      </tr>
+                    ) : team.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-10 text-center text-gray-500">
+                          No staff roles found.
+                        </td>
+                      </tr>
+                    ) : (
+                      team.map((row) => (
+                        <tr key={`${row.user_id}:${row.role}`} className="hover:bg-[#1c1c27]">
+                          <td className="px-4 py-3 font-medium text-white">{row.full_name || row.user_id}</td>
+                          <td className="px-4 py-3 text-gray-400">{row.email || "—"}</td>
+                          <td className="px-4 py-3">
+                            <span className="px-2 py-1 rounded-md text-xs bg-white/5 border border-white/10 text-white/80">
+                              {row.role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const sb = getSupabase();
+                                  if (!sb) throw new Error("Supabase is not configured.");
+                                  if (!row.email) throw new Error("This user has no email on profile.");
+                                  const { error } = await sb.rpc("revoke_user_role_by_email", { _email: row.email, _role: row.role });
+                                  if (error) throw error;
+                                  await loadTeam();
+                                } catch (e: any) {
+                                  setTeamErr(e?.message ?? "Failed to revoke role.");
+                                }
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 hover:bg-red-500/15 text-red-200 border border-red-500/20 transition"
+                            >
+                              Revoke
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Invite modal */}
+              {inviteOpen && (
+                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                  <div className="w-full max-w-lg bg-[#13131a] border border-[#2a2a35] rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-between p-5 border-b border-[#2a2a35]">
+                      <div className="text-white font-bold">Invite admin</div>
+                      <button onClick={() => setInviteOpen(false)} className="text-gray-400 hover:text-white">
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="p-5 space-y-4">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Email</label>
+                        <input
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          className="w-full bg-[#0b0b10] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                          placeholder="name@domain.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Role</label>
+                        <select
+                          value={inviteRole}
+                          onChange={(e) => setInviteRole(e.target.value as Role)}
+                          className="w-full bg-[#0b0b10] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                        >
+                          <option value="admin">admin</option>
+                          <option value="moderator">moderator</option>
+                          <option value="founder">founder</option>
+                        </select>
+                      </div>
+
+                      {teamErr && <div className="text-sm text-red-300">{teamErr}</div>}
+
+                      <div className="flex justify-end gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setInviteOpen(false)}
+                          className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-300 border border-[#2a2a35] hover:bg-white/5"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          disabled={inviteSaving}
+                          onClick={async () => {
+                            try {
+                              setTeamErr(null);
+                              const sb = getSupabase();
+                              if (!sb) throw new Error("Supabase is not configured.");
+                              const email = inviteEmail.trim();
+                              if (!email) throw new Error("Email is required.");
+                              setInviteSaving(true);
+                              const { error } = await sb.rpc("grant_user_role_by_email", { _email: email, _role: inviteRole });
+                              if (error) throw error;
+                              setInviteOpen(false);
+                              setInviteEmail("");
+                              setInviteRole("admin");
+                              await loadTeam();
+                            } catch (e: any) {
+                              setTeamErr(e?.message ?? "Failed to invite admin.");
+                            } finally {
+                              setInviteSaving(false);
+                            }
+                          }}
+                          className="px-4 py-2 bg-[#6c63ff] hover:bg-[#5b54e5] text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+                        >
+                          {inviteSaving ? "Inviting..." : "Invite"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

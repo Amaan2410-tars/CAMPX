@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -43,6 +43,8 @@ const NAV_ITEMS = [
 export default function AdminShell() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [me, setMe] = useState<{ id: string; full_name: string | null; email: string | null } | null>(null);
+  const [myRole, setMyRole] = useState<string>("Staff");
 
   const pageTitle = useMemo(() => {
     const currentPath = location.pathname;
@@ -59,20 +61,53 @@ export default function AdminShell() {
     navigate("/auth/login");
   };
 
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data: u } = await sb.auth.getUser();
+        const user = u.user;
+        if (!user) return;
+
+        const { data: prof } = await sb.from("profiles").select("id, full_name, email").eq("id", user.id).maybeSingle();
+        if (!cancelled) setMe((prof as any) ?? { id: user.id, full_name: null, email: user.email ?? null });
+
+        const { data: roles } = await sb.from("user_roles").select("role").eq("user_id", user.id);
+        const list = (roles ?? []).map((r: any) => String(r.role));
+        const badge = list.includes("founder") ? "Founder" : list.includes("admin") ? "Admin" : list.includes("moderator") ? "Moderator" : "Staff";
+        if (!cancelled) setMyRole(badge);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const initials = useMemo(() => {
+    const name = (me?.full_name || me?.email || "A").trim();
+    const parts = name.split(/\s+/).filter(Boolean);
+    const a = parts[0]?.[0] ?? "A";
+    const b = parts[1]?.[0] ?? parts[0]?.[1] ?? "";
+    return (a + b).toUpperCase();
+  }, [me?.full_name, me?.email]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-[#f0f0f8] overflow-hidden font-sans">
-      <div className="grid min-h-screen grid-cols-[minmax(240px,20vw)_1fr]">
-        {/* Sidebar (always visible, laptop-first) */}
-        <aside className="w-full bg-[#13131a] border-r border-[#1c1c27] flex flex-col sticky top-0 h-screen">
-          <div className="flex h-16 items-center justify-between px-5 border-b border-[#1c1c27]">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[15px] font-bold tracking-tight text-white truncate">
-                CampX<span className="text-[#6c63ff] font-black">.</span> Admin
-              </span>
+      <div className="grid min-h-screen grid-cols-[minmax(260px,22vw)_1fr]">
+        {/* Sidebar (Instagram-like) */}
+        <aside className="w-full bg-[#0b0b10] border-r border-white/10 flex flex-col sticky top-0 h-screen">
+          <div className="px-6 pt-8 pb-6">
+            <div className="text-[28px] leading-none font-extrabold tracking-tight text-white">
+              Camp<span className="text-[#6c63ff]">X</span>
             </div>
+            <div className="mt-1 text-xs text-white/50 tracking-widest uppercase">Admin</div>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto pb-4 custom-scrollbar">
             <nav className="space-y-1 px-3">
               {NAV_ITEMS.map((item) => {
                 const dashboardActive = item.path === "/admin" || item.path === "/";
@@ -84,35 +119,34 @@ export default function AdminShell() {
                     key={item.path}
                     to={item.path}
                     className={[
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      "group flex items-center gap-4 rounded-xl px-4 py-3 text-[15px] font-medium transition",
                       active
-                        ? "bg-[#6c63ff]/10 text-[#6c63ff] border border-[#6c63ff]/20"
-                        : "text-gray-400 hover:bg-[#1c1c27] hover:text-white",
+                        ? "bg-white/5 text-white"
+                        : "text-white/70 hover:bg-white/5 hover:text-white",
                     ].join(" ")}
                   >
-                    <item.icon size={18} className={active ? "text-[#6c63ff]" : "text-gray-500"} />
-                    {item.label}
+                    <item.icon size={22} className={active ? "text-white" : "text-white/70 group-hover:text-white"} />
+                    <span className={active ? "font-semibold" : ""}>{item.label}</span>
                   </Link>
                 );
               })}
             </nav>
           </div>
 
-          <div className="p-4 border-t border-[#1c1c27]">
-            <div className="flex items-center gap-3 mb-4 px-2">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#6c63ff] to-purple-400 flex items-center justify-center font-bold text-white shadow-lg">
-                YK
+          <div className="p-5 border-t border-white/10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-11 w-11 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-white">
+                {initials}
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-white leading-tight truncate">Yash Kumar</div>
-                <div className="text-xs text-[#6c63ff] font-medium bg-[#6c63ff]/10 px-2 py-0.5 rounded inline-block mt-1">
-                  Founder
-                </div>
+                <div className="text-sm font-semibold text-white leading-tight truncate">{me?.full_name || "Admin"}</div>
+                <div className="text-xs text-white/60 truncate">{me?.email || ""}</div>
+                <div className="mt-1 text-[11px] text-[#6c63ff] font-semibold">{myRole}</div>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition"
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium text-white/70 hover:bg-white/5 hover:text-white transition"
             >
               <LogOut size={18} />
               Sign Out
