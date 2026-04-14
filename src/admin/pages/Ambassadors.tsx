@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { GraduationCap, FileText, CheckCircle2, TrendingUp, HelpCircle } from "lucide-react";
+import { GraduationCap, FileText, CheckCircle2, TrendingUp, HelpCircle, X, Search } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
 
 type AmbRow = {
@@ -18,6 +18,11 @@ export default function Ambassadors() {
   const [err, setErr] = useState<string | null>(null);
   const [rows, setRows] = useState<AmbRow[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignEmail, setAssignEmail] = useState("");
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
+  const [searchRes, setSearchRes] = useState<Array<{ id: string; full_name: string | null; email: string | null; college: string | null }>>([]);
 
   useEffect(() => {
     const sb = getSupabase();
@@ -65,7 +70,10 @@ export default function Ambassadors() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Campus Ambassadors</h1>
           <p className="text-gray-400 text-sm mt-1">Manage remote representatives and review weekly submissions.</p>
         </div>
-        <button className="px-4 py-2 bg-[#6c63ff] text-white text-sm font-semibold rounded-lg hover:bg-[#5b54e5] transition border border-transparent flex items-center gap-2">
+        <button
+          onClick={() => setAssignOpen(true)}
+          className="px-4 py-2 bg-[#6c63ff] text-white text-sm font-semibold rounded-lg hover:bg-[#5b54e5] transition border border-transparent flex items-center gap-2"
+        >
           <GraduationCap size={16} /> Assign Ambassador
         </button>
       </div>
@@ -160,6 +168,135 @@ export default function Ambassadors() {
            <CheckCircle2 size={48} className="mb-4 opacity-20 text-emerald-500" />
            <p className="text-white font-medium mb-1">You are all caught up!</p>
            <p className="text-sm">No pending weekly reports waiting for review.</p>
+        </div>
+      )}
+
+      {assignOpen && (
+        <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-[#1c1c27] border border-[#2a2a35] rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-[#2a2a35]">
+              <div className="text-white font-bold">Assign ambassador</div>
+              <button onClick={() => setAssignOpen(false)} className="text-gray-400 hover:text-white transition">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="text-sm text-gray-400">
+                This grants the <code className="text-gray-200">ambassador</code> role and ensures an <code className="text-gray-200">ambassador_stats</code> row exists.
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">User email*</label>
+                  <input
+                    value={assignEmail}
+                    onChange={(e) => setAssignEmail(e.target.value)}
+                    className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                    placeholder="name@domain.com"
+                  />
+                </div>
+                <div className="flex items-end justify-end gap-3">
+                  <button
+                    disabled={assignSaving}
+                    onClick={async () => {
+                      const sb = getSupabase();
+                      if (!sb) {
+                        setErr("Supabase is not configured.");
+                        return;
+                      }
+                      try {
+                        setAssignSaving(true);
+                        setErr(null);
+                        const email = assignEmail.trim();
+                        if (!email) throw new Error("Email is required.");
+
+                        // Grant ambassador role (requires founder/admin per SQL function).
+                        const { error: gErr } = await sb.rpc("grant_user_role_by_email", { _email: email, _role: "ambassador" });
+                        if (gErr) throw gErr;
+
+                        // Find user_id from profiles by email, then upsert stats.
+                        const { data: prof, error: pErr } = await sb.from("profiles").select("id").eq("email", email).maybeSingle();
+                        if (pErr) throw pErr;
+                        if (prof?.id) {
+                          const { error: sErr } = await sb.from("ambassador_stats").upsert({ user_id: prof.id }, { onConflict: "user_id" });
+                          if (sErr) throw sErr;
+                        }
+
+                        setAssignOpen(false);
+                        setAssignEmail("");
+                        // Reload list
+                        const { data, error } = await sb
+                          .from("ambassador_stats")
+                          .select("user_id, referrals_week, events_assisted, recognition_points, updated_at")
+                          .order("updated_at", { ascending: false })
+                          .limit(200);
+                        if (error) throw error;
+                        const r = (data ?? []) as any as AmbRow[];
+                        const userIds = Array.from(new Set(r.map((x) => x.user_id)));
+                        const profMap: Record<string, ProfileRow> = {};
+                        if (userIds.length) {
+                          const { data: profs } = await sb.from("profiles").select("id, full_name, college").in("id", userIds);
+                          (profs ?? []).forEach((p: any) => (profMap[p.id] = p));
+                        }
+                        setRows(r);
+                        setProfiles(profMap);
+                      } catch (e: any) {
+                        setErr(e?.message ?? "Failed to assign ambassador.");
+                      } finally {
+                        setAssignSaving(false);
+                      }
+                    }}
+                    className="w-full md:w-auto px-4 py-2 bg-[#6c63ff] hover:bg-[#5b54e5] text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+                  >
+                    {assignSaving ? "Assigning..." : "Assign"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <label className="block text-xs text-gray-400 mb-1">Quick search (optional)</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+                  <input
+                    value={searchQ}
+                    onChange={async (e) => {
+                      const v = e.target.value;
+                      setSearchQ(v);
+                      const sb = getSupabase();
+                      if (!sb) return;
+                      if (v.trim().length < 2) {
+                        setSearchRes([]);
+                        return;
+                      }
+                      const { data } = await sb
+                        .from("profiles")
+                        .select("id, full_name, email, college")
+                        .or(`full_name.ilike.%${v}%,email.ilike.%${v}%`)
+                        .limit(8);
+                      setSearchRes((data ?? []) as any);
+                    }}
+                    placeholder="Search by name or email..."
+                    className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg py-2 pl-8 pr-3 text-xs focus:outline-none focus:border-[#6c63ff] text-white"
+                  />
+                </div>
+                {searchRes.length > 0 && (
+                  <div className="mt-2 bg-[#13131a] border border-[#2a2a35] rounded-xl overflow-hidden">
+                    {searchRes.map((u) => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => setAssignEmail(String(u.email ?? ""))}
+                        className="w-full text-left px-4 py-3 hover:bg-white/5 transition border-b border-[#2a2a35] last:border-b-0"
+                      >
+                        <div className="text-sm text-white font-semibold">{u.full_name || u.email || u.id}</div>
+                        <div className="text-xs text-gray-500">{u.email || "—"} • {u.college || "—"}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
