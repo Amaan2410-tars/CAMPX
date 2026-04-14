@@ -66,7 +66,9 @@ export default function ExploreFeed() {
     <>
       <div className="topbar">
         <div className="topbar-row">
-          <div className="topbar-title">Explore</div>
+          <div className="topbar-title">
+            <img src="/campx-logo-512.png" alt="CampX" style={{ height: '24px', marginRight: '6px' }} />
+          </div>
           <div className="topbar-right">
             <div className="icon-btn" onClick={() => triggerGlobalToast('Search opened', 'info')}>
               <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
@@ -215,11 +217,7 @@ export default function ExploreFeed() {
         </button>
       )}
 
-      {/* Swipe hint */}
-      <div className="swipe-hint">
-        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-        <span>College</span>
-      </div>
+
 
       {/* Nudge modal */}
       <div className={`nudge-overlay ${nudgeOpen ? 'open' : ''}`} onClick={() => setNudgeOpen(false)}>

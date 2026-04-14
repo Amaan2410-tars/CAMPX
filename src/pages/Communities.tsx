@@ -83,14 +83,12 @@ export default function Communities() {
   return (
     <>
       <style>{`
-        .screen { position: absolute; inset: 0; display: flex; flex-direction: column; transition: transform 0.42s cubic-bezier(0.77,0,0.175,1), opacity 0.3s ease; }
-        .screen.active { transform: translateX(0); opacity: 1; }
-        .screen.offright { transform: translateX(100%); opacity: 0; pointer-events: none; }
-        .screen.offleft { transform: translateX(-30%); opacity: 0; pointer-events: none; }
+        .comm-screen { display: flex; flex-direction: column; flex: 1; height: 100%; min-height: 100vh; background: var(--bg); }
       `}</style>
 
       {/* LIST SCREEN */}
-      <div className={`screen ${activeScreen === 'list' ? 'active' : 'offleft'}`} id="list-screen">
+      {activeScreen === 'list' && (
+      <div className="comm-screen" id="list-screen">
         <div className="topbar">
           <div className="topbar-title">Communities</div>
           <div className="topbar-right">
@@ -158,9 +156,11 @@ export default function Communities() {
           </div>
         </div>
       </div>
+      )}
 
       {/* CHANNEL SCREEN */}
-      <div className={`screen ${activeScreen === 'channel' ? 'active' : 'offright'}`} id="channel-screen">
+      {activeScreen === 'channel' && (
+      <div className="comm-screen" id="channel-screen">
         <div className="ch-topbar">
           <div className="ch-topbar-row">
             <div className="back-btn" onClick={goBackToList} style={{cursor: 'pointer'}}>
@@ -319,6 +319,7 @@ export default function Communities() {
           </button>
         </div>
       </div>
+      )}
     </>
   );
 }
