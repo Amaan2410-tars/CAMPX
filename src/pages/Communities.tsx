@@ -17,11 +17,7 @@ interface CommunityData {
   online: number;
 }
 
-const COMMUNITIES: CommunityData[] = [
-  { id: 'cse', icon: '💻', name: 'CSE Hub — CBIT', type: 'college', preview: 'Aryan: Has anyone started the OS assignment yet? The...', time: '2m', unread: 12, members: 248, online: 34 },
-  { id: 'webdev', icon: '🌐', name: 'Web Dev India', type: 'open', preview: '📎 react-hooks-cheatsheet.pdf was shared', time: '18m', unread: 5, members: 1230, online: 89 },
-  { id: 'hack', icon: '⚡', name: 'HackIndia Team', type: 'open', preview: "Priya: Let's sync at 8 PM today for the backend review", time: '1h', members: 64, online: 12 },
-];
+const COMMUNITIES: CommunityData[] = [];
 
 export default function Communities() {
   usePageTitle('Communities');
@@ -30,14 +26,7 @@ export default function Communities() {
   const [activeTab, setActiveTab] = useState<ChannelTab>('text');
   const [msgInput, setMsgInput] = useState('');
   const [inVoice, setInVoice] = useState(false);
-  const [messages, setMessages] = useState([
-    { id: '1', author: 'Rahul K', role: 'admin', initials: 'RK', time: '9:42 AM', text: 'Morning everyone! 🌅 Reminder — DSA lab viva is this Friday. Make sure you\'ve revised linked lists, trees and sorting algorithms. Good luck!', reactions: [{ emoji: '👍', count: 24, active: true }, { emoji: '🔥', count: 11, active: false }] },
-    { id: '2', author: 'Priya S', role: 'mod', initials: 'PS', time: '10:15 AM', text: 'Has anyone solved the OS assignment question 4? The semaphore implementation is confusing me 😅', reactions: [] },
-    { id: '3', author: 'Aryan M', role: '', initials: 'AM', time: '10:18 AM', text: '@Priya S Yes! Use a mutex with pthread_mutex_lock() — wrapping the critical section. I\'ll share my code snippet after lab.', reactions: [] },
-    { id: '4', author: 'Aryan M', role: '', initials: '', time: '', text: 'Also check the NPTEL lecture 14 — it explains it way better than the textbook tbh', reactions: [], continued: true },
-    { id: '5', author: 'Sneha K', role: '', initials: 'SK', time: '11:30 AM', text: 'Shared the CN notes from last year\'s topper — super helpful for the upcoming exam!', reactions: [{ emoji: '❤️', count: 31, active: true }, { emoji: '🙏', count: 18, active: false }, { emoji: '🔥', count: 9, active: false }], file: { name: 'CN_Notes_Final_2024.pdf', size: '3.2 MB · PDF' } },
-    { id: '6', author: 'Vikram R', role: '', initials: 'VR', time: '2:05 PM', text: 'Anyone joining the voice channel for group study tonight? Planning 8–10 PM', reactions: [{ emoji: '✋', count: 7, active: false }] },
-  ] as any[]);
+  const [messages, setMessages] = useState<any[]>([]);
   const msgEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,6 +94,9 @@ export default function Communities() {
 
         <div className="community-list">
           <div className="section-label">Your communities</div>
+          {COMMUNITIES.length === 0 && (
+            <div style={{padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>You haven't joined any communities yet. Join one below!</div>
+          )}
 
           {COMMUNITIES.map((c, i) => (
             <React.Fragment key={c.id}>

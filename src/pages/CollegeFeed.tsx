@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { triggerGlobalToast } from '../components/AppLayout';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { usePageTitle } from '../hooks/usePageTitle';
+import { getSupabase } from '@/lib/supabase';
 import '../index.css';
 
 export default function CollegeFeed() {
   usePageTitle('College Feed');
   const [postText, setPostText] = useState('');
+  const [collegeName, setCollegeName] = useState('Loading...');
+
+  useEffect(() => {
+    const fetchCollege = async () => {
+      const supabase = getSupabase();
+      if (!supabase) { setCollegeName('Your College'); return; }
+      const { data } = await supabase.auth.getUser();
+      setCollegeName(data?.user?.user_metadata?.college || 'Your College');
+    };
+    fetchCollege();
+  }, []);
 
   const handlePost = () => {
     if (!postText.trim()) return;
@@ -18,7 +31,7 @@ export default function CollegeFeed() {
         <div className="cb-wrapper">
           <div className="cb-label">COLLEGE FEED</div>
           <div className="cb-row">
-            <div className="cb-title">CBIT Hyderabad</div>
+            <div className="cb-title">{collegeName}</div>
             <div className="cb-verified"></div>
           </div>
         </div>
@@ -162,62 +175,12 @@ export default function CollegeFeed() {
           </div>
         </div>
 
-        {/* Demo campus posts */}
-        {[
-          { author: 'Rahul K', initials: 'RK', tier: 'pro', time: '25m ago', text: 'Morning everyone! 🌅 DSA lab viva is this Friday — make sure you\'ve revised linked lists, trees and sorting. Good luck to everyone!', likes: 42, comments: 18, reposts: 3 },
-          { author: 'Priya S', initials: 'PS', tier: 'verified', time: '1h ago', text: 'The new library wing looks amazing 📚 Finally got proper study pods with charging ports. Huge W for CBIT!', likes: 89, comments: 24, reposts: 7, hasImage: true },
-          { author: 'Arjun Mehta', initials: 'AM', tier: 'verified', time: '2h ago', text: 'Lost my student ID card near the OAT area. Black lanyard with CBIT logo. If anyone finds it please DM me 🙏', likes: 12, comments: 8, reposts: 15 },
-          { author: 'Sneha K', initials: 'SK', tier: 'plus', time: '3h ago', text: 'CN notes from last year\'s topper uploaded to the CSE Hub community channel! Check the Files tab 📝 #CBITNotes #Semester5', likes: 156, comments: 31, reposts: 42 },
-        ].map((post, idx) => (
-          <div key={idx} className="post">
-            <div className="post-header">
-              <div className="avatar" style={{background: 'linear-gradient(135deg, #2d1b4e, #3d2b6e)'}}>{post.initials}</div>
-              <div className="post-meta">
-                <div className="post-author">
-                  {post.author}
-                  <span className={`tier-badge ${post.tier === 'pro' ? 'badge-pro' : post.tier === 'plus' ? 'badge-plus' : 'badge-verified'}`}>{post.tier}</span>
-                </div>
-                <div className="post-info">
-                  <span className="college-chip">CBIT</span>
-                  <span className="dot-sep">·</span>
-                  <span>{post.time}</span>
-                </div>
-              </div>
-              <button type="button" className="post-more" aria-label="More">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-              </button>
-            </div>
-            <div className="post-text">{post.text}</div>
-            {post.hasImage && (
-              <div className="post-image">
-                <div className="img-placeholder style1" style={{height: '160px'}}>
-                  <div className="img-overlay"></div>
-                  <div className="img-college-tag">CBIT Library Wing</div>
-                </div>
-              </div>
-            )}
-            <div className="engage-bar">
-              <button type="button" className="engage-btn" onClick={() => triggerGlobalToast('Liked!', 'success')}>
-                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                {post.likes}
-              </button>
-              <div className="engage-sep"></div>
-              <button type="button" className="engage-btn">
-                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                {post.comments}
-              </button>
-              <div className="engage-sep"></div>
-              <button type="button" className="engage-btn">
-                <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                {post.reposts}
-              </button>
-              <div className="engage-sep"></div>
-              <button type="button" className="engage-btn" onClick={() => triggerGlobalToast('Post saved', 'success')}>
-                <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-          </div>
-        ))}
+        {/* Dynamic campus posts */}
+        <div style={{padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>
+          <div style={{fontSize: '32px', marginBottom: '12px'}}>🎓</div>
+          <div>No activity in your college yet.</div>
+          <div style={{fontSize: '13px', marginTop: '4px'}}>Be the first to share something!</div>
+        </div>
       </div>
 
       {/* Compose FAB */}

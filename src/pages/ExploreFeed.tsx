@@ -5,13 +5,7 @@ import '../index.css';
 
 const FILTER_TABS = ['All', 'Tech', 'Arts', 'Sports', 'Management', 'Events'];
 
-const DEMO_POSTS = [
-  { id: '1', author: 'Karthik Menon', college: 'IIIT Hyderabad', tier: 'pro', time: '2h ago', text: 'Hot take: GitHub profile matters more than GPA for tech jobs in 2025. Recruiters skip resumes and go straight to your repos. Build in public. 🚀', likes: 234, comments: 67, reposts: 18, type: 'text' as const },
-  { id: '2', author: 'Priya Sharma', college: 'CBIT Hyderabad', tier: 'verified', time: '4h ago', text: 'Just finished my first full-stack project using Next.js + Supabase. The DX is incredible compared to traditional backend setups. #WebDev #NextJS', likes: 156, comments: 42, reposts: 12, type: 'text' as const },
-  { id: '3', author: 'CampX Spotlight', college: '', tier: 'brand', time: 'Sponsored', text: 'Internshala is hiring! 500+ internships open for engineering students. Apply before Dec 30. 🎯', likes: 89, comments: 15, reposts: 8, type: 'sponsored' as const },
-  { id: '4', author: 'Rahul K', college: 'MJCET', tier: 'plus', time: '6h ago', text: 'Placement season is absolutely brutal this year — companies asking DSA + system design + HR all in one day 😮‍💨 #Placements2025', likes: 412, comments: 128, reposts: 45, type: 'text' as const },
-  { id: '5', author: 'Sneha Verma', college: 'Osmania University', tier: 'verified', time: '8h ago', text: 'Campus photography club showcase was 🔥 Check out the shots from our annual exhibition! #CampusLife #Photography', likes: 198, comments: 34, reposts: 22, type: 'photo' as const },
-];
+const DEMO_POSTS: any[] = [];
 
 export default function ExploreFeed() {
   usePageTitle('Explore Feed');
@@ -208,6 +202,13 @@ export default function ExploreFeed() {
             </div>
           </div>
         ))}
+
+        {DEMO_POSTS.length === 0 && (
+          <div style={{padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>
+            <div style={{fontSize: '32px', marginBottom: '12px'}}>🌍</div>
+            <div>No posts in the global feed yet.</div>
+          </div>
+        )}
       </div>
 
       {/* Compose FAB — hidden in Basic mode */}

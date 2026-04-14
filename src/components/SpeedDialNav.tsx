@@ -68,27 +68,15 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
-  {
-    id: "profile",
-    label: "Profile",
-    href: "/profile",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
 ];
 
 const FAN_POSITIONS = [
-  { x: -145, y: 15 },
-  { x: -110, y: 70 },
-  { x: -55,  y: 115 },
-  { x: 0,    y: 130 },
-  { x: 55,   y: 115 },
-  { x: 110,  y: 70 },
-  { x: 145,  y: 15 },
+  { x: -140, y: 17 },
+  { x: -103, y: 82 },
+  { x: -38,  y: 120 },
+  { x: 38,   y: 120 },
+  { x: 103,  y: 82 },
+  { x: 140,  y: 17 },
 ];
 
 export default function SpeedDialNav() {

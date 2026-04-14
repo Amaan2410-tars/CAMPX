@@ -4,28 +4,14 @@ import CallWindow from '../components/CallWindow';
 import { usePageTitle } from '../hooks/usePageTitle';
 import '../index.css';
 
-const CONVERSATIONS = [
-  { id: 'neha', name: 'Neha Patel', initials: 'NP', college: 'CSE · CBIT', tier: 'pro', online: true, preview: 'You: That\'s amazing, congrats again! 🎉', time: '2m', unread: 0 },
-  { id: 'arjun', name: 'Arjun Mehta', initials: 'AM', college: 'ECE · JNTU', tier: 'verified', online: true, preview: 'Arjun: Can you share the IoT sensor code?', time: '15m', unread: 3 },
-  { id: 'priya', name: 'Priya Sharma', initials: 'PS', college: 'CSE · IIIT Hyd', tier: 'plus', online: false, preview: 'Priya: The hackathon results are out!! 🎊', time: '1h', unread: 1 },
-  { id: 'karthik', name: 'Karthik Menon', initials: 'KM', college: 'IT · Osmania', tier: 'pro', online: false, preview: 'You: I\'ll check and get back to you', time: '3h', unread: 0 },
-  { id: 'sneha', name: 'Sneha Verma', initials: 'SV', college: 'CSE · VNR', tier: 'verified', online: true, preview: '📸 Sent a photo', time: 'Yesterday', unread: 0 },
-];
+const CONVERSATIONS: any[] = [];
 
 export default function Dms() {
   usePageTitle('Messages');
   const [activeScreen, setActiveScreen] = useState<'inbox' | 'chat'>('inbox');
-  const [activeConv, setActiveConv] = useState(CONVERSATIONS[0]);
+  const [activeConv, setActiveConv] = useState<{id: string, name: string, initials: string, online?: boolean, tier?: string} | null>(null);
   const [activeCall, setActiveCall] = useState<boolean>(false);
-  const [messages, setMessages] = useState<any[]>([
-    { id: '1', text: 'Hey! Did you see my post on the feed? 👀', sender: 'them', timestamp: '10:04 AM', type: 'text' },
-    { id: '2', text: 'Yes omg!! Google internship!! That\'s insane 🔥🔥', sender: 'me', timestamp: '10:06 AM', type: 'text' },
-    { id: '3', text: 'Hahaha thank you!! It still feels surreal tbh 😭', sender: 'them', timestamp: '10:07 AM', type: 'text' },
-    { id: '4', text: '4 rounds in one day was absolutely brutal though', sender: 'them', timestamp: '10:07 AM', type: 'text' },
-    { id: '5', type: 'image', sender: 'them', timestamp: '10:08 AM', caption: 'My offer letter! 🎉' },
-    { id: '6', type: 'file', sender: 'them', timestamp: '10:09 AM', fileName: 'Interview_Prep_Notes.pdf', fileSize: '2.4 MB' },
-    { id: '7', text: 'That\'s amazing, congrats again! 🎉', sender: 'me', timestamp: '10:10 AM', type: 'text' },
-  ]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [typingVisible, setTypingVisible] = useState(false);
   const [replyTo, setReplyTo] = useState<any>(null);
@@ -82,8 +68,9 @@ export default function Dms() {
     <>
       
       {/* INBOX SCREEN */}
-      <div className="dms-wrapper">
-        <div className={`screen ${activeScreen === 'inbox' ? 'active' : 'hidden-left'}`} style={{overflowY: 'auto'}} id="inbox">
+      <div className="dms-wrapper" style={{display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', width: '100%'}}>
+        {activeScreen === 'inbox' && (
+        <div style={{display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto'}} id="inbox">
         <div className="topbar">
           <div className="topbar-title">Messages</div>
           <div className="topbar-right">
@@ -118,7 +105,9 @@ export default function Dms() {
 
         <div className="conv-list">
           <div className="section-label">Recent</div>
-          
+          {CONVERSATIONS.length === 0 && (
+            <div style={{padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>No recent messages. Connect with classmates to start chatting!</div>
+          )}
           {CONVERSATIONS.map(conv => (
             <React.Fragment key={conv.id}>
               <div className="conv-item" onClick={() => openChat(conv)} style={{cursor: 'pointer'}}>
@@ -149,10 +138,12 @@ export default function Dms() {
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--text-muted)" fill="none" strokeWidth="1.5" style={{marginRight: '6px', verticalAlign: 'middle'}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Only mutual follows can exchange messages
         </div>
-      </div>
+        </div>
+        )}
 
       {/* CHAT SCREEN */}
-      <div className={`screen ${activeScreen === 'chat' ? 'active' : 'hidden-right'}`} id="chat" style={{display: 'flex', flexDirection: 'column'}}>
+      {activeScreen === 'chat' && activeConv && (
+      <div id="chat" style={{display: 'flex', flexDirection: 'column', flex: 1, minHeight: '100vh', width: '100%'}}>
         
         {explodeConfig.active && (
           <div className="chat-explode-container">
@@ -255,6 +246,9 @@ export default function Dms() {
               </div>
             </div>
           )}
+          {messages.length === 0 && !typingVisible && (
+            <div style={{padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>Start the conversation</div>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
@@ -294,11 +288,12 @@ export default function Dms() {
             )}
           </div>
         </div>
-        </div>
+      </div>
+      )}
       </div>
       
       {/* External Call Window Overlay */}
-      {activeCall && (
+      {activeCall && activeConv && (
         <CallWindow 
           activeConvName={activeConv.name}
           activeConvInitials={activeConv.initials}
