@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Search, Plus, ChevronLeft, Building2, Users, Activity, CalendarDays, SearchX, X } from "lucide-react";
+import { Search, Plus, ChevronLeft, Building2, Users, Activity, CalendarDays, SearchX, X, Trash2 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
 import { triggerGlobalToast } from "@/components/AppLayout";
 
@@ -13,6 +13,7 @@ interface College {
 export default function Colleges() {
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"Overview" | "Users" | "Communities" | "Posts" | "Events">("Overview");
   const [loading, setLoading] = useState(true);
@@ -121,7 +122,7 @@ export default function Colleges() {
           >
             <ChevronLeft size={20} />
           </button>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-white tracking-tight">{selectedCollege.name}</h2>
             </div>
@@ -130,6 +131,38 @@ export default function Colleges() {
               <span>Added {new Date(selectedCollege.created_at).toLocaleDateString()}</span>
             </div>
           </div>
+
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={async () => {
+              const ok = window.confirm(
+                `Delete college "${selectedCollege.name}"?\n\nThis will also delete related email domains. Profiles will keep their college name but their college_id may become null.`
+              );
+              if (!ok) return;
+              const sb = getSupabase();
+              if (!sb) {
+                triggerGlobalToast("Supabase is not configured.", "error");
+                return;
+              }
+              try {
+                setDeleting(true);
+                const { error } = await sb.from("colleges").delete().eq("id", selectedCollege.id);
+                if (error) throw error;
+                setAll((prev) => prev.filter((c) => c.id !== selectedCollege.id));
+                setSelectedCollege(null);
+                triggerGlobalToast("College deleted.", "success");
+              } catch (e: any) {
+                triggerGlobalToast(e?.message ?? "Failed to delete college.", "error");
+              } finally {
+                setDeleting(false);
+              }
+            }}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold border border-red-500/30 bg-red-500/10 text-red-200 hover:bg-red-500/15 transition disabled:opacity-60"
+          >
+            <Trash2 size={16} />
+            {deleting ? "Deleting..." : "Delete"}
+          </button>
         </div>
 
         {/* Tabs */}
@@ -241,18 +274,19 @@ export default function Colleges() {
                 <th className="px-6 py-4 font-semibold">College Name</th>
                 <th className="px-6 py-4 font-semibold">Code</th>
                 <th className="px-6 py-4 font-semibold">Created</th>
+                <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a35]">
               {loading ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-12 text-center">
+                  <td colSpan={4} className="px-6 py-12 text-center">
                     Loading…
                   </td>
                 </tr>
               ) : filteredColleges.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-12 text-center">
+                  <td colSpan={4} className="px-6 py-12 text-center">
                     No colleges found matching your criteria.
                   </td>
                 </tr>
@@ -265,6 +299,18 @@ export default function Colleges() {
                     </td>
                     <td className="px-6 py-4">{college.code}</td>
                     <td className="px-6 py-4">{new Date(college.created_at).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCollege(college);
+                        }}
+                      >
+                        Manage
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
