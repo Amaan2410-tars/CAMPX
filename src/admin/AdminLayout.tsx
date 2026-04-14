@@ -6,7 +6,6 @@ import {
   Bell, LineChart, Settings, LogOut, Menu, X, Search 
 } from "lucide-react";
 import { getSupabase } from "../lib/supabase";
-import "./admin-reset.css";
 
 const isAdminDomain = window.location.hostname.includes('admin');
 const basePath = isAdminDomain ? "" : "/admin";
@@ -34,6 +33,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // `main.tsx` adds this early; keep as safety for client-side navigations.
     document.documentElement.classList.add("campx-admin");
     return () => {
       document.documentElement.classList.remove("campx-admin");
