@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -47,6 +47,11 @@ export default function AdminShell() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Ensure the mobile drawer closes on any navigation.
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
   const pageTitle = useMemo(() => {
     const currentPath = location.pathname;
     const dashboardPath = basePath || "/";
@@ -74,7 +79,6 @@ export default function AdminShell() {
         <aside className="hidden lg:flex w-[240px] bg-[#13131a] border-r border-[#1c1c27] flex-col sticky top-0 h-screen">
           <div className="flex h-16 items-center justify-between px-5 border-b border-[#1c1c27]">
             <div className="flex items-center gap-2 min-w-0">
-              <img src="/campx-logo.png" alt="CampX Logo" className="h-8 w-8 object-contain shrink-0" />
               <span className="text-[15px] font-bold tracking-tight text-white truncate">
                 CampX<span className="text-[#6c63ff] font-black">.</span> Admin
               </span>
@@ -139,7 +143,6 @@ export default function AdminShell() {
         >
           <div className="flex h-16 items-center justify-between px-5 border-b border-[#1c1c27]">
             <div className="flex items-center gap-2 min-w-0">
-              <img src="/campx-logo.png" alt="CampX Logo" className="h-8 w-8 object-contain shrink-0" />
               <span className="text-[15px] font-bold tracking-tight text-white truncate">
                 CampX<span className="text-[#6c63ff] font-black">.</span> Admin
               </span>
