@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { triggerGlobalToast } from '../components/AppLayout';
+import { usePageTitle } from '../hooks/usePageTitle';
 import '../index.css';
 
 const FILTER_TABS = ['All', 'Tech', 'Arts', 'Sports', 'Management', 'Events'];
@@ -13,6 +14,7 @@ const DEMO_POSTS = [
 ];
 
 export default function ExploreFeed() {
+  usePageTitle('Explore Feed');
   const [postText, setPostText] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [isBasicMode, setIsBasicMode] = useState(false);

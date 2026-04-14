@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { triggerGlobalToast } from '../components/AppLayout';
+import { usePageTitle } from '../hooks/usePageTitle';
 import '../index.css';
 
 export default function Settings() {
+  usePageTitle('Settings');
   const navigate = useNavigate();
 
   const [toggles, setToggles] = useState<Record<string, boolean>>({

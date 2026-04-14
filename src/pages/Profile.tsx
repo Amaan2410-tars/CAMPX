@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { triggerGlobalToast } from '../components/AppLayout';
+import { usePageTitle } from '../hooks/usePageTitle';
 import '../index.css';
 
 export default function Profile() {
+  usePageTitle('Profile');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('posts');
   const [otherActiveTab, setOtherActiveTab] = useState('posts');

@@ -20,9 +20,14 @@ export default defineConfig({
         display: "standalone",
         icons: [
             {
-                src: "vite.svg", // Fallback for the PWA check
-                sizes: "192x192 512x512",
-                type: "image/svg+xml",
+                src: "campx-logo-192.png",
+                sizes: "192x192",
+                type: "image/png",
+            },
+            {
+                src: "campx-logo-512.png",
+                sizes: "512x512",
+                type: "image/png",
             }
         ]
       },

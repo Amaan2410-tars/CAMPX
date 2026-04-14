@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { triggerGlobalToast } from '../components/AppLayout';
+import { usePageTitle } from '../hooks/usePageTitle';
 import '../index.css';
 
 type ChannelTab = 'text' | 'announce' | 'files' | 'voice';
@@ -23,6 +24,7 @@ const COMMUNITIES: CommunityData[] = [
 ];
 
 export default function Communities() {
+  usePageTitle('Communities');
   const [activeScreen, setActiveScreen] = useState<'list' | 'channel'>('list');
   const [activeCommunity, setActiveCommunity] = useState<CommunityData | null>(null);
   const [activeTab, setActiveTab] = useState<ChannelTab>('text');

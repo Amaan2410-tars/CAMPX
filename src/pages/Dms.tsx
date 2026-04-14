@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { triggerGlobalToast } from '../components/AppLayout';
 import CallWindow from '../components/CallWindow';
+import { usePageTitle } from '../hooks/usePageTitle';
 import '../index.css';
 
 const CONVERSATIONS = [
@@ -12,6 +13,7 @@ const CONVERSATIONS = [
 ];
 
 export default function Dms() {
+  usePageTitle('Messages');
   const [activeScreen, setActiveScreen] = useState<'inbox' | 'chat'>('inbox');
   const [activeConv, setActiveConv] = useState(CONVERSATIONS[0]);
   const [activeCall, setActiveCall] = useState<boolean>(false);

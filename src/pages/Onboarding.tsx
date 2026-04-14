@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { usePageTitle } from '../hooks/usePageTitle';
 import '../index.css';
 
 interface FormErrors {
@@ -75,6 +76,7 @@ const COLLEGE_CATALOG: Record<string, string[]> = {
 const MOCK_COLLEGES = Object.keys(COLLEGE_CATALOG).map((name, idx) => ({ id: `c-${idx}`, name }));
 
 export default function Onboarding() {
+  usePageTitle('Join Your Campus Community');
   const navigate = useNavigate();
   const [currentScreen, setCurrentScreen] = useState('splash');
   const [history, setHistory] = useState<string[]>(['splash']);

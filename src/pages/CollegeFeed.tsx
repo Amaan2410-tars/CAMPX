@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { triggerGlobalToast } from '../components/AppLayout';
+import { usePageTitle } from '../hooks/usePageTitle';
 import '../index.css';
 
 export default function CollegeFeed() {
+  usePageTitle('College Feed');
   const [postText, setPostText] = useState('');
 
   const handlePost = () => {
