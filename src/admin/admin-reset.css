@@ -10,19 +10,26 @@ html.campx-admin #root {
 html.campx-admin,
 html.campx-admin body {
   overflow: auto !important;
-  background: #0a0a0f;
+  background: #0a0a0f !important;
   color: #f0f0f8;
 }
 
 html.campx-admin body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background-image: none !important;
 }
 
 /* Disable global decorative overlays from `campx-pages.css` (noise gradients, etc). */
 html.campx-admin body::before,
 html.campx-admin body::after {
   content: none !important;
+}
+
+/* Also ensure any global layout background can't bleed into admin. */
+html.campx-admin #root {
+  background: #0a0a0f !important;
+  background-image: none !important;
 }
 
 /* Ensure prototype “phone app” styles never affect admin. */
