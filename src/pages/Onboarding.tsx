@@ -145,6 +145,7 @@ export default function Onboarding() {
   const [collegeId, setCollegeId] = useState<string | null>(null);
   const [collegeResults, setCollegeResults] = useState<{id: string; name: string}[]>([]);
   const [collegeDropdownOpen, setCollegeDropdownOpen] = useState(false);
+  const [collegeIdsByName, setCollegeIdsByName] = useState<Record<string, string>>({});
   const [major, setMajor] = useState('');
   const [majorQuery, setMajorQuery] = useState('');
   const [majorDropdownOpen, setMajorDropdownOpen] = useState(false);
@@ -174,6 +175,29 @@ export default function Onboarding() {
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const collegeSearchTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    // Best-effort preload of allowed colleges -> UUID mapping.
+    // Dropdown should still work even if this fails; validation will enforce selecting from the list.
+    const sb = getSupabase();
+    if (!sb) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await sb.from('colleges').select('id, name').limit(500);
+        if (cancelled) return;
+        const map: Record<string, string> = {};
+        (data ?? []).forEach((c) => {
+          const canonical = COLLEGE_NAME_ALIASES[normalizeCollegeName(c.name)];
+          if (canonical) map[canonical] = c.id;
+        });
+        setCollegeIdsByName(map);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const goTo = (screenId: string) => {
     setHistory(prev => [...prev, screenId]);
@@ -246,16 +270,22 @@ export default function Onboarding() {
   // ── College Search (debounced) ──
   const searchColleges = useCallback((query: string) => {
     if (collegeSearchTimer.current) clearTimeout(collegeSearchTimer.current);
-    if (!query.trim()) {
-      setCollegeResults([]);
-      setCollegeDropdownOpen(false);
-      return;
-    }
+    const q = query.trim().toLowerCase();
+    const localMatches = (ALLOWED_COLLEGE_NAMES as readonly string[])
+      .filter((n) => !q || n.toLowerCase().includes(q))
+      .slice(0, 8)
+      .map((name) => ({ id: collegeIdsByName[name] ?? '', name }));
+
+    // Always show local allowlist immediately (even if Supabase has no rows yet).
+    // This keeps the dropdown responsive while we fetch/merge UUIDs in the background.
+    setCollegeResults(localMatches);
+    setCollegeDropdownOpen(Boolean(localMatches.length));
+    if (!q) return;
     collegeSearchTimer.current = window.setTimeout(async () => {
       const sb = getSupabase();
       if (!sb) {
-        setCollegeResults([]);
-        setCollegeDropdownOpen(false);
+        setCollegeResults(localMatches);
+        setCollegeDropdownOpen(Boolean(localMatches.length));
         return;
       }
       try {
@@ -274,15 +304,25 @@ export default function Onboarding() {
           .filter(Boolean) as { id: string; name: string }[];
 
         // Deduplicate by canonical name (keep the first UUID we saw).
-        const dedup = Array.from(new Map(filtered.map((c) => [c.name, c])).values()).slice(0, 8);
-        setCollegeResults(dedup);
-        setCollegeDropdownOpen(Boolean(dedup.length));
+        const dedupDb = Array.from(new Map(filtered.map((c) => [c.name, c])).values());
+
+        // Merge DB ids into local results (so selection gets a UUID when available).
+        const merged = (localMatches.length ? localMatches : dedupDb)
+          .map((c) => {
+            const fromDb = dedupDb.find((d) => d.name === c.name);
+            const id = fromDb?.id || c.id || collegeIdsByName[c.name] || '';
+            return { id, name: c.name };
+          })
+          .slice(0, 8);
+
+        setCollegeResults(merged);
+        setCollegeDropdownOpen(Boolean(merged.length));
       } catch {
-        setCollegeResults([]);
-        setCollegeDropdownOpen(false);
+        setCollegeResults(localMatches);
+        setCollegeDropdownOpen(Boolean(localMatches.length));
       }
     }, 200);
-  }, []);
+  }, [collegeIdsByName]);
 
   const currentCollegeKey = COLLEGE_NAME_ALIASES[normalizeCollegeName(collegeName)] ?? null;
 
@@ -738,7 +778,7 @@ export default function Onboarding() {
                       searchColleges(v);
                     }}
                     onFocus={() => {
-                      searchColleges(collegeName || ' ');
+                      searchColleges(collegeName || '');
                     }}
                   />
                   {collegeDropdownOpen && (
@@ -751,7 +791,7 @@ export default function Onboarding() {
                           onMouseDown={(evt) => {
                             evt.preventDefault();
                             setCollegeName(c.name);
-                            setCollegeId(c.id);
+                            setCollegeId(c.id || collegeIdsByName[c.name] || null);
                             setCollegeDropdownOpen(false);
                             setMajor('');
                             setMajorQuery('');
