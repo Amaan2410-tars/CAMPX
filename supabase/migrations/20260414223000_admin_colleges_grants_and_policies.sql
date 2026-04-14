@@ -4,20 +4,36 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- colleges
 -- ─────────────────────────────────────────────────────────────────────────────
-GRANT SELECT ON TABLE public.colleges TO anon, authenticated;
-GRANT INSERT, UPDATE, DELETE ON TABLE public.colleges TO authenticated;
+DO $$
+BEGIN
+  IF to_regclass('public.colleges') IS NULL THEN
+    RAISE NOTICE 'Skipping colleges grants/policies: public.colleges does not exist';
+    RETURN;
+  END IF;
 
-ALTER TABLE public.colleges ENABLE ROW LEVEL SECURITY;
+  GRANT SELECT ON TABLE public.colleges TO anon, authenticated;
+  GRANT INSERT, UPDATE, DELETE ON TABLE public.colleges TO authenticated;
 
-DROP POLICY IF EXISTS "colleges_staff_write" ON public.colleges;
-CREATE POLICY "colleges_staff_write" ON public.colleges
-  FOR ALL TO authenticated
-  USING (public.has_any_staff_role())
-  WITH CHECK (public.has_any_staff_role());
+  ALTER TABLE public.colleges ENABLE ROW LEVEL SECURITY;
+
+  DROP POLICY IF EXISTS "colleges_staff_write" ON public.colleges;
+  CREATE POLICY "colleges_staff_write" ON public.colleges
+    FOR ALL TO authenticated
+    USING (public.has_any_staff_role())
+    WITH CHECK (public.has_any_staff_role());
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- college_email_domains
 -- ─────────────────────────────────────────────────────────────────────────────
-GRANT SELECT ON TABLE public.college_email_domains TO authenticated;
-GRANT INSERT, UPDATE, DELETE ON TABLE public.college_email_domains TO authenticated;
+DO $$
+BEGIN
+  IF to_regclass('public.college_email_domains') IS NULL THEN
+    RAISE NOTICE 'Skipping college_email_domains grants: public.college_email_domains does not exist';
+    RETURN;
+  END IF;
+
+  GRANT SELECT ON TABLE public.college_email_domains TO authenticated;
+  GRANT INSERT, UPDATE, DELETE ON TABLE public.college_email_domains TO authenticated;
+END $$;
 
