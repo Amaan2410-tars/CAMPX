@@ -62,7 +62,7 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-60 transform flex-col bg-[#13131a] border-r border-[#1c1c27] transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-50 w-60 shrink-0 transform flex flex-col bg-[#13131a] border-r border-[#1c1c27] transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex h-16 items-center justify-between px-6 border-b border-[#1c1c27]">
           <div className="flex items-center gap-2">

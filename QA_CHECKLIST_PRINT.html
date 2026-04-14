@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CampX QA Checklist (Print)</title>
+    <style>
+      :root {
+        --text: #111;
+        --muted: #444;
+        --rule: #cfcfcf;
+      }
+
+      @page {
+        size: A4;
+        margin: 16mm;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        color: var(--text);
+        font: 12pt/1.35 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        background: #fff;
+      }
+
+      .wrap {
+        max-width: 190mm;
+        margin: 0 auto;
+        padding: 0;
+      }
+
+      header {
+        border-bottom: 2px solid var(--rule);
+        padding: 0 0 10px 0;
+        margin: 0 0 14px 0;
+      }
+
+      h1 {
+        font-size: 20pt;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.02em;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 18px;
+        color: var(--muted);
+        font-size: 10.5pt;
+      }
+
+      .meta .line {
+        border-bottom: 1px solid var(--rule);
+        height: 1.2em;
+        display: inline-block;
+        vertical-align: bottom;
+        width: 100%;
+      }
+
+      h2 {
+        font-size: 14pt;
+        margin: 16px 0 8px 0;
+        padding-top: 8px;
+        border-top: 1px solid var(--rule);
+      }
+      h3 {
+        font-size: 12.5pt;
+        margin: 12px 0 6px 0;
+      }
+
+      ul {
+        margin: 0 0 10px 0;
+        padding-left: 0;
+        list-style: none;
+      }
+
+      .check {
+        display: grid;
+        grid-template-columns: 18px 1fr;
+        gap: 10px;
+        align-items: start;
+        padding: 4px 0;
+      }
+
+      .box {
+        width: 14px;
+        height: 14px;
+        border: 1.8px solid #111;
+        border-radius: 2px;
+        margin-top: 2px;
+      }
+
+      .sub {
+        margin-left: 22px;
+        border-left: 2px solid #eee;
+        padding-left: 12px;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 10.5pt;
+        margin: 6px 0 0 0;
+      }
+
+      .page-break {
+        break-before: page;
+        page-break-before: always;
+      }
+
+      .small {
+        font-size: 10.5pt;
+        color: var(--muted);
+      }
+
+      .pill {
+        display: inline-block;
+        border: 1px solid var(--rule);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10pt;
+        color: var(--muted);
+        margin-right: 6px;
+      }
+
+      /* Make links look like text on print */
+      a { color: inherit; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>CampX QA Checklist (Manual Click‑Test)</h1>
+        <div class="meta">
+          <div><span class="pill">Environment</span> <span class="line"></span></div>
+          <div><span class="pill">Build / Commit</span> <span class="line"></span></div>
+          <div><span class="pill">Tester</span> <span class="line"></span></div>
+          <div><span class="pill">Date</span> <span class="line"></span></div>
+          <div style="grid-column: 1 / -1;"><span class="pill">Base URL</span> <span class="line"></span></div>
+        </div>
+        <p class="note">
+          Check every box in order. Use real Supabase config + latest migrations applied.
+        </p>
+      </header>
+
+      <h2>Pre‑flight</h2>
+      <ul>
+        <li class="check"><span class="box"></span><span><b>Supabase configured</b>: app loads without “Supabase is not configured”.</span></li>
+        <li class="check"><span class="box"></span><span><b>DB migrations applied</b>: feeds, tiers, DMs E2EE, follows, profile customization, avatars storage.</span></li>
+        <li class="check"><span class="box"></span><span><b>Test accounts available</b>:</span></li>
+      </ul>
+      <div class="sub">
+        <ul>
+          <li class="check"><span class="box"></span><span><b>Account A</b>: <code>basic</code></span></li>
+          <li class="check"><span class="box"></span><span><b>Account B</b>: <code>verified</code> (same college as A)</span></li>
+          <li class="check"><span class="box"></span><span><b>Account C</b> (optional): <code>verified</code> (different college)</span></li>
+        </ul>
+      </div>
+
+      <h2>Public / Auth</h2>
+      <h3>Onboarding (signup + OTP)</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Signup validates required fields (name/email/phone/password/DOB).</span></li>
+        <li class="check"><span class="box"></span><span>Under‑18 DOB fails (server‑side) and user cannot proceed.</span></li>
+        <li class="check"><span class="box"></span><span>College search returns results from DB (no mock list).</span></li>
+        <li class="check"><span class="box"></span><span>OTP send works and email is received.</span></li>
+        <li class="check"><span class="box"></span><span>OTP verify succeeds only with correct 6‑digit code.</span></li>
+        <li class="check"><span class="box"></span><span>After verify, user can enter app.</span></li>
+      </ul>
+
+      <h3>Login / Forgot password</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Login with password works.</span></li>
+        <li class="check"><span class="box"></span><span>Logout fully signs out and redirects to onboarding.</span></li>
+        <li class="check"><span class="box"></span><span>Forgot password email flow works (reset link).</span></li>
+      </ul>
+
+      <div class="page-break"></div>
+
+      <h2>Student App (Core)</h2>
+      <h3>App shell / navigation</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Bottom nav loads and routes correctly (no dead links).</span></li>
+        <li class="check"><span class="box"></span><span>Basic tier sees persistent verification banner (non‑dismissible).</span></li>
+      </ul>
+
+      <h3>Explore feed</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Loads posts from verified+ users globally.</span></li>
+        <li class="check"><span class="box"></span><span>Basic can view Explore feed.</span></li>
+        <li class="check"><span class="box"></span><span>Basic cannot create/like/comment/repost (blocked server‑side + UI nudge).</span></li>
+        <li class="check"><span class="box"></span><span>Verified+ can create/like/comment/repost successfully.</span></li>
+      </ul>
+
+      <h3>College feed</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Basic is blocked/redirected away from College feed.</span></li>
+        <li class="check"><span class="box"></span><span>Verified+ can view College feed.</span></li>
+        <li class="check"><span class="box"></span><span>College feed only shows posts from same <code>college_id</code>.</span></li>
+      </ul>
+
+      <h3>Communities</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Basic cannot join communities (server‑side).</span></li>
+        <li class="check"><span class="box"></span><span>Verified can join up to 5 total; 6th fails server‑side with clear error.</span></li>
+        <li class="check"><span class="box"></span><span>Pro/Plus can join unlimited.</span></li>
+      </ul>
+
+      <h3>DMs (E2EE)</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Basic cannot access DMs (blocked).</span></li>
+        <li class="check"><span class="box"></span><span>Verified can open/create DM with same‑college user.</span></li>
+        <li class="check"><span class="box"></span><span>Cross‑college DM only works if mutual follows (if using two‑college test).</span></li>
+        <li class="check"><span class="box"></span><span>Sending a DM stores ciphertext only (no plaintext body).</span></li>
+        <li class="check"><span class="box"></span><span>Messages decrypt and display correctly on both sides.</span></li>
+      </ul>
+
+      <h3>DM multi‑device continuity</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Device 1: enable backup passphrase and confirm backup stored.</span></li>
+        <li class="check"><span class="box"></span><span>Device 2 (fresh browser): restore using passphrase and confirm old messages decrypt.</span></li>
+      </ul>
+
+      <div class="page-break"></div>
+
+      <h3>Profile + Settings</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Profile shows real name/college/major/year/tier (no hardcoded values).</span></li>
+        <li class="check"><span class="box"></span><span>Settings card shows real data and email.</span></li>
+        <li class="check"><span class="box"></span><span>Settings → Change email triggers Supabase email change verification.</span></li>
+        <li class="check"><span class="box"></span><span>Settings → Change password updates password (≥ 8 chars).</span></li>
+        <li class="check"><span class="box"></span><span>Settings → Edit profile:</span></li>
+      </ul>
+      <div class="sub">
+        <ul>
+          <li class="check"><span class="box"></span><span>Update bio saves and appears on Profile.</span></li>
+          <li class="check"><span class="box"></span><span>Theme saves and persists after refresh.</span></li>
+          <li class="check"><span class="box"></span><span>Avatar upload succeeds and appears on Profile after save/refresh.</span></li>
+        </ul>
+      </div>
+
+      <h2>Billing / Plans</h2>
+      <ul>
+        <li class="check"><span class="box"></span><span>User Tiers page shows plans from DB when Supabase is configured.</span></li>
+        <li class="check"><span class="box"></span><span>If plans table is empty/unreachable, page still renders safely.</span></li>
+      </ul>
+
+      <h2>Admin Portal</h2>
+      <h3>Admin authentication</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Admin login rejects non‑staff users.</span></li>
+        <li class="check"><span class="box"></span><span>Admin login allows staff users with <code>user_roles</code> = admin/founder/moderator.</span></li>
+      </ul>
+
+      <h3>Admin pages</h3>
+      <ul>
+        <li class="check"><span class="box"></span><span>Dashboard loads live counts (or safe empty states).</span></li>
+        <li class="check"><span class="box"></span><span>Colleges:</span></li>
+      </ul>
+      <div class="sub">
+        <ul>
+          <li class="check"><span class="box"></span><span>List loads from <code>colleges</code>.</span></li>
+          <li class="check"><span class="box"></span><span>Add College creates row.</span></li>
+          <li class="check"><span class="box"></span><span>Optional domain inserted into <code>college_email_domains</code>.</span></li>
+        </ul>
+      </div>
+
+      <ul>
+        <li class="check"><span class="box"></span><span>Communities:</span></li>
+      </ul>
+      <div class="sub">
+        <ul>
+          <li class="check"><span class="box"></span><span>Pending requests list loads from <code>community_creation_requests</code>.</span></li>
+          <li class="check"><span class="box"></span><span>Approve/Reject updates request status.</span></li>
+        </ul>
+      </div>
+
+      <ul>
+        <li class="check"><span class="box"></span><span>Moderation:</span></li>
+      </ul>
+      <div class="sub">
+        <ul>
+          <li class="check"><span class="box"></span><span>Report queue loads from <code>reports</code>.</span></li>
+          <li class="check"><span class="box"></span><span>Actions update <code>reports.status</code> and write <code>moderation_actions</code>.</span></li>
+        </ul>
+      </div>
+
+      <ul>
+        <li class="check"><span class="box"></span><span>Subscriptions shows data from <code>subscriptions</code> + <code>plans</code> + profiles.</span></li>
+      </ul>
+
+      <h2>Negative tests (must fail)</h2>
+      <ul>
+        <li class="check"><span class="box"></span><span>Basic tries to follow someone → blocked (server‑side).</span></li>
+        <li class="check"><span class="box"></span><span>Basic tries to DM → blocked (server‑side).</span></li>
+        <li class="check"><span class="box"></span><span>Basic tries to post/like/comment/repost → blocked (server‑side).</span></li>
+        <li class="check"><span class="box"></span><span>Verified tries to view cross‑college College feed content → not visible.</span></li>
+      </ul>
+
+      <p class="small" style="border-top: 1px solid var(--rule); padding-top: 10px; margin-top: 14px;">
+        Tip: print to PDF using “A4”, margins “default”, and disable headers/footers for clean pages.
+      </p>
+    </div>
+  </body>
+</html>
+
