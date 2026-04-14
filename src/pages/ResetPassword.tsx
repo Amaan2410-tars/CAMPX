@@ -27,11 +27,28 @@ export default function ResetPassword() {
 
     const sync = async () => {
       try {
+        // Supabase email links may arrive as:
+        // - `/#access_token=...` (implicit) OR
+        // - `?code=...` (PKCE). Handle the PKCE case by exchanging the code.
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        if (code) {
+          const { error: exErr } = await sb.auth.exchangeCodeForSession(code);
+          if (exErr) throw exErr;
+          url.searchParams.delete("code");
+          // Clean up URL so refresh doesn't re-exchange.
+          window.history.replaceState({}, "", url.toString());
+        }
+
         const { data } = await sb.auth.getSession();
         if (cancelled) return;
         setHasSession(Boolean(data.session));
-      } catch {
-        if (!cancelled) setHasSession(false);
+      } catch (e: any) {
+        if (cancelled) return;
+        setHasSession(false);
+        const msg = String(e?.message ?? "").toLowerCase();
+        if (msg.includes("expired")) setErr("This reset link is invalid or has expired. Please request a new password reset email.");
+        else if (msg) setErr(e?.message ?? "Failed to open reset link.");
       } finally {
         if (!cancelled) setReady(true);
       }
