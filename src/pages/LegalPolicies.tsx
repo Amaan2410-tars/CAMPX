@@ -81,8 +81,8 @@ export default function LegalPolicies() {
           <div className="space-y-4 text-gray-400 leading-relaxed text-sm">
             <p>If you have any questions or require support, please contact us at:</p>
             <ul className="list-none space-y-2">
-              <li><strong>Email Address:</strong> support@campx.social</li>
-              <li><strong>Contact Number:</strong> +91 98765 43210</li>
+              <li><strong>Email Address:</strong> ghoriamaan01@gmail.com</li>
+              <li><strong>Contact Number:</strong> +91 7036192138</li>
               <li><strong>Operating Address:</strong> CampX Technologies Pvt Ltd, 123 Tech Hub, Hitech City, Hyderabad, Telangana 500081, India</li>
             </ul>
           </div>
