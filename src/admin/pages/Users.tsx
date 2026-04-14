@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Search, Filter, MoreVertical, ShieldAlert, AlertTriangle, Ban, X } from "lucide-react";
+import { Search, Filter, MoreVertical, ShieldAlert, AlertTriangle, Ban, X, Plus, Trash2 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
 
 interface UserRecord {
@@ -22,6 +22,10 @@ export default function Users() {
   const [rows, setRows] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createEmail, setCreateEmail] = useState("");
+  const [createRole, setCreateRole] = useState<"user" | "ambassador" | "moderator" | "admin">("user");
+  const [createSaving, setCreateSaving] = useState(false);
 
   const getTierBadge = (tier: UserRecord["tier"]) => {
     switch (tier) {
@@ -102,6 +106,12 @@ export default function Users() {
           </div>
           <button className="flex items-center justify-center p-2 bg-[#1c1c27] border border-[#2a2a35] rounded-lg text-gray-400 hover:text-white transition">
             <Filter size={20} />
+          </button>
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#6c63ff] text-white text-sm font-semibold rounded-lg hover:bg-[#5b54e5] transition border border-transparent"
+          >
+            <Plus size={16} /> Create / Invite
           </button>
         </div>
       </div>
@@ -240,8 +250,102 @@ export default function Users() {
                 <button className="w-full flex items-center justify-between p-3 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 rounded-lg transition text-red-500 text-sm font-bold">
                   <span className="flex items-center gap-2"><Ban size={18}/> Permanent Ban (Founder Only)</span>
                 </button>
+                <button
+                  className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-red-500/40 rounded-lg transition text-white text-sm font-medium"
+                  onClick={async () => {
+                    const ok = window.confirm(`Delete user profile for ${selectedUser.email || selectedUser.id}?\n\nThis removes the profile row (does NOT delete auth user).`);
+                    if (!ok) return;
+                    const sb = getSupabase();
+                    if (!sb) return;
+                    const { error } = await sb.from("profiles").delete().eq("id", selectedUser.id);
+                    if (error) {
+                      setError(error.message);
+                      return;
+                    }
+                    setRows((prev) => prev.filter((r) => r.id !== selectedUser.id));
+                    setSelectedUser(null);
+                  }}
+                >
+                  <span className="flex items-center gap-2 text-red-400"><Trash2 size={18}/> Delete Profile Row</span>
+                </button>
               </div>
 
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create / Invite User (role grant) */}
+      {createOpen && (
+        <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#1c1c27] border border-[#2a2a35] rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-[#2a2a35]">
+              <div className="text-white font-bold">Create / Invite user</div>
+              <button onClick={() => setCreateOpen(false)} className="text-gray-400 hover:text-white transition">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="text-sm text-gray-400">
+                This grants a role to an existing Supabase user by email. If the user doesn’t exist yet, they must sign up first.
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Email</label>
+                <input
+                  value={createEmail}
+                  onChange={(e) => setCreateEmail(e.target.value)}
+                  className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                  placeholder="name@domain.com"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Role</label>
+                <select
+                  value={createRole}
+                  onChange={(e) => setCreateRole(e.target.value as any)}
+                  className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                >
+                  <option value="user">user</option>
+                  <option value="ambassador">ambassador</option>
+                  <option value="moderator">moderator</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(false)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-300 border border-[#2a2a35] hover:bg-white/5"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={createSaving}
+                  onClick={async () => {
+                    try {
+                      setError(null);
+                      const sb = getSupabase();
+                      if (!sb) throw new Error("Supabase is not configured.");
+                      const email = createEmail.trim();
+                      if (!email) throw new Error("Email is required.");
+                      setCreateSaving(true);
+                      const { error } = await sb.rpc("grant_user_role_by_email", { _email: email, _role: createRole });
+                      if (error) throw error;
+                      setCreateOpen(false);
+                      setCreateEmail("");
+                      setCreateRole("user");
+                    } catch (e: any) {
+                      setError(e?.message ?? "Failed.");
+                    } finally {
+                      setCreateSaving(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#6c63ff] hover:bg-[#5b54e5] text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+                >
+                  {createSaving ? "Saving..." : "Grant role"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
