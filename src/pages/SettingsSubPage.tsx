@@ -17,7 +17,14 @@ export default function SettingsSubPage() {
     year_of_study: string | null;
     tier: string | null;
     verification_status: string | null;
+    bio: string | null;
+    theme: string | null;
+    avatar_url: string | null;
   } | null>(null);
+  const [editBio, setEditBio] = useState('');
+  const [editTheme, setEditTheme] = useState<'purple' | 'teal' | 'amber' | 'coral'>('purple');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const initials = useMemo(() => {
     const name = (profile?.full_name || '').trim();
@@ -47,19 +54,26 @@ export default function SettingsSubPage() {
         if (!user) return;
         const { data } = await sb
           .from('profiles')
-          .select('full_name, college, major, year_of_study, tier, verification_status')
+          .select('full_name, college, major, year_of_study, tier, verification_status, bio, theme, avatar_url')
           .eq('id', user.id)
           .maybeSingle();
         if (!cancelled) {
           setEmail(user.email ?? '');
-          setProfile({
+          const nextProfile = {
             full_name: data?.full_name ?? null,
             college: data?.college ?? null,
             major: data?.major ?? null,
             year_of_study: data?.year_of_study ?? null,
             tier: data?.tier ?? null,
             verification_status: data?.verification_status ?? null,
-          });
+            bio: (data as any)?.bio ?? null,
+            theme: (data as any)?.theme ?? null,
+            avatar_url: (data as any)?.avatar_url ?? null,
+          };
+          setProfile(nextProfile);
+          setEditBio(String(nextProfile.bio ?? ''));
+          const t = String(nextProfile.theme ?? '').trim() as any;
+          if (t === 'purple' || t === 'teal' || t === 'amber' || t === 'coral') setEditTheme(t);
         }
       } catch (e: any) {
         if (!cancelled) setErr(e?.message ?? 'Failed to load account.');
@@ -108,6 +122,47 @@ export default function SettingsSubPage() {
     }
   };
 
+  const saveProfileEdits = async () => {
+    const sb = getSupabase();
+    if (!sb) {
+      triggerGlobalToast('Supabase is not configured.', 'error');
+      return;
+    }
+    try {
+      setSavingProfile(true);
+      const { data: userData } = await sb.auth.getUser();
+      const user = userData.user;
+      if (!user) throw new Error('Not signed in.');
+
+      const bio = editBio.trim().slice(0, 180);
+      let avatar_url: string | null | undefined = undefined;
+
+      if (avatarFile) {
+        const ext = (avatarFile.name.split('.').pop() || 'png').toLowerCase();
+        const path = `${user.id}/avatar.${ext}`;
+        const { error: upErr } = await sb.storage.from('avatars').upload(path, avatarFile, {
+          upsert: true,
+          contentType: avatarFile.type || undefined,
+          cacheControl: '3600',
+        });
+        if (upErr) throw upErr;
+        const { data: pub } = sb.storage.from('avatars').getPublicUrl(path);
+        avatar_url = pub.publicUrl;
+      }
+
+      const { error } = await sb.from('profiles').update({ bio, theme: editTheme, ...(avatar_url ? { avatar_url } : {}) }).eq('id', user.id);
+      if (error) throw error;
+
+      setProfile((p) => (p ? { ...p, bio, theme: editTheme, ...(avatar_url ? { avatar_url } : {}) } : p));
+      triggerGlobalToast('Profile updated.', 'success');
+      goBack();
+    } catch (e: any) {
+      triggerGlobalToast(e?.message ?? 'Failed to update profile.', 'error');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const renderHeader = (title: string) => (
     <div className="topbar">
       <div className="back-btn" onClick={goBack} style={{ cursor: 'pointer', padding: '0 16px', display: 'flex', alignItems: 'center' }}>
@@ -130,6 +185,17 @@ export default function SettingsSubPage() {
                   {initials}
                 </div>
               </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Avatar</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)}
+                  style={{ color: '#aaa' }}
+                />
+                <div style={{ fontSize: '12px', color: '#888' }}>Uploads to secure storage and updates your profile photo.</div>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Display Name</label>
                 <input type="text" disabled value={profile?.full_name ?? ''} style={{ background: '#1c1c24', border: '1px solid #333', color: '#666', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
@@ -137,13 +203,48 @@ export default function SettingsSubPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Bio</label>
-                <textarea disabled value={'Bio editing is not wired yet.'} style={{ background: '#1c1c24', border: '1px solid #333', color: '#666', padding: '12px 16px', borderRadius: '12px', fontSize: '16px', minHeight: '100px' }} />
+                <textarea
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  placeholder="Tell people what you're building, learning, or looking for…"
+                  style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px', minHeight: '100px' }}
+                />
+                <div style={{ fontSize: '12px', color: '#888' }}>{Math.min(180, editBio.length)}/180</div>
               </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Theme</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  {([
+                    { id: 'purple', c: '#6c63ff' },
+                    { id: 'teal', c: '#2dd4bf' },
+                    { id: 'amber', c: '#fbbf24' },
+                    { id: 'coral', c: '#f97316' },
+                  ] as const).map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setEditTheme(t.id)}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 999,
+                        background: t.c,
+                        border: editTheme === t.id ? '3px solid white' : '2px solid rgba(255,255,255,0.15)',
+                        cursor: 'pointer',
+                      }}
+                      aria-label={`Theme ${t.id}`}
+                      type="button"
+                    />
+                  ))}
+                </div>
+              </div>
+
               <button 
-                onClick={() => { triggerGlobalToast('Profile editing is not available yet.', 'info'); goBack(); }}
-                style={{ marginTop: '20px', background: '#fff', color: '#000', border: 'none', padding: '14px', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}
+                disabled={savingProfile || loading}
+                onClick={() => { void saveProfileEdits(); }}
+                style={{ marginTop: '20px', background: '#fff', color: '#000', border: 'none', padding: '14px', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: savingProfile ? 'not-allowed' : 'pointer', opacity: savingProfile ? 0.7 : 1 }}
               >
-                Save Changes
+                {savingProfile ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </>

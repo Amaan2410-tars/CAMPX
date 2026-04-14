@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSupabase, isSupabaseConfigured } from "../lib/supabase";
 import { triggerGlobalToast } from "../components/AppLayout"; // Reuse toast if available, or we can use Sonner
+import { fetchUserRoles, isStaff } from "@/lib/rbac";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -41,13 +42,8 @@ export default function AdminLogin() {
       return;
     }
 
-    const { data: profile } = await sb
-      .from("profiles")
-      .select("role")
-      .eq("id", authData.user.id)
-      .single();
-
-    if (profile?.role === "admin" || profile?.role === "founder") {
+    const { roles } = await fetchUserRoles(sb);
+    if (isStaff(roles)) {
       navigate(basePath);
     } else {
       await sb.auth.signOut();

@@ -18,6 +18,9 @@ export default function Profile() {
     major: string | null;
     year_of_study: string | null;
     tier: string | null;
+    bio: string | null;
+    theme: string | null;
+    avatar_url: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function Profile() {
         if (!user) return;
         const { data, error } = await sb
           .from('profiles')
-          .select('full_name, college, major, year_of_study, tier')
+          .select('full_name, college, major, year_of_study, tier, bio, theme, avatar_url')
           .eq('id', user.id)
           .maybeSingle();
         if (error) throw error;
@@ -48,7 +51,12 @@ export default function Profile() {
             major: data?.major ?? null,
             year_of_study: data?.year_of_study ?? null,
             tier: data?.tier ?? null,
+            bio: (data as any)?.bio ?? null,
+            theme: (data as any)?.theme ?? null,
+            avatar_url: (data as any)?.avatar_url ?? null,
           });
+          const t = String((data as any)?.theme ?? '').trim();
+          if (t) setActiveTheme(t);
         }
       } catch (e: any) {
         if (!cancelled) setErr(e?.message ?? 'Failed to load profile.');
@@ -73,7 +81,17 @@ export default function Profile() {
 
   const changeTheme = (color: string) => {
     setActiveTheme(color);
+    setMe((p) => (p ? { ...p, theme: color } : p));
     triggerGlobalToast(`Theme changed to ${color}`, 'success');
+
+    const sb = getSupabase();
+    if (!sb) return;
+    void (async () => {
+      const { data: userData } = await sb.auth.getUser();
+      const user = userData.user;
+      if (!user) return;
+      await sb.from('profiles').update({ theme: color }).eq('id', user.id);
+    })();
   };
 
   return (
@@ -101,9 +119,17 @@ export default function Profile() {
         <div className="hero-glow"></div>
 
         <div className="avatar-wrap">
-          <div className="profile-avatar" >
+          <div className="profile-avatar">
             <div className="avatar-ring"></div>
-            {initials}
+            {me?.avatar_url ? (
+              <img
+                src={me.avatar_url}
+                alt="Avatar"
+                style={{ width: '100%', height: '100%', borderRadius: '999px', objectFit: 'cover' }}
+              />
+            ) : (
+              initials
+            )}
           </div>
           <div className="edit-avatar-btn">
             <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -130,7 +156,9 @@ export default function Profile() {
         </div>
 
         <div className="profile-bio">
-          Building things that matter 🛠️ · Open source · DSA grinder · <span className="accent">@Google</span> intern aspirant · Coffee-fuelled debugger ☕
+          {me?.bio?.trim()
+            ? me.bio
+            : 'Add a bio from Settings → Edit Profile.'}
         </div>
 
         
@@ -140,7 +168,7 @@ export default function Profile() {
           <div className={`scheme-dot ${activeTheme === 'teal' ? 'active' : ''}`} style={{background: '#2dd4bf'}} title="Teal" onClick={() => changeTheme('teal')}></div>
           <div className={`scheme-dot ${activeTheme === 'amber' ? 'active' : ''}`} style={{background: '#fbbf24'}} title="Amber" onClick={() => changeTheme('amber')}></div>
           <div className={`scheme-dot ${activeTheme === 'coral' ? 'active' : ''}`} style={{background: '#f97316'}} title="Coral-Pink" onClick={() => changeTheme('coral')}></div>
-          <span style={{fontSize: '10px', color: 'var(--text-muted)'}}>Pro feature</span>
+          <span style={{fontSize: '10px', color: 'var(--text-muted)'}}>Saved</span>
         </div>
 
         

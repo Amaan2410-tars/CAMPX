@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { getSupabase, isSupabaseConfigured } from "../lib/supabase";
+import { fetchUserRoles, isStaff } from "@/lib/rbac";
 
 export default function AdminAuthGuard() {
   const [loading, setLoading] = useState(true);
@@ -55,18 +56,8 @@ export default function AdminAuthGuard() {
       }
 
       // Check role
-      const { data: profile } = await sb
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
-      
-      const role = profile?.role;
-      if (role === "admin" || role === "founder") {
-        setIsAuthorized(true);
-      } else {
-        setIsAuthorized(false);
-      }
+      const { roles } = await fetchUserRoles(sb);
+      setIsAuthorized(isStaff(roles));
 
       setLoading(false);
     };
