@@ -334,6 +334,45 @@ export default function Onboarding() {
     return base.filter((m) => m.toLowerCase().includes(q)).slice(0, 8);
   })();
 
+  const resolveCollegeId = useCallback(async (canonicalName: string): Promise<string | null> => {
+    const sb = getSupabase();
+    if (!sb) return null;
+    try {
+      // Try direct match first, then fallback to fuzzy match.
+      const { data: exact } = await sb.from('colleges').select('id, name').ilike('name', canonicalName).limit(1);
+      const hit = exact?.[0];
+      if (hit?.id) return hit.id as string;
+
+      const { data } = await sb.from('colleges').select('id, name').ilike('name', `%${canonicalName}%`).limit(10);
+      const found = (data ?? []).find((c) => COLLEGE_NAME_ALIASES[normalizeCollegeName(c.name)] === canonicalName);
+      return (found?.id as string) || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const handleContinueSignup2 = useCallback(async () => {
+    // If user picked a canonical college but we don't have the UUID yet, resolve it now.
+    if (!collegeId && currentCollegeKey) {
+      const id = await resolveCollegeId(currentCollegeKey);
+      if (id) {
+        setCollegeId(id);
+        setCollegeIdsByName((prev) => ({ ...prev, [currentCollegeKey]: id }));
+      } else {
+        setErrors((p) => ({
+          ...p,
+          college: 'This college is not set up in the database yet. Please ask admin to add it in Admin → Colleges.',
+        }));
+        return;
+      }
+    }
+
+    if (validateSignup2()) {
+      setErrors({});
+      goTo('signup3');
+    }
+  }, [collegeId, currentCollegeKey, resolveCollegeId, validateSignup2]);
+
   // ── OTP Handling ──
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -880,7 +919,7 @@ export default function Onboarding() {
                 {renderInlineError('year')}
               </div>
 
-              <button type="button" className="btn btn-primary" onClick={() => { if (validateSignup2()) { setErrors({}); goTo('signup3'); } }}>Continue</button>
+              <button type="button" className="btn btn-primary" onClick={handleContinueSignup2}>Continue</button>
             </div>
           </div>
 
