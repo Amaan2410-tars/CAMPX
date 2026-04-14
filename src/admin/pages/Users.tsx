@@ -1,48 +1,88 @@
-import React, { useState } from "react";
-import { Search, Filter, MoreVertical, ShieldAlert, GraduationCap, Clock, AlertTriangle, Ban, X, CheckCircle2 } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Search, Filter, MoreVertical, ShieldAlert, AlertTriangle, Ban, X } from "lucide-react";
+import { getSupabase } from "@/lib/supabase";
 
 interface UserRecord {
   id: string;
-  name: string;
-  email: string;
-  mobile: string;
-  college: string;
-  course: string;
-  year: string;
-  tier: "Basic" | "Verified" | "Pro" | "Plus";
-  kycStatus: "Pending" | "Approved" | "Rejected" | "None";
-  joinedAt: string;
-  lastActive: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  college: string | null;
+  major: string | null;
+  year_of_study: string | null;
+  tier: "basic" | "verified" | "pro" | "plus";
+  verification_status: "unverified" | "email_verified" | "verified";
+  created_at: string;
+  updated_at: string;
 }
-
-const MOCK_USERS: UserRecord[] = [
-  { id: "101", name: "Yash Kumar", email: "yash.cse@cbit.ac.in", mobile: "+91 9876543210", college: "CBIT", course: "B.Tech CSE", year: "3rd Year", tier: "Pro", kycStatus: "Approved", joinedAt: "2024-01-12", lastActive: "Just now" },
-  { id: "102", name: "Aditi Rao", email: "aditi.r@vnr.edu", mobile: "+91 8765432109", college: "VNRVJIET", course: "MBA", year: "1st Year", tier: "Basic", kycStatus: "None", joinedAt: "2024-03-01", lastActive: "2 hours ago" },
-  { id: "103", name: "Rohan Verma", email: "rohanv@iith.ac.in", mobile: "+91 7654321098", college: "IITH", course: "M.Tech", year: "2nd Year", tier: "Verified", kycStatus: "Pending", joinedAt: "2024-04-10", lastActive: "1 day ago" },
-  { id: "104", name: "Snehil Sharma", email: "sneha123@gmail.com", mobile: "+91 6543210987", college: "SNIST", course: "B.Tech IT", year: "4th Year", tier: "Basic", kycStatus: "Rejected", joinedAt: "2024-02-28", lastActive: "3 days ago" },
-];
 
 export default function Users() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
+  const [rows, setRows] = useState<UserRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const getTierBadge = (tier: UserRecord["tier"]) => {
     switch (tier) {
-      case "Pro": return <span className="text-[#a855f7] bg-[#a855f7]/10 px-2 py-0.5 rounded text-xs font-bold border border-[#a855f7]/20 uppercase">Pro</span>;
-      case "Plus": return <span className="text-[#ec4899] bg-[#ec4899]/10 px-2 py-0.5 rounded text-xs font-bold border border-[#ec4899]/20 uppercase">Plus</span>;
-      case "Verified": return <span className="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded text-xs font-bold border border-emerald-400/20 uppercase">Verified</span>;
+      case "pro": return <span className="text-[#a855f7] bg-[#a855f7]/10 px-2 py-0.5 rounded text-xs font-bold border border-[#a855f7]/20 uppercase">Pro</span>;
+      case "plus": return <span className="text-[#ec4899] bg-[#ec4899]/10 px-2 py-0.5 rounded text-xs font-bold border border-[#ec4899]/20 uppercase">Plus</span>;
+      case "verified": return <span className="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded text-xs font-bold border border-emerald-400/20 uppercase">Verified</span>;
       default: return <span className="text-gray-400 bg-gray-400/10 px-2 py-0.5 rounded text-xs font-bold border border-gray-400/20 uppercase">Basic</span>;
     }
   };
 
-  const getKycBadge = (kyc: UserRecord["kycStatus"]) => {
-    switch (kyc) {
-      case "Approved": return <span className="flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 size={14}/> Approved</span>;
-      case "Pending": return <span className="flex items-center gap-1 text-yellow-400 text-xs"><Clock size={14}/> Pending</span>;
-      case "Rejected": return <span className="flex items-center gap-1 text-red-400 text-xs"><X size={14}/> Rejected</span>;
-      default: return <span className="text-gray-500 text-xs">-</span>;
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((r) => {
+      const hay = [
+        r.full_name,
+        r.email,
+        r.phone,
+        r.college,
+        r.major,
+        r.tier,
+        r.verification_status,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [rows, searchQuery]);
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setError("Supabase is not configured for admin.");
+      return;
     }
-  };
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    void (async () => {
+      const { data, error } = await sb
+        .from("profiles")
+        .select("id, full_name, email, phone, college, major, year_of_study, tier, verification_status, created_at, updated_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (cancelled) return;
+      if (error) {
+        setError(error.message);
+        setRows([]);
+      } else {
+        setRows((data ?? []) as UserRecord[]);
+      }
+      setLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -54,7 +94,7 @@ export default function Users() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
             <input 
               type="text" 
-              placeholder="Search by name, email, mobile..." 
+              placeholder="Search by name, email, phone, college..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full sm:w-72 bg-[#1c1c27] text-sm text-white placeholder-gray-500 border border-[#2a2a35] rounded-lg py-2 pl-9 pr-4 focus:ring-1 focus:ring-[#6c63ff] focus:border-[#6c63ff] focus:outline-none"
@@ -75,28 +115,44 @@ export default function Users() {
                 <th className="px-6 py-4 font-semibold">User</th>
                 <th className="px-6 py-4 font-semibold">College Info</th>
                 <th className="px-6 py-4 font-semibold">Tier</th>
-                <th className="px-6 py-4 font-semibold">KYC Status</th>
+                <th className="px-6 py-4 font-semibold">Verification</th>
                 <th className="px-6 py-4 font-semibold">Activity</th>
                 <th className="px-6 py-4 font-semibold text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a35]">
-              {MOCK_USERS.map((user) => (
+              {loading && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    Loading users…
+                  </td>
+                </tr>
+              )}
+              {!loading && error && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-red-400">
+                    {error}
+                  </td>
+                </tr>
+              )}
+              {!loading && !error && filtered.map((user) => (
                 <tr key={user.id} className="hover:bg-[#13131a] transition cursor-pointer" onClick={() => setSelectedUser(user)}>
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-white">{user.name}</div>
-                    <div className="text-xs mt-1 text-gray-500">{user.email}</div>
-                    <div className="text-xs text-gray-500">{user.mobile}</div>
+                    <div className="font-semibold text-white">{user.full_name || "—"}</div>
+                    <div className="text-xs mt-1 text-gray-500">{user.email || "—"}</div>
+                    <div className="text-xs text-gray-500">{user.phone || "—"}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-white font-medium">{user.college}</div>
-                    <div className="text-xs text-gray-500 mt-1">{user.course} • {user.year}</div>
+                    <div className="text-white font-medium">{user.college || "—"}</div>
+                    <div className="text-xs text-gray-500 mt-1">{user.major || "—"}{user.year_of_study ? ` • ${user.year_of_study}` : ""}</div>
                   </td>
                   <td className="px-6 py-4">{getTierBadge(user.tier)}</td>
-                  <td className="px-6 py-4">{getKycBadge(user.kycStatus)}</td>
                   <td className="px-6 py-4">
-                    <div className="text-gray-300">Joined: {user.joinedAt}</div>
-                    <div className="text-xs text-gray-500 mt-1">Last: {user.lastActive}</div>
+                    <span className="text-xs text-gray-300">{user.verification_status}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-gray-300">Joined: {new Date(user.created_at).toLocaleDateString()}</div>
+                    <div className="text-xs text-gray-500 mt-1">Updated: {new Date(user.updated_at).toLocaleString()}</div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <button className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2a2a35] rounded transition" onClick={(e) => { e.stopPropagation(); }}>
@@ -124,11 +180,11 @@ export default function Users() {
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#6c63ff] to-purple-400 flex items-center justify-center text-xl font-bold text-white shadow-xl">
-                  {selectedUser.name.charAt(0)}
+                  {(selectedUser.full_name || "?").charAt(0)}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">{selectedUser.name}</h3>
-                  <div className="text-sm text-gray-400">{selectedUser.email}</div>
+                  <h3 className="text-xl font-bold text-white">{selectedUser.full_name || "—"}</h3>
+                  <div className="text-sm text-gray-400">{selectedUser.email || "—"}</div>
                   <div className="mt-2">{getTierBadge(selectedUser.tier)}</div>
                 </div>
               </div>
@@ -138,19 +194,19 @@ export default function Users() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <div className="text-gray-500 mb-1">College</div>
-                    <div className="text-white font-medium">{selectedUser.college}</div>
+                    <div className="text-white font-medium">{selectedUser.college || "—"}</div>
                   </div>
                   <div>
-                    <div className="text-gray-500 mb-1">KYC Status</div>
-                    <div className="font-medium">{getKycBadge(selectedUser.kycStatus)}</div>
+                    <div className="text-gray-500 mb-1">Verification</div>
+                    <div className="font-medium text-gray-200">{selectedUser.verification_status}</div>
                   </div>
                   <div>
                     <div className="text-gray-500 mb-1">Course</div>
-                    <div className="text-white font-medium">{selectedUser.course}</div>
+                    <div className="text-white font-medium">{selectedUser.major || "—"}</div>
                   </div>
                   <div>
                     <div className="text-gray-500 mb-1">Year</div>
-                    <div className="text-white font-medium">{selectedUser.year}</div>
+                    <div className="text-white font-medium">{selectedUser.year_of_study || "—"}</div>
                   </div>
                 </div>
               </div>

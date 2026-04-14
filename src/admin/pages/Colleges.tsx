@@ -1,58 +1,113 @@
-import React, { useState } from "react";
-import { Search, Filter, Plus, ChevronLeft, Building2, Users, GraduationCap, MessagesSquare, Activity, CalendarDays, MoreVertical, X, Check, EyeOff, Ban, SearchX } from "lucide-react";
-
-// Types corresponding to DB
-type CollegeStatus = "Active" | "Hidden" | "Suspended" | "Deactivated";
+import React, { useEffect, useMemo, useState } from "react";
+import { Search, Plus, ChevronLeft, Building2, Users, Activity, CalendarDays, SearchX } from "lucide-react";
+import { getSupabase } from "@/lib/supabase";
+import { triggerGlobalToast } from "@/components/AppLayout";
 
 interface College {
   id: string;
   name: string;
   code: string;
-  city: string;
-  state: string;
-  type: string;
-  status: CollegeStatus;
-  usersCount: number;
-  verifiedCount: number;
-  hasAmbassador: boolean;
-  addedAt: string;
+  created_at: string;
 }
-
-// Mock Data
-const MOCK_COLLEGES: College[] = [
-  { id: "1", name: "Chaitanya Bharathi Institute of Technology", code: "CBIT", city: "Hyderabad", state: "Telangana", type: "Engineering", status: "Active", usersCount: 2450, verifiedCount: 1800, hasAmbassador: true, addedAt: "2024-01-10" },
-  { id: "2", name: "IIT Hyderabad", code: "IITH", city: "Hyderabad", state: "Telangana", type: "Multiple", status: "Active", usersCount: 1200, verifiedCount: 1100, hasAmbassador: false, addedAt: "2024-02-15" },
-  { id: "3", name: "VNR Vignana Jyothi Institute", code: "VNRVJIET", city: "Hyderabad", state: "Telangana", type: "Engineering", status: "Hidden", usersCount: 0, verifiedCount: 0, hasAmbassador: false, addedAt: "2024-04-12" },
-  { id: "4", name: "Sreenidhi Institute of Science", code: "SNIST", city: "Hyderabad", state: "Telangana", type: "Engineering", status: "Suspended", usersCount: 840, verifiedCount: 620, hasAmbassador: true, addedAt: "2024-03-01" },
-];
 
 export default function Colleges() {
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
+  const [activeTab, setActiveTab] = useState<"Overview" | "Users" | "Communities" | "Posts" | "Events">("Overview");
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [all, setAll] = useState<College[]>([]);
+  const [stats, setStats] = useState<{ usersCount: number; verifiedCount: number } | null>(null);
 
-  const [activeTab, setActiveTab] = useState("Overview");
-
-  const filteredColleges = MOCK_COLLEGES.filter(c => {
-    if (filterStatus !== "All" && c.status !== filterStatus) return false;
-    if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase()) && !c.code.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
-
-  const getStatusBadge = (status: CollegeStatus) => {
-    switch (status) {
-      case "Active": return <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full font-medium border border-emerald-500/20">Active</span>;
-      case "Hidden": return <span className="px-2 py-1 bg-gray-500/10 text-gray-400 text-xs rounded-full font-medium border border-gray-500/20">Hidden</span>;
-      case "Suspended": return <span className="px-2 py-1 bg-yellow-500/10 text-yellow-400 text-xs rounded-full font-medium border border-yellow-500/20">Suspended</span>;
-      case "Deactivated": return <span className="px-2 py-1 bg-red-500/10 text-red-400 text-xs rounded-full font-medium border border-red-500/20">Deactivated</span>;
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setLoading(false);
+      setErr("Supabase is not configured.");
+      return;
     }
-  };
+    let cancelled = false;
+    void (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+        const { data, error } = await sb.from("colleges").select("id, name, code, created_at").order("name", { ascending: true });
+        if (error) throw error;
+        if (!cancelled) setAll((data ?? []) as any);
+      } catch (e: any) {
+        if (!cancelled) setErr(e?.message ?? "Failed to load colleges.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const handleCreateCollege = (e: React.FormEvent) => {
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb || !selectedCollege) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        setStats(null);
+        const [{ count: usersCount }, { count: verifiedCount }] = await Promise.all([
+          sb.from("profiles").select("id", { count: "exact", head: true }).eq("college_id", selectedCollege.id),
+          sb
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .eq("college_id", selectedCollege.id)
+            .in("tier", ["verified", "pro", "plus"]),
+        ]);
+        if (!cancelled) setStats({ usersCount: usersCount ?? 0, verifiedCount: verifiedCount ?? 0 });
+      } catch {
+        if (!cancelled) setStats({ usersCount: 0, verifiedCount: 0 });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCollege?.id]);
+
+  const filteredColleges = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter((c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q));
+  }, [all, searchQuery]);
+
+  const handleCreateCollege = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsAddModalOpen(false);
-    alert("New college created and set to Hidden status.");
+    const sb = getSupabase();
+    if (!sb) {
+      triggerGlobalToast("Supabase is not configured.", "error");
+      return;
+    }
+    try {
+      const form = e.currentTarget as HTMLFormElement;
+      const fd = new FormData(form);
+      const name = String(fd.get("college_name") ?? "").trim();
+      const code = String(fd.get("college_code") ?? "").trim();
+      const domain = String(fd.get("college_domain") ?? "").trim();
+      if (!name) throw new Error("College name is required.");
+      if (!code) throw new Error("College code is required.");
+
+      const { data, error } = await sb.from("colleges").insert({ name, code }).select("id, name, code, created_at").single();
+      if (error) throw error;
+
+      if (domain) {
+        const cleaned = domain.replace(/^@/, "").trim().toLowerCase();
+        const { error: dErr } = await sb.from("college_email_domains").insert({ college_id: data.id, domain: cleaned });
+        if (dErr) throw dErr;
+      }
+
+      setAll((prev) => [data as any, ...prev].sort((a, b) => a.name.localeCompare(b.name)));
+      setIsAddModalOpen(false);
+      triggerGlobalToast("College created.", "success");
+    } catch (e: any) {
+      triggerGlobalToast(e?.message ?? "Failed to create college.", "error");
+    }
   };
 
   if (selectedCollege) {
@@ -69,16 +124,11 @@ export default function Colleges() {
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-white tracking-tight">{selectedCollege.name}</h2>
-              {getStatusBadge(selectedCollege.status)}
             </div>
             <div className="text-sm text-gray-400 flex items-center gap-2 mt-1">
               <span>{selectedCollege.code}</span> • 
-              <span>{selectedCollege.city}, {selectedCollege.state}</span>
+              <span>Added {new Date(selectedCollege.created_at).toLocaleDateString()}</span>
             </div>
-          </div>
-          <div className="ml-auto flex gap-3">
-            <button className="px-4 py-2 bg-[#1c1c27] text-white text-sm font-medium rounded-lg border border-[#333] hover:bg-[#2a2a35] transition">Edit Details</button>
-            <button className="px-4 py-2 bg-[#6c63ff] text-white text-sm font-medium rounded-lg border border-[#6c63ff] hover:bg-[#5b54e5] transition">Change Status</button>
           </div>
         </div>
 
@@ -87,14 +137,12 @@ export default function Colleges() {
           {[
             { id: "Overview", icon: Building2 },
             { id: "Users", icon: Users },
-            { id: "Team", icon: GraduationCap },
-            { id: "Communities", icon: MessagesSquare },
             { id: "Posts", icon: Activity },
             { id: "Events", icon: CalendarDays }
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.id 
                   ? "border-[#6c63ff] text-[#6c63ff]" 
@@ -111,20 +159,14 @@ export default function Colleges() {
         <div className="pt-4">
           {activeTab === "Overview" && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35]">
                   <div className="text-sm text-gray-400 uppercase tracking-wider font-semibold mb-1">Total Users</div>
-                  <div className="text-2xl font-bold text-white">{selectedCollege.usersCount.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-white">{(stats?.usersCount ?? 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35]">
-                  <div className="text-sm text-gray-400 uppercase tracking-wider font-semibold mb-1">Verified Users</div>
-                  <div className="text-2xl font-bold text-green-400">{selectedCollege.verifiedCount.toLocaleString()}</div>
-                </div>
-                <div className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35]">
-                  <div className="text-sm text-gray-400 uppercase tracking-wider font-semibold mb-1">Ambassador</div>
-                  <div className={`text-xl font-bold ${selectedCollege.hasAmbassador ? "text-purple-400" : "text-yellow-400"}`}>
-                    {selectedCollege.hasAmbassador ? "Assigned" : "Not Assigned"}
-                  </div>
+                  <div className="text-sm text-gray-400 uppercase tracking-wider font-semibold mb-1">Verified+ Users</div>
+                  <div className="text-2xl font-bold text-green-400">{(stats?.verifiedCount ?? 0).toLocaleString()}</div>
                 </div>
               </div>
 
@@ -132,39 +174,16 @@ export default function Colleges() {
                 <h3 className="font-semibold text-white mb-4">Registration Setup</h3>
                 <div className="space-y-4 text-sm">
                   <div className="flex justify-between border-b border-[#2a2a35] pb-2">
-                    <span className="text-gray-400">Official Domain (Path A)</span>
-                    <span className="text-white font-medium">@{selectedCollege.code.toLowerCase()}.ac.in</span>
+                    <span className="text-gray-400">College Email Domains</span>
+                    <span className="text-white font-medium">Manage in Domains table</span>
                   </div>
                   <div className="flex justify-between border-b border-[#2a2a35] pb-2">
-                    <span className="text-gray-400">Platform ID Cards (Path B)</span>
-                    <span className="text-white font-medium">Enabled (Manual KYC)</span>
-                  </div>
-                  <div className="flex justify-between border-b border-[#2a2a35] pb-2">
-                    <span className="text-gray-400">Course List</span>
-                    <span className="text-white font-medium">B.Tech, M.Tech, MBA, MCA</span>
+                    <span className="text-gray-400">Verification Method</span>
+                    <span className="text-white font-medium">College email only</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-8 flex gap-4">
-                {!selectedCollege.hasAmbassador && (
-                   <button disabled className="px-6 py-2.5 bg-green-500/20 text-green-400 text-sm font-semibold rounded-lg border border-green-500/20 cursor-not-allowed opacity-50 flex items-center gap-2">
-                     <Check size={16} /> Go Live (Needs Ambassador)
-                   </button>
-                )}
-                {selectedCollege.status !== "Hidden" && (
-                   <button className="px-6 py-2.5 bg-gray-500/20 text-gray-300 text-sm font-semibold rounded-lg border border-gray-500/30 flex items-center gap-2 hover:bg-gray-500/30 transition">
-                     <EyeOff size={16} /> Hide College
-                   </button>
-                )}
-                <button className="px-6 py-2.5 bg-yellow-500/20 text-yellow-500 text-sm font-semibold rounded-lg border border-yellow-500/30 flex items-center gap-2 hover:bg-yellow-500/30 transition">
-                  <Ban size={16} /> Suspend Operations
-                </button>
-                <div className="flex-1"></div>
-                <button className="px-6 py-2.5 bg-red-500/10 text-red-500 text-sm font-semibold rounded-lg border border-red-500/20 flex items-center gap-2 hover:bg-red-500/20 transition">
-                  <X size={16} /> Deactivate
-                </button>
-              </div>
             </div>
           )}
 
@@ -182,6 +201,11 @@ export default function Colleges() {
 
   return (
     <div className="space-y-6">
+      {err && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl p-4 text-sm">
+          {err}
+        </div>
+      )}
       
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -198,17 +222,6 @@ export default function Colleges() {
               className="w-full sm:w-64 bg-[#1c1c27] text-sm text-white placeholder-gray-500 border border-[#2a2a35] rounded-lg py-2 pl-9 pr-4 focus:ring-1 focus:ring-[#6c63ff] focus:border-[#6c63ff] focus:outline-none"
             />
           </div>
-          
-          <select 
-            className="bg-[#1c1c27] text-sm text-white border border-[#2a2a35] rounded-lg py-2 px-3 focus:outline-none focus:border-[#6c63ff]"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="All">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Hidden">Hidden</option>
-            <option value="Suspended">Suspended</option>
-          </select>
 
           <button 
             onClick={() => setIsAddModalOpen(true)}
@@ -226,18 +239,20 @@ export default function Colleges() {
             <thead className="text-xs text-gray-500 uppercase bg-[#13131a] border-b border-[#2a2a35]">
               <tr>
                 <th className="px-6 py-4 font-semibold">College Name</th>
-                <th className="px-6 py-4 font-semibold">Location</th>
-                <th className="px-6 py-4 font-semibold">Type</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
-                <th className="px-6 py-4 font-semibold text-right">Users</th>
-                <th className="px-6 py-4 font-semibold text-center">Ambassador</th>
-                <th className="px-6 py-4 font-semibold text-center">Actions</th>
+                <th className="px-6 py-4 font-semibold">Code</th>
+                <th className="px-6 py-4 font-semibold">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a35]">
-              {filteredColleges.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={3} className="px-6 py-12 text-center">
+                    Loading…
+                  </td>
+                </tr>
+              ) : filteredColleges.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-6 py-12 text-center">
                     No colleges found matching your criteria.
                   </td>
                 </tr>
@@ -246,31 +261,10 @@ export default function Colleges() {
                   <tr key={college.id} className="hover:bg-[#13131a] transition cursor-pointer" onClick={() => setSelectedCollege(college)}>
                     <td className="px-6 py-4">
                       <div className="font-semibold text-white">{college.name}</div>
-                      <div className="text-xs mt-1 text-gray-500">{college.code} • Added {college.addedAt}</div>
+                      <div className="text-xs mt-1 text-gray-500">{college.id}</div>
                     </td>
-                    <td className="px-6 py-4">{college.city}, {college.state}</td>
-                    <td className="px-6 py-4">{college.type}</td>
-                    <td className="px-6 py-4">{getStatusBadge(college.status)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="text-white font-medium">{college.usersCount.toLocaleString()}</div>
-                      <div className="text-xs text-green-400">{college.verifiedCount.toLocaleString()} verified</div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {college.hasAmbassador ? (
-                        <span className="inline-flex items-center justify-center p-1.5 bg-purple-500/10 text-purple-400 rounded-lg" title="Assigned">
-                          <Check size={16} />
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center justify-center p-1.5 bg-gray-500/10 text-gray-500 rounded-lg" title="Not Assigned">
-                          <X size={16} />
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2a2a35] rounded transition" onClick={(e) => { e.stopPropagation(); }}>
-                        <MoreVertical size={16} />
-                      </button>
-                    </td>
+                    <td className="px-6 py-4">{college.code}</td>
+                    <td className="px-6 py-4">{new Date(college.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))
               )}
@@ -279,10 +273,7 @@ export default function Colleges() {
         </div>
         <div className="p-4 border-t border-[#2a2a35] flex items-center justify-between text-xs text-gray-500 bg-[#13131a]">
           <div>Showing 1 to {filteredColleges.length} of {filteredColleges.length} entries</div>
-          <div className="flex gap-1">
-            <button className="px-3 py-1 bg-[#1c1c27] border border-[#333] rounded hover:bg-[#2a2a35] transition text-white">Previous</button>
-            <button className="px-3 py-1 bg-[#1c1c27] border border-[#333] rounded hover:bg-[#2a2a35] transition text-white">Next</button>
-          </div>
+          <div />
         </div>
       </div>
 
@@ -302,34 +293,15 @@ export default function Colleges() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-400 mb-1">College Name*</label>
-                    <input required type="text" className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]" placeholder="e.g. Oxford Engineering College" />
+                    <input name="college_name" required type="text" className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]" placeholder="e.g. Oxford Engineering College" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">College Code*</label>
-                    <input required type="text" className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]" placeholder="e.g. OXF" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Type*</label>
-                    <select required className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]">
-                      <option value="">Select Type...</option>
-                      <option>Engineering</option>
-                      <option>Medical</option>
-                      <option>Management</option>
-                      <option>Arts & Science</option>
-                      <option>Multiple Disciplines</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">City*</label>
-                    <input required type="text" className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">State*</label>
-                    <input required type="text" className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]" />
+                    <input name="college_code" required type="text" className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]" placeholder="e.g. OXF" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-400 mb-1">Official Email Domain (Optional)</label>
-                    <input type="text" className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]" placeholder="@collegedomain.edu" />
+                    <input name="college_domain" type="text" className="w-full bg-[#13131a] border border-[#333] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#6c63ff]" placeholder="@collegedomain.edu" />
                     <p className="text-xs text-gray-500 mt-1">Providing this enables automated Path A student verification.</p>
                   </div>
                 </div>

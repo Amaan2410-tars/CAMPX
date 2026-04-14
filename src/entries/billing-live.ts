@@ -96,7 +96,7 @@ async function main(): Promise<void> {
           ? `<div style="font-size:12px;color:#a5b4fc;margin-bottom:10px;">You came from Settings. Select a plan and continue to Razorpay.</div>`
           : ""
       }
-      <div style="font-size:12px;color:#fbbf24;margin-bottom:10px;">Razorpay account note: if KYC is still under review, live card/UPI capture may fail until Razorpay activates your account.</div>
+      <div style="font-size:12px;color:#fbbf24;margin-bottom:10px;">Razorpay account note: live card/UPI capture may fail until Razorpay activates your account.</div>
       ${errMsg ? `<p style="color:#f87171;">${escapeHtml(errMsg)}</p>` : ""}
       ${
         plans?.length

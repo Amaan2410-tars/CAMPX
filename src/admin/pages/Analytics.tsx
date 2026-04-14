@@ -15,8 +15,7 @@ const DAU_DATA = [
 const FUNNEL_DATA = [
   { step: "Signed Up", count: 25000 },
   { step: "Email Verified", count: 22000 },
-  { step: "KYC Submitted", count: 18000 },
-  { step: "KYC Approved", count: 15400 },
+  { step: "College Verified", count: 15400 },
 ];
 
 export default function Analytics() {
@@ -88,10 +87,10 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* KYC Funnel Chart */}
+        {/* Verification funnel chart (email + college domain) */}
         <div className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35]">
           <h3 className="text-base font-semibold text-white mb-6 flex items-center gap-2">
-            <BarChart2 size={18} className="text-emerald-400"/> Identity Verification Funnel
+            <BarChart2 size={18} className="text-emerald-400"/> Verification Funnel
           </h3>
           <div className="h-[300px]">
              <ResponsiveContainer width="100%" height="100%">

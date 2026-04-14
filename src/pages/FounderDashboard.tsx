@@ -14,7 +14,7 @@ export default function FounderDashboard() {
     <div className="grid">
       <div className="card"><div className="k">Daily Active Users</div><div className="v" id="campx-metric-dau">—</div></div>
       <div className="card"><div className="k">New Signups (24h)</div><div className="v" id="campx-metric-signups">—</div></div>
-      <div className="card"><div className="k">KYC Pending</div><div className="v" id="campx-metric-kyc">—</div></div>
+      <div className="card"><div className="k">Pending Verification</div><div className="v" id="campx-metric-kyc">—</div></div>
       <div className="card"><div className="k">Reported Content</div><div className="v" id="campx-metric-reports">—</div></div>
     </div>
 

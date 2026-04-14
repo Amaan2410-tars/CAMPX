@@ -8,72 +8,14 @@ interface FormErrors {
   [key: string]: string;
 }
 
-const COLLEGE_CATALOG: Record<string, string[]> = {
-  "Shadan College Of Engineering and Technology": [
-    "Computer Science and Engineering (CSE)",
-    "Information Technology (IT)",
-    "CSE (AI & ML)",
-    "CSE (Data Science)",
-    "Electronics and Communication Engineering (ECE)",
-    "Electrical and Electronics Engineering (EEE)",
-    "Mechanical Engineering",
-    "Civil Engineering",
-    "MBA"
-  ],
-  "Lords College of Engineering and Technology": [
-    "Computer Science and Engineering (CSE)",
-    "Information Technology (IT)",
-    "CSE (AI & ML)",
-    "CSE (Data Science)",
-    "Electronics and Communication Engineering (ECE)",
-    "Electrical and Electronics Engineering (EEE)",
-    "Mechanical Engineering",
-    "Civil Engineering",
-    "MBA"
-  ],
-  "M.J College of Engineering and Technology": [
-    "Computer Science and Engineering (CSE)",
-    "Information Technology (IT)",
-    "CSE (AI & ML)",
-    "Artificial Intelligence and Data Science",
-    "Electronics and Communication Engineering (ECE)",
-    "Electrical Engineering (EE)",
-    "Mechanical Engineering",
-    "Civil Engineering",
-    "Production Engineering"
-  ],
-  "Methodist College of Engineering and Technology": [
-    "Computer Science and Engineering (CSE)",
-    "CSE (AI & ML)",
-    "Electronics and Communication Engineering (ECE)",
-    "Electrical and Electronics Engineering (EEE)",
-    "Mechanical Engineering",
-    "Civil Engineering"
-  ],
-  "Anwar-ul-uloom Degree College": [
-    "B.Sc (Computer Science)",
-    "B.Sc (Physical Sciences)",
-    "B.Sc (Life Sciences)",
-    "B.Com (General)",
-    "B.Com (Computers)",
-    "B.Com (Honors)",
-    "BBA",
-    "B.A."
-  ],
-  "St Joseph College of Degree": [
-    "B.Com (General)",
-    "B.Com (Computers)",
-    "B.Com (Honors)",
-    "B.Com (IT)",
-    "BBA (Business Administration)",
-    "BBA (IT)",
-    "B.Sc (Maths, Physics, Computer Science)",
-    "B.Sc (Electronics)",
-    "B.A. (Mass Communication)"
-  ]
-};
-
-const MOCK_COLLEGES = Object.keys(COLLEGE_CATALOG).map((name, idx) => ({ id: `c-${idx}`, name }));
+function is18Plus(dobIso: string): boolean {
+  // dobIso is expected to be yyyy-mm-dd from <input type="date">
+  const dob = new Date(dobIso);
+  if (Number.isNaN(dob.getTime())) return false;
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear() - 18, now.getMonth(), now.getDate());
+  return dob <= cutoff;
+}
 
 export default function Onboarding() {
   usePageTitle('Join Your Campus Community');
@@ -84,6 +26,7 @@ export default function Onboarding() {
   // Form state
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -98,8 +41,8 @@ export default function Onboarding() {
 
   // Loading / UI state
   const [loading, setLoading] = useState(false);
-  const [otpLength, setOtpLength] = useState(8); 
-  const [otpDigits, setOtpDigits] = useState(Array(8).fill(''));
+  const [otpLength] = useState(6);
+  const [otpDigits, setOtpDigits] = useState(Array(6).fill(''));
   const [otpError, setOtpError] = useState('');
   const [otpShake, setOtpShake] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(true);
@@ -155,6 +98,8 @@ export default function Onboarding() {
     if (!fullName.trim()) errs.fullName = 'Full name is required';
     if (!email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address';
+    if (!dateOfBirth) errs.dob = 'Date of birth is required';
+    else if (!is18Plus(dateOfBirth)) errs.dob = 'You must be 18+ to create an account';
     if (!mobile.trim()) errs.mobile = 'Mobile number is required';
     else {
       const mobileErr = validateMobile(mobile);
@@ -171,6 +116,7 @@ export default function Onboarding() {
   const validateSignup2 = (): boolean => {
     const errs: FormErrors = {};
     if (!collegeName.trim()) errs.college = 'Please select your college';
+    if (!collegeId) errs.college = 'Please select your college from the list';
     if (!major.trim()) errs.major = 'Major / branch is required';
     if (!yearOfStudy) errs.year = 'Year of study is required';
     setErrors(errs);
@@ -194,29 +140,19 @@ export default function Onboarding() {
     }
     collegeSearchTimer.current = window.setTimeout(async () => {
       const sb = getSupabase();
-      if (sb) {
-        try {
-          const { data } = await sb.from('colleges').select('id, name').ilike('name', `%${query}%`).limit(8);
-          if (data && data.length > 0) {
-            setCollegeResults(data);
-            setCollegeDropdownOpen(true);
-            return;
-          }
-        } catch { /* fall through to mock */ }
+      if (!sb) {
+        setCollegeResults([]);
+        setCollegeDropdownOpen(false);
+        return;
       }
-      // Mock fallback
-      const mockColleges = [
-        { id: '1', name: 'CBIT Hyderabad' },
-        { id: '2', name: 'JNTU Hyderabad' },
-        { id: '3', name: 'Osmania University' },
-        { id: '4', name: 'IIIT Hyderabad' },
-        { id: '5', name: 'VNR VJIET' },
-        { id: '6', name: 'MJCET Hyderabad' },
-        { id: '7', name: 'Vasavi CE' },
-        { id: '8', name: 'Stanley College of Engineering' },
-      ].filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
-      setCollegeResults(mockColleges);
-      setCollegeDropdownOpen(mockColleges.length > 0);
+      try {
+        const { data } = await sb.from('colleges').select('id, name').ilike('name', `%${query}%`).limit(8);
+        setCollegeResults(data ?? []);
+        setCollegeDropdownOpen(Boolean(data?.length));
+      } catch {
+        setCollegeResults([]);
+        setCollegeDropdownOpen(false);
+      }
     }, 300);
   }, []);
 
@@ -274,14 +210,33 @@ export default function Onboarding() {
     setLoading(true);
     setErrors({});
     try {
+      if (!isSupabaseConfigured()) {
+        setErrors({ submit: 'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' });
+        setLoading(false);
+        return;
+      }
       const sb = getSupabase();
-      if (sb) {
-        const { error } = await sb.auth.signInWithOtp({ email });
-        if (error) {
-          setErrors({ submit: error.message });
-          setLoading(false);
-          return;
-        }
+      if (!sb) throw new Error('Supabase client unavailable');
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${window.location.origin}/onboarding`,
+          data: {
+            full_name: fullName,
+            phone: mobile,
+            college: collegeName,
+            college_id: collegeId,
+            major,
+            year_of_study: yearOfStudy,
+            date_of_birth: dateOfBirth,
+          },
+        },
+      });
+      if (error) {
+        setErrors({ submit: error.message });
+        setLoading(false);
+        return;
       }
       localStorage.setItem('campx_verify_email', email);
       goTo('verify-code');
@@ -294,7 +249,7 @@ export default function Onboarding() {
 
   const handleVerifyOtp = async () => {
     const code = otpDigits.join('');
-    if (code.length < 6) { // Accept 6 or 8 based on supabase settings
+    if (code.length !== 6) {
       setOtpError('Enter the complete verification code');
       return;
     }
@@ -303,8 +258,8 @@ export default function Onboarding() {
     try {
       const sb = getSupabase();
       const storedEmail = localStorage.getItem('campx_verify_email') || email;
-      if (sb) {
-        const { error } = await sb.auth.verifyOtp({ email: storedEmail, token: code, type: 'email' });
+      if (!sb) throw new Error('Supabase client unavailable');
+      const { error } = await sb.auth.verifyOtp({ email: storedEmail, token: code, type: 'email' });
         if (error) {
           setOtpShake(true);
           setTimeout(() => setOtpShake(false), 600);
@@ -320,15 +275,15 @@ export default function Onboarding() {
               id: user.id,
               full_name: fullName,
               email: storedEmail,
-              mobile,
+              phone: mobile,
               college: collegeName,
               college_id: collegeId,
               major,
               year_of_study: yearOfStudy,
+              date_of_birth: dateOfBirth,
             }, { onConflict: 'id' });
           }
         } catch { /* non-critical */ }
-      }
       goTo('verified-welcome');
     } catch (err: any) {
       setOtpShake(true);
@@ -346,7 +301,10 @@ export default function Onboarding() {
       const sb = getSupabase();
       const storedEmail = localStorage.getItem('campx_verify_email') || email;
       if (sb) {
-        await sb.auth.signInWithOtp({ email: storedEmail });
+        await sb.auth.signInWithOtp({
+          email: storedEmail,
+          options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/onboarding` },
+        });
       }
     } catch { /* silently retry */ }
   };
@@ -561,6 +519,15 @@ export default function Onboarding() {
               </div>
 
               <div className="input-group">
+                <label className="input-label" htmlFor="signup-dob">Date of birth</label>
+                <div className={`input-wrap ${errors.dob ? 'has-error' : ''}`}>
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <input type="date" id="signup-dob" value={dateOfBirth} onChange={e => { setDateOfBirth(e.target.value); setErrors(p => ({...p, dob: ''})); }} />
+                </div>
+                {renderInlineError('dob')}
+              </div>
+
+              <div className="input-group">
                 <label className="input-label" htmlFor="signup-mobile">Mobile number</label>
                 <div className={`input-wrap ${errors.mobile ? 'has-error' : ''}`}>
                   <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
@@ -617,23 +584,56 @@ export default function Onboarding() {
 
               <div className="input-group">
                 <label className="input-label" htmlFor="college-name">College / University</label>
-                <select className={`year-select ${errors.college ? 'has-error' : ''}`} id="college-name" value={collegeName} onChange={e => { setCollegeName(e.target.value); setMajor(''); setErrors(p => ({...p, college: ''})); }}>
-                  <option value="">Select your college</option>
-                  {MOCK_COLLEGES.map(c => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
-                  ))}
-                </select>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="college-name"
+                    className={`year-select ${errors.college ? 'has-error' : ''}`}
+                    placeholder="Search your college..."
+                    value={collegeName}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setCollegeName(v);
+                      setCollegeId(null);
+                      setErrors(p => ({ ...p, college: '' }));
+                      searchColleges(v);
+                    }}
+                    onFocus={() => {
+                      if (collegeName.trim().length >= 2) searchColleges(collegeName);
+                    }}
+                  />
+                  {collegeDropdownOpen && (
+                    <div className="college-dropdown" role="listbox" aria-label="College search results">
+                      {collegeResults.map((c) => (
+                        <div
+                          key={c.id}
+                          className="college-dropdown-item"
+                          role="option"
+                          onMouseDown={(evt) => {
+                            evt.preventDefault();
+                            setCollegeName(c.name);
+                            setCollegeId(c.id);
+                            setCollegeDropdownOpen(false);
+                            setErrors(p => ({ ...p, college: '' }));
+                          }}
+                        >
+                          {c.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {renderInlineError('college')}
               </div>
 
               <div className="input-group">
                 <label className="input-label" htmlFor="signup-major">Major / Branch</label>
-                <select className={`year-select ${errors.major ? 'has-error' : ''}`} id="signup-major" value={major} onChange={e => { setMajor(e.target.value); setErrors(p => ({...p, major: ''})); }} disabled={!collegeName}>
-                  <option value="">Select major</option>
-                  {collegeName && COLLEGE_CATALOG[collegeName] ? COLLEGE_CATALOG[collegeName].map((m, i) => (
-                    <option key={i} value={m}>{m}</option>
-                  )) : null}
-                </select>
+                <input
+                  id="signup-major"
+                  className={`year-select ${errors.major ? 'has-error' : ''}`}
+                  placeholder="e.g. Computer Science and Engineering"
+                  value={major}
+                  onChange={(e) => { setMajor(e.target.value); setErrors(p => ({ ...p, major: '' })); }}
+                />
                 {renderInlineError('major')}
               </div>
 

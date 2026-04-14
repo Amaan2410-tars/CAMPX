@@ -1,59 +1,154 @@
-import React from "react";
-import { Users2, ShieldCheck, GraduationCap, Building2, CreditCard, Star, TrendingUp, Activity } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
-
-const METRICS = [
-  { label: "Total Users", value: "24,592", icon: Users2, color: "text-blue-400" },
-  { label: "Verified Users", value: "18,401", icon: ShieldCheck, color: "text-green-400" },
-  { label: "Colleges Live", value: "42", icon: Building2, color: "text-purple-400" },
-  { label: "Active Communities", value: "318", icon: Activity, color: "text-orange-400" },
-  { label: "Pro Subscribers", value: "8,204", icon: Star, color: "text-yellow-400" },
-  { label: "Plus Subscribers", value: "1,140", icon: Star, color: "text-pink-400" },
-  { label: "Revenue (MTD)", value: "₹4.2L", icon: CreditCard, color: "text-emerald-400" },
-  { label: "Pending KYC", value: "142", icon: GraduationCap, color: "text-red-400" },
-];
-
-const SIGNUP_DATA = [
-  { name: "1 Apr", users: 400 },
-  { name: "5 Apr", users: 300 },
-  { name: "10 Apr", users: 550 },
-  { name: "15 Apr", users: 480 },
-  { name: "20 Apr", users: 600 },
-  { name: "25 Apr", users: 800 },
-  { name: "30 Apr", users: 950 },
-];
-
-const REVENUE_DATA = [
-  { name: "Nov", rev: 120000 },
-  { name: "Dec", rev: 180000 },
-  { name: "Jan", rev: 210000 },
-  { name: "Feb", rev: 280000 },
-  { name: "Mar", rev: 350000 },
-  { name: "Apr", rev: 420000 },
-];
-
-const TIER_DATA = [
-  { name: "Verified", value: 9057, color: "#4ade80" },
-  { name: "Basic", value: 6191, color: "#9ca3af" },
-  { name: "Pro", value: 8204, color: "#a855f7" },
-  { name: "Plus", value: 1140, color: "#ec4899" },
-];
-
-const RECENT_ACTIVITY = [
-  { id: 1, action: "New Pro Subscription", user: "Aditya Sharma", college: "CBIT", time: "2 mins ago", type: "monetization" },
-  { id: 2, action: "KYC Approved", user: "Priya Singh", college: "VNR VJIET", time: "15 mins ago", type: "moderation" },
-  { id: 3, action: "New College Created", user: "System", college: "IIT Hyderabad", time: "1 hour ago", type: "system" },
-  { id: 4, action: "Community Created: AI Club", user: "Karan Verma", college: "CBIT", time: "2 hours ago", type: "content" },
-  { id: 5, action: "User Flagged for Spam", user: "Rahul K", college: "SNIST", time: "3 hours ago", type: "moderation" },
-];
+import React, { useEffect, useMemo, useState } from "react";
+import { Users2, ShieldCheck, Building2, CreditCard, Star, TrendingUp, Activity } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { getSupabase } from "@/lib/supabase";
 
 export default function Dashboard() {
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  const [metrics, setMetrics] = useState({
+    totalUsers: 0,
+    verifiedUsers: 0,
+    colleges: 0,
+    communities: 0,
+    proUsers: 0,
+    plusUsers: 0,
+    revenueMtdCents: 0,
+  });
+
+  const [signupData, setSignupData] = useState<Array<{ name: string; users: number }>>([]);
+  const [tierData, setTierData] = useState<Array<{ name: string; value: number; color: string }>>([]);
+  const [recentAudit, setRecentAudit] = useState<Array<{ id: string; action: string; entity: string; created_at: string }>>([]);
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setLoading(false);
+      setErr("Supabase is not configured.");
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const since30 = new Date();
+        since30.setDate(since30.getDate() - 30);
+
+        const [
+          profilesAll,
+          verifiedProfiles,
+          proProfiles,
+          plusProfiles,
+          collegesCount,
+          communitiesCount,
+          paymentsMtd,
+          analytics,
+          audit,
+        ] = await Promise.all([
+          sb.from("profiles").select("id", { count: "exact", head: true }),
+          sb.from("profiles").select("id", { count: "exact", head: true }).in("tier", ["verified", "pro", "plus"]),
+          sb.from("profiles").select("id", { count: "exact", head: true }).eq("tier", "pro"),
+          sb.from("profiles").select("id", { count: "exact", head: true }).eq("tier", "plus"),
+          sb.from("colleges").select("id", { count: "exact", head: true }),
+          sb.from("communities").select("id", { count: "exact", head: true }),
+          sb
+            .from("payments")
+            .select("amount_cents, created_at, status")
+            .eq("status", "captured")
+            .gte("created_at", startOfMonth.toISOString()),
+          sb
+            .from("analytics_daily")
+            .select("day, signups")
+            .gte("day", since30.toISOString().slice(0, 10))
+            .order("day", { ascending: true }),
+          sb.from("audit_log").select("id, action, entity, created_at").order("created_at", { ascending: false }).limit(20),
+        ]);
+
+        const mtdSumCents = (paymentsMtd.data ?? []).reduce((acc, p) => acc + (p.amount_cents ?? 0), 0);
+
+        const signups =
+          (analytics.data ?? []).map((r) => ({
+            name: new Date(r.day as any).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+            users: r.signups ?? 0,
+          })) ?? [];
+
+        const total = profilesAll.count ?? 0;
+        const verifiedPlus = verifiedProfiles.count ?? 0;
+        const pro = proProfiles.count ?? 0;
+        const plus = plusProfiles.count ?? 0;
+        const verifiedOnly = Math.max(0, verifiedPlus - pro - plus);
+        const basic = Math.max(0, total - verifiedPlus);
+
+        const td = [
+          { name: "Verified", value: verifiedOnly, color: "#4ade80" },
+          { name: "Basic", value: basic, color: "#9ca3af" },
+          { name: "Pro", value: pro, color: "#a855f7" },
+          { name: "Plus", value: plus, color: "#ec4899" },
+        ];
+
+        if (cancelled) return;
+        setMetrics({
+          totalUsers: total,
+          verifiedUsers: verifiedPlus,
+          colleges: collegesCount.count ?? 0,
+          communities: communitiesCount.count ?? 0,
+          proUsers: pro,
+          plusUsers: plus,
+          revenueMtdCents: mtdSumCents,
+        });
+        setSignupData(signups);
+        setTierData(td);
+        setRecentAudit(audit.data ?? []);
+      } catch (e: any) {
+        if (!cancelled) setErr(e?.message ?? "Failed to load dashboard.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const metricCards = useMemo(
+    () => [
+      { label: "Total Users", value: metrics.totalUsers.toLocaleString(), icon: Users2, color: "text-blue-400" },
+      { label: "Verified+ Users", value: metrics.verifiedUsers.toLocaleString(), icon: ShieldCheck, color: "text-green-400" },
+      { label: "Colleges", value: metrics.colleges.toLocaleString(), icon: Building2, color: "text-purple-400" },
+      { label: "Communities", value: metrics.communities.toLocaleString(), icon: Activity, color: "text-orange-400" },
+      { label: "Pro Users", value: metrics.proUsers.toLocaleString(), icon: Star, color: "text-yellow-400" },
+      { label: "Plus Users", value: metrics.plusUsers.toLocaleString(), icon: Star, color: "text-pink-400" },
+      {
+        label: "Revenue (MTD)",
+        value: `₹${Math.round(metrics.revenueMtdCents / 100).toLocaleString()}`,
+        icon: CreditCard,
+        color: "text-emerald-400",
+      },
+      { label: "Uptime", value: "—", icon: TrendingUp, color: "text-gray-400" },
+    ],
+    [metrics]
+  );
+
   return (
     <div className="space-y-6">
+      {err && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl p-4 text-sm">
+          {err}
+        </div>
+      )}
       
       {/* Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {METRICS.map((item, idx) => (
+        {metricCards.map((item, idx) => (
           <div key={idx} className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35] flex items-center gap-4">
             <div className={`p-3 rounded-lg bg-[#13131a] ${item.color}`}>
               <item.icon size={24} />
@@ -73,7 +168,7 @@ export default function Dashboard() {
           <h3 className="text-base font-semibold text-white mb-4">User Growth (Last 30 Days)</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={SIGNUP_DATA}>
+              <LineChart data={signupData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2a2a35" />
                 <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
                 <YAxis stroke="#6b7280" fontSize={12} />
@@ -82,6 +177,9 @@ export default function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+          {!loading && signupData.length === 0 && (
+            <div className="text-xs text-gray-500 mt-2">No analytics data yet.</div>
+          )}
         </div>
 
         <div className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35]">
@@ -89,8 +187,8 @@ export default function Dashboard() {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={TIER_DATA} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                  {TIER_DATA.map((entry, index) => (
+                <Pie data={tierData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                  {tierData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -99,7 +197,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
           <div className="grid grid-cols-2 gap-2 mt-2">
-            {TIER_DATA.map((t) => (
+            {tierData.map((t) => (
               <div key={t.name} className="flex items-center gap-2 text-xs text-gray-300">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }}></div>
                 {t.name}
@@ -120,24 +218,13 @@ export default function Dashboard() {
           <div className="divide-y divide-[#2a2a35]">
             <div className="p-4 flex items-center justify-between hover:bg-[#13131a] transition cursor-pointer">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-500/10 text-red-400 rounded-lg"><GraduationCap size={20} /></div>
-                <div>
-                  <div className="text-sm font-medium text-white">Pending KYC Reviews</div>
-                  <div className="text-xs text-gray-400">142 users waiting for video verification</div>
-                </div>
-              </div>
-              <button className="px-3 py-1.5 bg-[#13131a] border border-[#333] rounded text-xs text-white hover:bg-[#6c63ff] hover:border-[#6c63ff] transition">Review</button>
-            </div>
-            
-            <div className="p-4 flex items-center justify-between hover:bg-[#13131a] transition cursor-pointer">
-              <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-500/10 text-purple-400 rounded-lg"><Building2 size={20} /></div>
                 <div>
-                  <div className="text-sm font-medium text-white">Colleges Missing Ambassador</div>
-                  <div className="text-xs text-gray-400">12 active colleges have no representative</div>
+                  <div className="text-sm font-medium text-white">College Domains</div>
+                  <div className="text-xs text-gray-400">Manage college email domains for verification.</div>
                 </div>
               </div>
-              <button className="px-3 py-1.5 bg-[#13131a] border border-[#333] rounded text-xs text-white hover:bg-[#6c63ff] hover:border-[#6c63ff] transition">Assign</button>
+              <button className="px-3 py-1.5 bg-[#13131a] border border-[#333] rounded text-xs text-white hover:bg-[#6c63ff] hover:border-[#6c63ff] transition">Open</button>
             </div>
 
             <div className="p-4 flex items-center justify-between hover:bg-[#13131a] transition cursor-pointer">
@@ -145,7 +232,7 @@ export default function Dashboard() {
                 <div className="p-2 bg-orange-500/10 text-orange-400 rounded-lg"><ShieldCheck size={20} /></div>
                 <div>
                   <div className="text-sm font-medium text-white">Reported Posts</div>
-                  <div className="text-xs text-gray-400">45 high-priority content flags</div>
+                  <div className="text-xs text-gray-400">Review incoming reports and take action.</div>
                 </div>
               </div>
               <button className="px-3 py-1.5 bg-[#13131a] border border-[#333] rounded text-xs text-white hover:bg-[#6c63ff] hover:border-[#6c63ff] transition">Moderate</button>
@@ -160,18 +247,20 @@ export default function Dashboard() {
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
           </div>
           <div className="p-2 h-[260px] overflow-y-auto custom-scrollbar">
-            {RECENT_ACTIVITY.map(act => (
+            {recentAudit.map((act) => (
               <div key={act.id} className="p-3 mb-1 flex gap-3 text-sm rounded-lg hover:bg-[#13131a]">
                 <div className="w-1.5 h-1.5 mt-1.5 rounded-full bg-[#6c63ff] shrink-0"></div>
                 <div className="flex-1">
-                  <div className="text-gray-200"><span className="font-semibold text-white">{act.user}</span> • {act.action}</div>
+                  <div className="text-gray-200"><span className="font-semibold text-white">{act.entity}</span> • {act.action}</div>
                   <div className="text-xs text-gray-500 mt-1 flex justify-between">
-                    <span>{act.college}</span>
-                    <span>{act.time}</span>
+                    <span>{new Date(act.created_at).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
             ))}
+            {!loading && recentAudit.length === 0 && (
+              <div className="py-10 text-center text-gray-500 text-sm">No audit events yet.</div>
+            )}
           </div>
         </div>
 

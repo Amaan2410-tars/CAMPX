@@ -1,22 +1,75 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { triggerGlobalToast } from '../components/AppLayout';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { getSupabase } from '@/lib/supabase';
 import '../index.css';
 
 export default function Profile() {
   usePageTitle('Profile');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('posts');
-  const [otherActiveTab, setOtherActiveTab] = useState('posts');
-  const [isFollowing, setIsFollowing] = useState(true);
-  const [showOtherProfile, setShowOtherProfile] = useState(false);
   const [activeTheme, setActiveTheme] = useState('purple');
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [me, setMe] = useState<{
+    full_name: string | null;
+    college: string | null;
+    major: string | null;
+    year_of_study: string | null;
+    tier: string | null;
+  } | null>(null);
 
-  const toggleFollow = () => {
-    setIsFollowing(!isFollowing);
-    triggerGlobalToast(isFollowing ? "Unfollowed Neha Patel" : "Following Neha Patel", 'info');
-  };
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setLoading(false);
+      setErr('Supabase is not configured.');
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+        const { data: userData } = await sb.auth.getUser();
+        const user = userData.user;
+        if (!user) return;
+        const { data, error } = await sb
+          .from('profiles')
+          .select('full_name, college, major, year_of_study, tier')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (!cancelled) {
+          setMe({
+            full_name: data?.full_name ?? null,
+            college: data?.college ?? null,
+            major: data?.major ?? null,
+            year_of_study: data?.year_of_study ?? null,
+            tier: data?.tier ?? null,
+          });
+        }
+      } catch (e: any) {
+        if (!cancelled) setErr(e?.message ?? 'Failed to load profile.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const initials = useMemo(() => {
+    const name = (me?.full_name || '').trim();
+    if (!name) return '—';
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }, [me?.full_name]);
+
+  const tierLabel = useMemo(() => String(me?.tier ?? 'basic').toUpperCase(), [me?.tier]);
 
   const changeTheme = (color: string) => {
     setActiveTheme(color);
@@ -29,7 +82,7 @@ export default function Profile() {
 
 
   
-  <div className={`screen ${showOtherProfile ? 'offleft' : 'active'}`} id="own-profile" style={{overflowY: 'auto', position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', transition: 'transform 0.42s cubic-bezier(0.77,0,0.175,1), opacity 0.3s ease', transform: showOtherProfile ? 'translateX(-30%)' : 'translateX(0)', opacity: showOtherProfile ? 0 : 1, pointerEvents: showOtherProfile ? 'none' : 'auto' as any}}>
+  <div className="screen active" id="own-profile" style={{overflowY: 'auto', position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column'}}>
 
     <div className="topbar">
       <div className="topbar-title">Profile</div>
@@ -37,9 +90,7 @@ export default function Profile() {
         <div className="icon-btn" onClick={() => navigate('/settings')} style={{cursor: 'pointer'}} title="Settings" aria-label="Settings">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </div>
-        <div className="icon-btn" onClick={() => setShowOtherProfile(true)} style={{cursor: 'pointer'}} title="View other profile">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
+        
       </div>
     </div>
 
@@ -52,19 +103,20 @@ export default function Profile() {
         <div className="avatar-wrap">
           <div className="profile-avatar" >
             <div className="avatar-ring"></div>
-            YK
+            {initials}
           </div>
           <div className="edit-avatar-btn">
             <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </div>
         </div>
 
-        <div className="profile-name">Yash Kumar</div>
+        <div className="profile-name">{me?.full_name || (loading ? 'Loading…' : '—')}</div>
+        {err && <div style={{ color: '#fca5a5', fontSize: '12px', marginTop: '6px' }}>{err}</div>}
 
         <div className="tier-row">
           <div className="tier-badge-main badge-pro-main">
             <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Pro
+            {tierLabel}
           </div>
           <div className="profile-badge">🏆 Achiever</div>
           <div className="profile-badge">⚡ Top Poster</div>
@@ -72,7 +124,9 @@ export default function Profile() {
 
         <div className="college-tag">
           <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          CBIT Hyderabad · CSE · 3rd Year
+          {me?.college || '—'}
+          {me?.major ? ` · ${me.major}` : ''}
+          {me?.year_of_study ? ` · ${me.year_of_study}` : ''}
         </div>
 
         <div className="profile-bio">
@@ -265,6 +319,7 @@ export default function Profile() {
   </div>
 
   
+  {false && (
   <div className={`screen ${showOtherProfile ? 'active' : 'offright'}`} id="other-profile" style={{overflowY: 'auto', background: 'var(--bg)', position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', transition: 'transform 0.42s cubic-bezier(0.77,0,0.175,1), opacity 0.3s ease', transform: showOtherProfile ? 'translateX(0)' : 'translateX(100%)', opacity: showOtherProfile ? 1 : 0, pointerEvents: showOtherProfile ? 'auto' : 'none' as any}}>
 
     <div className="other-topbar">
@@ -406,6 +461,7 @@ export default function Profile() {
 
   </div>
   </div>
+  )}
 </>
   );
 }

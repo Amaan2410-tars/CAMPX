@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Megaphone, Send, Clock, Users, Building, MousePointerClick, History } from "lucide-react";
+import { triggerGlobalToast } from "@/components/AppLayout";
 
 export default function Announcements() {
   const [target, setTarget] = useState("All");
@@ -67,7 +68,7 @@ export default function Announcements() {
                   <Clock size={16} /> Schedule Send
                 </button>
                 <button 
-                  onClick={() => alert("Announcement queued for delivery.")}
+                  onClick={() => triggerGlobalToast("Announcements are not wired yet.", "info")}
                   className="bg-[#6c63ff] hover:bg-[#5b54e5] text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition"
                 >
                   <Send size={16} /> Broadcast Now

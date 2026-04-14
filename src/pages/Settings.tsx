@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { triggerGlobalToast } from '../components/AppLayout';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { getSupabase } from '@/lib/supabase';
 import '../index.css';
 
 export default function Settings() {
   usePageTitle('Settings');
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<{
+    full_name: string | null;
+    college: string | null;
+    major: string | null;
+    year_of_study: string | null;
+    tier: string | null;
+    email: string | null;
+  } | null>(null);
 
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     activity_status: true,
@@ -37,10 +46,52 @@ export default function Settings() {
 
   const runLogout = () => {
     triggerGlobalToast("Logging out securely...", "update");
-    setTimeout(() => {
+    const sb = getSupabase();
+    if (!sb) {
       navigate('/onboarding');
-    }, 800);
+      return;
+    }
+    void sb.auth.signOut().finally(() => {
+      navigate('/onboarding');
+    });
   };
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) return;
+    let cancelled = false;
+    void (async () => {
+      const { data: userData } = await sb.auth.getUser();
+      const user = userData.user;
+      if (!user) return;
+      const { data } = await sb
+        .from('profiles')
+        .select('full_name, college, major, year_of_study, tier, email')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!cancelled) {
+        setProfile({
+          full_name: data?.full_name ?? null,
+          college: data?.college ?? null,
+          major: data?.major ?? null,
+          year_of_study: data?.year_of_study ?? null,
+          tier: data?.tier ?? null,
+          email: data?.email ?? user.email ?? null,
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const initials = useMemo(() => {
+    const name = (profile?.full_name || '').trim();
+    if (!name) return '—';
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }, [profile?.full_name]);
 
   return (
     <>
@@ -57,10 +108,17 @@ export default function Settings() {
       </div>
       
       <div className="profile-card" role="button" tabIndex={0} onClick={() => navigate('/profile')}>
-        <div className="pc-avatar"><div className="pc-ring"></div>YK</div>
+        <div className="pc-avatar"><div className="pc-ring"></div>{initials}</div>
         <div className="pc-info">
-          <div className="pc-name">Yash Kumar</div>
-          <div className="pc-meta"><span className="pc-tier">Pro</span><span className="pc-college">CBIT · CSE · 3rd Year</span></div>
+          <div className="pc-name">{profile?.full_name || '—'}</div>
+          <div className="pc-meta">
+            <span className="pc-tier">{String(profile?.tier || 'basic').toUpperCase()}</span>
+            <span className="pc-college">
+              {profile?.college || '—'}
+              {profile?.major ? ` · ${profile.major}` : ''}
+              {profile?.year_of_study ? ` · ${profile.year_of_study}` : ''}
+            </span>
+          </div>
         </div>
         <div className="pc-chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
@@ -89,7 +147,7 @@ export default function Settings() {
               
               <div className="settings-row" onClick={() => navigate('/settings/change-email')}>
                 <div className="row-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><polyline points="2,4 12,13 22,4"/></svg></div>
-                <div className="row-text"><div className="row-title">Change email</div><div className="row-sub">example@cbit.ac.in</div></div>
+                <div className="row-text"><div className="row-title">Change email</div><div className="row-sub">{profile?.email || '—'}</div></div>
                 <div className="row-right"><div className="row-chev"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>
               </div>
 
@@ -247,7 +305,7 @@ export default function Settings() {
 
               <div className="settings-row" onClick={handleStaticToggle}>
                 <div className="row-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-                <div className="row-text"><div className="row-title">KYC & billing alerts</div><div className="row-sub">Always on · Cannot disable</div></div>
+                <div className="row-text"><div className="row-title">OTP & billing alerts</div><div className="row-sub">Always on · Cannot disable</div></div>
                 <div className="row-right"><div className="toggle-track on"><div className="toggle-thumb"></div></div></div>
               </div>
             </div>

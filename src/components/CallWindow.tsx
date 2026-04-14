@@ -31,7 +31,6 @@ export default function CallWindow({ activeConvName, activeConvInitials, onClose
         peerInstance.current = peer;
 
         peer.on('open', (id) => {
-          console.log('My peer ID is: ' + id);
           if (isIncomingCall) {
             setCallState('ringing');
           } else {
@@ -57,7 +56,7 @@ export default function CallWindow({ activeConvName, activeConvInitials, onClose
 
       })
       .catch((err) => {
-        console.error('Failed to get local stream', err);
+        // Avoid noisy console errors in production UI; show ended state instead.
         setCallState('ended');
       });
 

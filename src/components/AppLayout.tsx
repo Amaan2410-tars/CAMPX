@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import SpeedDialNav from "./SpeedDialNav";
+import { getSupabase } from "@/lib/supabase";
 
 interface ToastProps {
   id: string;
@@ -19,6 +20,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
+  const [tier, setTier] = useState<string | null>(null);
 
   useEffect(() => {
     const handleToast = (e: Event) => {
@@ -38,6 +40,36 @@ export default function AppLayout() {
 
     window.addEventListener("campx-toast", handleToast);
     return () => window.removeEventListener("campx-toast", handleToast);
+  }, []);
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) return;
+    let cancelled = false;
+
+    async function refreshTier(): Promise<void> {
+      const { data: userData } = await sb.auth.getUser();
+      const user = userData.user;
+      if (!user) {
+        if (!cancelled) setTier(null);
+        return;
+      }
+      const { data } = await sb
+        .from("profiles")
+        .select("tier")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!cancelled) setTier((data?.tier as string | undefined) ?? "basic");
+    }
+
+    void refreshTier();
+    const { data: sub } = sb.auth.onAuthStateChange(() => {
+      void refreshTier();
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -119,6 +151,39 @@ export default function AppLayout() {
       `}</style>
 
       <div className="phone">
+        {tier === "basic" && (
+          <div
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 50,
+              background: "rgba(251, 191, 36, 0.10)",
+              borderBottom: "1px solid rgba(251, 191, 36, 0.25)",
+              padding: "10px 14px",
+            }}
+          >
+            <div style={{ fontSize: 12, color: "rgba(251, 220, 120, 0.95)", lineHeight: 1.4 }}>
+              <strong style={{ color: "rgba(255,255,255,0.92)" }}>Basic tier:</strong> Verify with your <strong>college email</strong> to unlock posting, communities, and DMs.
+              <button
+                type="button"
+                onClick={() => navigate("/onboarding")}
+                style={{
+                  marginLeft: 10,
+                  padding: "6px 10px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(251, 191, 36, 0.35)",
+                  background: "rgba(251, 191, 36, 0.12)",
+                  color: "rgba(255,255,255,0.9)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Verify now
+              </button>
+            </div>
+          </div>
+        )}
         <div className="toast-container">
           {toasts.map((toast) => (
             <div key={toast.id} className={`toast-popup ${toast.type}`}>

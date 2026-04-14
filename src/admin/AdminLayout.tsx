@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { 
-  LayoutDashboard, Building2, Users2, Video, MessagesSquare, 
+  LayoutDashboard, Building2, Users2, MessagesSquare, 
   ShieldAlert, CalendarDays, Megaphone, CreditCard, GraduationCap, 
   Bell, LineChart, Settings, LogOut, Menu, X, Search 
 } from "lucide-react";
@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { label: "Dashboard", path: basePath || "/", icon: LayoutDashboard },
   { label: "Colleges", path: `${basePath}/colleges`, icon: Building2 },
   { label: "Users", path: `${basePath}/users`, icon: Users2 },
-  { label: "KYC Queue", path: `${basePath}/kyc`, icon: Video },
   { label: "Communities", path: `${basePath}/communities`, icon: MessagesSquare },
   { label: "Posts & Mod", path: `${basePath}/moderation`, icon: ShieldAlert },
   { label: "Events", path: `${basePath}/events`, icon: CalendarDays },

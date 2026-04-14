@@ -271,7 +271,7 @@ function renderSignupSummary(): void {
     } else {
       badge.classList.add("warn");
       badgeText.textContent =
-        "After email verification you start on Basic (Explore). Complete Video KYC in Settings to unlock College feed.";
+        "After email verification you start on Basic (Explore). Verify your college email to unlock campus features.";
     }
   }
 }
@@ -364,7 +364,7 @@ function prepareVerifiedWelcome(): void {
       ? "Your college email is on file. Welcome to CampX — you can browse your campus feed and communities."
       : "Your email is confirmed. You are on Basic tier with full Explore access while you complete student verification.";
   }
-  if (kyc) kyc.style.display = college ? "none" : "flex";
+  if (kyc) kyc.style.display = "none";
   if (btn) {
     btn.textContent = college ? "Continue to College feed" : "Continue to Explore";
   }
@@ -431,7 +431,7 @@ async function upsertProfileFromSignup(sb: SupabaseClient, userId: string, email
   const phone = val("phone");
   const marketing = el<HTMLInputElement>("marketing-optin")?.checked ?? false;
   const tier = await detectTierForEmail(sb, email);
-  const verificationStatus = tier === "verified" ? "verified" : "kyc_pending";
+  const verificationStatus = tier === "verified" ? "verified" : "email_unverified";
 
   await sb.from("profiles").upsert(
     {
@@ -502,7 +502,7 @@ function wireGlobals(): void {
         hint.style.borderColor = "rgba(251,191,36,0.2)";
         hintText.style.color = "rgba(251,220,120,0.95)";
         hintText.textContent =
-          "Personal or unknown domain — you will need Video KYC after signup to get a verified badge and College feed.";
+          "Personal or unknown domain — you can still sign up, but you must verify using your college email domain to unlock campus features.";
       }
     };
   window.togglePass = (inputId: string, btn: HTMLElement) => {

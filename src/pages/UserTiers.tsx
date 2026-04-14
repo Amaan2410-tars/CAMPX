@@ -56,7 +56,6 @@ export default function UserTiers() {
           setPlans(data as Plan[]);
         }
       } catch (err: any) {
-        console.warn('Supabase fetch failed, falling back to mock plans.', err);
         setPlans(mockPlans);
       } finally {
         setLoading(false);

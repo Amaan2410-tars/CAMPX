@@ -1,25 +1,62 @@
-import React, { useState } from "react";
-import { Search, Filter, GraduationCap, FileText, CheckCircle2, TrendingUp, HelpCircle } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { GraduationCap, FileText, CheckCircle2, TrendingUp, HelpCircle } from "lucide-react";
+import { getSupabase } from "@/lib/supabase";
 
-interface Ambassador {
-  id: string;
-  name: string;
-  college: string;
-  joined: string;
-  reportsSubmitted: string;
-  studentsOnboarded: number;
-  status: "Active" | "Inactive";
-}
+type AmbRow = {
+  user_id: string;
+  referrals_week: number;
+  events_assisted: number;
+  recognition_points: number;
+  updated_at: string;
+};
 
-const MOCK_REPS: Ambassador[] = [
-  { id: "a1", name: "Neha Verma", college: "CBIT", joined: "Feb 2024", reportsSubmitted: "12/12", studentsOnboarded: 450, status: "Active" },
-  { id: "a2", name: "Karan Singh", college: "VNRVJIET", joined: "Mar 2024", reportsSubmitted: "8/10", studentsOnboarded: 120, status: "Active" },
-  { id: "a3", name: "Rahul Rao", college: "SNIST", joined: "Jan 2024", reportsSubmitted: "2/14", studentsOnboarded: 15, status: "Inactive" },
-  { id: "a4", name: "Priya Menon", college: "IITH", joined: "Apr 2024", reportsSubmitted: "4/4", studentsOnboarded: 89, status: "Active" },
-];
+type ProfileRow = { id: string; full_name: string | null; college: string | null };
 
 export default function Ambassadors() {
   const [activeTab, setActiveTab] = useState<"List" | "Reports">("List");
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [rows, setRows] = useState<AmbRow[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setLoading(false);
+      setErr("Supabase is not configured.");
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+        const { data, error } = await sb.from("ambassador_stats").select("user_id, referrals_week, events_assisted, recognition_points, updated_at").order("updated_at", { ascending: false }).limit(200);
+        if (error) throw error;
+        const r = (data ?? []) as any as AmbRow[];
+        const userIds = Array.from(new Set(r.map((x) => x.user_id)));
+        const profMap: Record<string, ProfileRow> = {};
+        if (userIds.length) {
+          const { data: profs } = await sb.from("profiles").select("id, full_name, college").in("id", userIds);
+          (profs ?? []).forEach((p: any) => (profMap[p.id] = p));
+        }
+        if (!cancelled) {
+          setRows(r);
+          setProfiles(profMap);
+        }
+      } catch (e: any) {
+        if (!cancelled) setErr(e?.message ?? "Failed to load ambassadors.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const activeCount = rows.length;
+  const compliance = useMemo(() => (rows.length ? "—" : "—"), [rows.length]);
 
   return (
     <div className="space-y-6">
@@ -37,25 +74,31 @@ export default function Ambassadors() {
         <div className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35] flex items-center gap-4">
           <div className="p-3 bg-[#6c63ff]/10 text-[#6c63ff] rounded-lg"><GraduationCap size={24}/></div>
           <div>
-            <div className="text-2xl font-bold text-white flex items-baseline gap-2">42 <span className="text-sm font-normal text-gray-500">Active reps</span></div>
+            <div className="text-2xl font-bold text-white flex items-baseline gap-2">{activeCount} <span className="text-sm font-normal text-gray-500">Ambassadors</span></div>
             <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Force</div>
           </div>
         </div>
         <div className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35] flex items-center gap-4">
           <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg"><FileText size={24}/></div>
           <div>
-            <div className="text-2xl font-bold text-white flex items-baseline gap-2">84% <span className="text-sm font-normal text-emerald-400">+2%</span></div>
+            <div className="text-2xl font-bold text-white flex items-baseline gap-2">{compliance}</div>
             <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Report Compliance</div>
           </div>
         </div>
         <div className="bg-[#1c1c27] p-5 rounded-xl border border-[#2a2a35] flex items-center gap-4">
           <div className="p-3 bg-yellow-500/10 text-yellow-400 rounded-lg"><HelpCircle size={24}/></div>
           <div>
-            <div className="text-2xl font-bold text-white">12 Colleges</div>
+            <div className="text-2xl font-bold text-white">—</div>
             <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Missing Ambassador</div>
           </div>
         </div>
       </div>
+
+      {err && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl p-4 text-sm">
+          {err}
+        </div>
+      )}
 
       <div className="flex border-b border-[#2a2a35]">
         <button onClick={() => setActiveTab("List")} className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors ${activeTab === "List" ? "border-[#6c63ff] text-[#6c63ff]" : "border-transparent text-gray-400 hover:text-white"}`}>
@@ -80,23 +123,27 @@ export default function Ambassadors() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a35]">
-              {MOCK_REPS.map((rep) => (
-                <tr key={rep.id} className="hover:bg-[#13131a] transition">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">Loading…</td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">No ambassadors found.</td>
+                </tr>
+              ) : rows.map((rep) => (
+                <tr key={rep.user_id} className="hover:bg-[#13131a] transition">
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-white">{rep.name}</div>
-                    <div className="text-xs text-gray-500">Joined {rep.joined}</div>
+                    <div className="font-semibold text-white">{profiles[rep.user_id]?.full_name ?? rep.user_id}</div>
+                    <div className="text-xs text-gray-500">Updated {new Date(rep.updated_at).toLocaleDateString()}</div>
                   </td>
-                  <td className="px-6 py-4 text-white font-medium">{rep.college}</td>
-                  <td className="px-6 py-4 text-center">{rep.reportsSubmitted}</td>
+                  <td className="px-6 py-4 text-white font-medium">{profiles[rep.user_id]?.college ?? "—"}</td>
+                  <td className="px-6 py-4 text-center">—</td>
                   <td className="px-6 py-4 text-center">
-                    <span className="flex items-center justify-center gap-1 text-emerald-400 font-bold"><TrendingUp size={14}/> {rep.studentsOnboarded}</span>
+                    <span className="flex items-center justify-center gap-1 text-emerald-400 font-bold"><TrendingUp size={14}/> {rep.referrals_week}</span>
                   </td>
                   <td className="px-6 py-4">
-                    {rep.status === "Active" ? (
-                       <span className="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded text-xs font-bold border border-emerald-400/20">Active</span>
-                    ) : (
-                       <span className="text-gray-400 bg-gray-400/10 px-2 py-0.5 rounded text-xs font-bold border border-gray-400/20">Inactive</span>
-                    )}
+                    <span className="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded text-xs font-bold border border-emerald-400/20">Active</span>
                   </td>
                   <td className="px-6 py-4 text-center text-[10px] font-bold text-[#6c63ff] cursor-pointer hover:underline uppercase tracking-wider">
                     View Dash

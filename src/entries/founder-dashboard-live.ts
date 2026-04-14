@@ -49,7 +49,7 @@ async function main(): Promise<void> {
   const { data: pending, error: pErr } = await sb
     .from("profiles")
     .select("id,full_name,college,program,year_of_study,verification_status,created_at")
-    .in("verification_status", ["kyc_pending", "email_verified"])
+    .in("verification_status", ["email_unverified", "email_verified"])
     .eq("tier", "basic")
     .order("created_at", { ascending: true })
     .limit(100);

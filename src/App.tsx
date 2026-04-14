@@ -4,7 +4,6 @@ import AppLayout from "./components/AppLayout";
 import { getSupabase, isSupabaseConfigured } from "./lib/supabase";
 
 // Import Student App pages
-import SwiftZone from "./pages/SwiftZone";
 import CampusAmbassadorDashboard from "./pages/CampusAmbassadorDashboard";
 import CollegeFeed from "./pages/CollegeFeed";
 import CollegeOnboarding from "./pages/CollegeOnboarding";
@@ -31,7 +30,6 @@ import AdminLogin from "./admin/AdminLogin";
 import Dashboard from "./admin/pages/Dashboard";
 import Colleges from "./admin/pages/Colleges";
 import Users from "./admin/pages/Users";
-import KycQueue from "./admin/pages/KycQueue";
 import AdminCommunities from "./admin/pages/Communities";
 import PostsModeration from "./admin/pages/PostsModeration";
 import Events from "./admin/pages/Events";
@@ -89,7 +87,6 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="colleges" element={<Colleges />} />
             <Route path="users" element={<Users />} />
-            <Route path="kyc" element={<KycQueue />} />
             <Route path="communities" element={<AdminCommunities />} />
             <Route path="moderation" element={<PostsModeration />} />
             <Route path="events" element={<Events />} />
@@ -118,7 +115,6 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="colleges" element={<Colleges />} />
           <Route path="users" element={<Users />} />
-          <Route path="kyc" element={<KycQueue />} />
           <Route path="communities" element={<AdminCommunities />} />
           <Route path="moderation" element={<PostsModeration />} />
           <Route path="events" element={<Events />} />
@@ -141,7 +137,6 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/settings/:pageId" element={<SettingsSubPage />} />
-        <Route path="/swift-zone" element={<SwiftZone />} />
         <Route path="/notifications-emails" element={<NotificationsEmails />} />
         <Route path="/subscription-billing" element={<SubscriptionBilling />} />
         <Route path="/user-tiers" element={<UserTiers />} />

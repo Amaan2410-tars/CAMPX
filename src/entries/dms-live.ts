@@ -1,4 +1,5 @@
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import { decryptFromSenderEphemeral, encryptForRecipient, generateIdentityKeypair } from "@/lib/e2ee";
 
 async function main(): Promise<void> {
   const host = document.getElementById("campx-dms-live");
@@ -33,13 +34,15 @@ async function main(): Promise<void> {
     </div>`;
 
   let activeConv: string | null = null;
+  let activePeer: string | null = null;
+  let myPrivJwk: JsonWebKey | null = null;
 
   async function loadThread(): Promise<void> {
     const thread = document.getElementById("campx-dm-thread");
     if (!thread || !activeConv) return;
     const { data, error } = await sb
       .from("messages")
-      .select("body, created_at, sender_id")
+      .select("e2ee_ciphertext, e2ee_nonce, e2ee_ephemeral_pub_jwk, created_at, sender_id")
       .eq("conversation_id", activeConv)
       .order("created_at", { ascending: true })
       .limit(50);
@@ -47,9 +50,37 @@ async function main(): Promise<void> {
       thread.textContent = error.message;
       return;
     }
-    thread.textContent = (data ?? [])
-      .map((m) => `${String(m.sender_id).slice(0, 8)}…: ${m.body}`)
-      .join("\n");
+    const rows = (data ?? []) as Array<{
+      sender_id: string;
+      created_at: string;
+      e2ee_ciphertext: string | null;
+      e2ee_nonce: string | null;
+      e2ee_ephemeral_pub_jwk: JsonWebKey | null;
+    }>;
+    const lines: string[] = [];
+    for (const m of rows) {
+      if (!m.e2ee_ciphertext || !m.e2ee_nonce || !m.e2ee_ephemeral_pub_jwk || !myPrivJwk) continue;
+      try {
+        const text = await decryptFromSenderEphemeral(m.e2ee_ciphertext, m.e2ee_nonce, m.e2ee_ephemeral_pub_jwk, myPrivJwk);
+        lines.push(`${String(m.sender_id).slice(0, 8)}…: ${text}`);
+      } catch {
+        lines.push(`${String(m.sender_id).slice(0, 8)}…: [decrypt failed]`);
+      }
+    }
+    thread.textContent = lines.join("\n");
+  }
+
+  // Ensure identity keypair exists and public key is stored on profile
+  const privRaw = localStorage.getItem("campx_dm_identity_priv_jwk");
+  const pubRaw = localStorage.getItem("campx_dm_identity_pub_jwk");
+  if (privRaw && pubRaw) {
+    myPrivJwk = JSON.parse(privRaw) as JsonWebKey;
+  } else {
+    const kp = await generateIdentityKeypair();
+    localStorage.setItem("campx_dm_identity_priv_jwk", JSON.stringify(kp.privateJwk));
+    localStorage.setItem("campx_dm_identity_pub_jwk", JSON.stringify(kp.publicJwk));
+    myPrivJwk = kp.privateJwk;
+    await sb.from("profiles").update({ dm_identity_pub_jwk: kp.publicJwk }).eq("id", user.id);
   }
 
   document.getElementById("campx-dm-open")?.addEventListener("click", async () => {
@@ -64,6 +95,7 @@ async function main(): Promise<void> {
       return;
     }
     activeConv = data as string;
+    activePeer = peer;
     await loadThread();
     sb.channel(`dm-${activeConv}`)
       .on(
@@ -86,10 +118,26 @@ async function main(): Promise<void> {
     const input = document.getElementById("campx-dm-msg") as HTMLInputElement | null;
     const body = input?.value?.trim() ?? "";
     if (!body) return;
+    if (!activePeer) return;
+    const { data: peerProfile } = await sb
+      .from("profiles")
+      .select("dm_identity_pub_jwk")
+      .eq("id", activePeer)
+      .maybeSingle();
+    const peerPub = (peerProfile as { dm_identity_pub_jwk?: JsonWebKey } | null)?.dm_identity_pub_jwk;
+    if (!peerPub) {
+      host.insertAdjacentHTML("beforeend", `<div style="color:#f87171;font-size:11px;">Peer missing E2EE keys</div>`);
+      return;
+    }
+    const enc = await encryptForRecipient(body, peerPub);
     const { error } = await sb.from("messages").insert({
       conversation_id: activeConv,
       sender_id: user.id,
-      body,
+      body: null,
+      e2ee_version: enc.version,
+      e2ee_ephemeral_pub_jwk: enc.ephemeralPubJwk,
+      e2ee_nonce: enc.nonceB64,
+      e2ee_ciphertext: enc.ciphertextB64,
     });
     if (error) {
       host.insertAdjacentHTML(

@@ -1,49 +1,127 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { triggerGlobalToast } from '../components/AppLayout';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { getSupabase } from '@/lib/supabase';
+import { addPostComment, fetchPosts, getLikedSet, insertPost, repostPost, togglePostLike, type FeedPostRow } from '@/lib/campxFeed';
 import '../index.css';
 
 const FILTER_TABS = ['All', 'Tech', 'Arts', 'Sports', 'Management', 'Events'];
 
-const DEMO_POSTS: any[] = [];
-
 export default function ExploreFeed() {
   usePageTitle('Explore Feed');
+  const navigate = useNavigate();
   const [postText, setPostText] = useState('');
   const [activeTab, setActiveTab] = useState('All');
-  const [isBasicMode, setIsBasicMode] = useState(false);
   const [nudgeOpen, setNudgeOpen] = useState(false);
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
+  const [tier, setTier] = useState<string>('basic');
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [posts, setPosts] = useState<FeedPostRow[]>([]);
+  const [likedSet, setLikedSet] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(false);
 
-  const handlePost = () => {
+  const canEngage = useMemo(() => tier !== 'basic', [tier]);
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setErrMsg('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+      return;
+    }
+    let cancelled = false;
+
+    async function load(): Promise<void> {
+      setLoading(true);
+      setErrMsg(null);
+
+      const { data: userData } = await sb.auth.getUser();
+      const user = userData.user;
+      if (!user) {
+        if (!cancelled) setErrMsg('Not signed in.');
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('tier')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!cancelled) setTier(String(profile?.tier ?? 'basic'));
+
+      const { data, error } = await fetchPosts(sb, 'explore');
+      if (!cancelled) {
+        if (error) setErrMsg(error.message);
+        setPosts(data ?? []);
+      }
+
+      const ids = (data ?? []).map((p) => p.id);
+      const likes = ids.length ? await getLikedSet(sb, ids, user.id) : new Set<string>();
+      if (!cancelled) setLikedSet(likes);
+
+      if (!cancelled) setLoading(false);
+    }
+
+    void load();
+    const channel = sb
+      .channel('campx-explore-feed-react')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => void load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => void load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, () => void load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_reposts' }, () => void load())
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      sb.removeChannel(channel);
+    };
+  }, []);
+
+  const handlePost = async () => {
     if (!postText.trim()) return;
-    triggerGlobalToast("Post published securely to entire platform!", 'success');
+    if (!canEngage) {
+      setNudgeOpen(true);
+      return;
+    }
+    const sb = getSupabase();
+    if (!sb) return;
+    const { data: userData } = await sb.auth.getUser();
+    const user = userData.user;
+    if (!user) return;
+    const { error } = await insertPost(sb, 'explore', user.id, postText);
+    if (error) {
+      setErrMsg(error.message);
+      return;
+    }
+    triggerGlobalToast('Posted to Explore.', 'success');
     setPostText('');
   };
 
-  const toggleLike = (id: string) => {
-    if (isBasicMode) { setNudgeOpen(true); return; }
-    setLikedPosts(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+  const handleAction = async (action: 'like' | 'comment' | 'repost', postId: string) => {
+    if (!canEngage) {
+      setNudgeOpen(true);
+      return;
+    }
+    const sb = getSupabase();
+    if (!sb) return;
+    const { data: userData } = await sb.auth.getUser();
+    const user = userData.user;
+    if (!user) return;
 
-  const toggleSave = (id: string) => {
-    if (isBasicMode) { setNudgeOpen(true); return; }
-    setSavedPosts(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); triggerGlobalToast('Removed from saved', 'info'); }
-      else { next.add(id); triggerGlobalToast('Post saved', 'success'); }
-      return next;
-    });
-  };
-
-  const handleEngageAction = (action: string) => {
-    if (isBasicMode) { setNudgeOpen(true); return; }
-    triggerGlobalToast(`${action} action`, 'info');
+    if (action === 'like') {
+      const { error } = await togglePostLike(sb, postId, user.id);
+      if (error) setErrMsg(error.message);
+      return;
+    }
+    if (action === 'comment') {
+      const text = window.prompt('Write a comment:');
+      if (text == null) return;
+      const { error } = await addPostComment(sb, postId, user.id, text);
+      if (error) setErrMsg(error.message);
+      return;
+    }
+    const { error } = await repostPost(sb, postId, user.id);
+    if (error) setErrMsg(error.message);
   };
 
   const getTierBadge = (tier: string) => {
@@ -85,23 +163,14 @@ export default function ExploreFeed() {
         </div>
       </div>
 
-      {/* Demo toggle */}
-      <div className="state-toggle">
-        <span className="toggle-label">Demo:</span>
-        <div className={`toggle-track ${!isBasicMode ? 'on' : ''}`} onClick={() => setIsBasicMode(!isBasicMode)}>
-          <div className="toggle-thumb"></div>
-        </div>
-        <span className="toggle-state-label">{isBasicMode ? 'Basic' : 'Verified'}</span>
-      </div>
-
       {/* Basic mode banner */}
-      {isBasicMode && (
+      {tier === 'basic' && (
         <div className="basic-banner">
           <div className="banner-icon">
             <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div className="banner-text">
-            <div className="banner-title">Viewing as Basic user</div>
+            <div className="banner-title">Basic tier</div>
             <div className="banner-sub">Verify your college email to unlock engagement</div>
           </div>
           <button className="banner-cta" onClick={() => setNudgeOpen(true)}>Verify</button>
@@ -109,8 +178,12 @@ export default function ExploreFeed() {
       )}
 
       <div className="feed" id="feed">
+        {errMsg && (
+          <div style={{ padding: '12px 16px', color: '#fca5a5' }}>{errMsg}</div>
+        )}
+
         {/* Composer - hidden in Basic mode */}
-        {!isBasicMode && (
+        {tier !== 'basic' && (
           <div className="campx-live-wrap" style={{padding: '0 16px'}}>
             <div className="campx-composer">
               <textarea
@@ -134,64 +207,47 @@ export default function ExploreFeed() {
           </div>
         )}
 
-        {/* Posts */}
-        {DEMO_POSTS.map(post => (
-          <div key={post.id} className="post" style={{position: 'relative'}}>
-            {post.type === 'sponsored' && (
-              <div className="sponsored-tag">
-                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                Sponsored
-              </div>
-            )}
+        {loading && (
+          <div style={{padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>Loading…</div>
+        )}
+
+        {!loading && posts.map((p) => (
+          <div key={p.id} className="post campx-post-live" style={{position: 'relative'}}>
             <div className="post-header">
               <div className="avatar" style={{background: 'linear-gradient(135deg, #2d1b4e, #3d2b6e)'}}>
-                {post.author.split(' ').map(n => n[0]).join('').slice(0,2)}
+                {(p.full_name || p.campx_id || 'S').slice(0,2).toUpperCase()}
               </div>
               <div className="post-meta">
                 <div className="post-author">
-                  {post.author}
-                  {getTierBadge(post.tier)}
+                  {p.full_name || p.campx_id || 'Student'}
                 </div>
                 <div className="post-info">
-                  {post.college && <><span className="college-chip">{post.college}</span><span className="dot-sep">·</span></>}
-                  <span>{post.time}</span>
+                  {p.college && <><span className="college-chip">{p.college}</span><span className="dot-sep">·</span></>}
+                  <span>{new Date(p.created_at).toLocaleString()}</span>
                 </div>
               </div>
               <button type="button" className="post-more" aria-label="More">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
               </button>
             </div>
-            <div className="post-text">{post.text}</div>
+            <div className="post-text">{p.body}</div>
 
-            {post.type === 'photo' && (
-              <div className="post-image">
-                <div className="img-placeholder style1" style={{height: '170px'}}>
-                  <div className="img-overlay"></div>
-                  <div className="img-college-tag">{post.college}</div>
-                </div>
-              </div>
-            )}
-
-            <div className={`engage-bar ${isBasicMode ? 'engage-disabled' : ''}`} style={{position: 'relative'}}>
-              <button type="button" className={`engage-btn ${likedPosts.has(post.id) ? 'liked' : ''}`} onClick={() => toggleLike(post.id)}>
+            <div className={`engage-bar ${tier === 'basic' ? 'engage-disabled' : ''}`} style={{position: 'relative'}}>
+              <button type="button" className={`engage-btn ${likedSet.has(p.id) ? 'liked' : ''}`} onClick={() => void handleAction('like', p.id)}>
                 <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                {likedPosts.has(post.id) ? post.likes + 1 : post.likes}
+                {p.like_count + (likedSet.has(p.id) ? 1 : 0)}
               </button>
               <div className="engage-sep"></div>
-              <button type="button" className="engage-btn" onClick={() => handleEngageAction('Comment')}>
+              <button type="button" className="engage-btn" onClick={() => void handleAction('comment', p.id)}>
                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                {post.comments}
+                {p.comment_count}
               </button>
               <div className="engage-sep"></div>
-              <button type="button" className="engage-btn" onClick={() => handleEngageAction('Repost')}>
+              <button type="button" className="engage-btn" onClick={() => void handleAction('repost', p.id)}>
                 <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                {post.reposts}
+                {p.repost_count}
               </button>
-              <div className="engage-sep"></div>
-              <button type="button" className={`engage-btn ${savedPosts.has(post.id) ? 'liked' : ''}`} onClick={() => toggleSave(post.id)}>
-                <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-              {isBasicMode && (
+              {tier === 'basic' && (
                 <div className="lock-overlay visible" onClick={() => setNudgeOpen(true)}>
                   <div className="lock-chip">
                     <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -203,7 +259,7 @@ export default function ExploreFeed() {
           </div>
         ))}
 
-        {DEMO_POSTS.length === 0 && (
+        {!loading && posts.length === 0 && (
           <div style={{padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>
             <div style={{fontSize: '32px', marginBottom: '12px'}}>🌍</div>
             <div>No posts in the global feed yet.</div>
@@ -212,7 +268,7 @@ export default function ExploreFeed() {
       </div>
 
       {/* Compose FAB — hidden in Basic mode */}
-      {!isBasicMode && (
+      {tier !== 'basic' && (
         <button className="compose-fab" onClick={() => triggerGlobalToast('Opening composer...', 'info')}>
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>

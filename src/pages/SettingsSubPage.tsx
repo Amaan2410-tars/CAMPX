@@ -1,14 +1,112 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { triggerGlobalToast } from '../components/AppLayout';
+import { getSupabase } from '@/lib/supabase';
 import '../index.css';
 
 export default function SettingsSubPage() {
   const { pageId } = useParams<{ pageId: string }>();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [email, setEmail] = useState<string>('');
+  const [profile, setProfile] = useState<{
+    full_name: string | null;
+    college: string | null;
+    major: string | null;
+    year_of_study: string | null;
+    tier: string | null;
+    verification_status: string | null;
+  } | null>(null);
+
+  const initials = useMemo(() => {
+    const name = (profile?.full_name || '').trim();
+    if (!name) return '—';
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }, [profile?.full_name]);
 
   // Return to settings natively
   const goBack = () => navigate('/settings');
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setLoading(false);
+      setErr('Supabase is not configured.');
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+        const { data: userData } = await sb.auth.getUser();
+        const user = userData.user;
+        if (!user) return;
+        const { data } = await sb
+          .from('profiles')
+          .select('full_name, college, major, year_of_study, tier, verification_status')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (!cancelled) {
+          setEmail(user.email ?? '');
+          setProfile({
+            full_name: data?.full_name ?? null,
+            college: data?.college ?? null,
+            major: data?.major ?? null,
+            year_of_study: data?.year_of_study ?? null,
+            tier: data?.tier ?? null,
+            verification_status: data?.verification_status ?? null,
+          });
+        }
+      } catch (e: any) {
+        if (!cancelled) setErr(e?.message ?? 'Failed to load account.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const requestEmailChange = async (newEmail: string) => {
+    const sb = getSupabase();
+    if (!sb) {
+      triggerGlobalToast('Supabase is not configured.', 'error');
+      return;
+    }
+    try {
+      const cleaned = newEmail.trim();
+      if (!cleaned) throw new Error('Enter a new email.');
+      const { error } = await sb.auth.updateUser({ email: cleaned });
+      if (error) throw error;
+      triggerGlobalToast('Verification link sent to your new email.', 'info');
+      goBack();
+    } catch (e: any) {
+      triggerGlobalToast(e?.message ?? 'Failed to update email.', 'error');
+    }
+  };
+
+  const requestPasswordChange = async (newPassword: string, confirm: string) => {
+    const sb = getSupabase();
+    if (!sb) {
+      triggerGlobalToast('Supabase is not configured.', 'error');
+      return;
+    }
+    try {
+      if (!newPassword || newPassword.length < 8) throw new Error('Password must be at least 8 characters.');
+      if (newPassword !== confirm) throw new Error('Passwords do not match.');
+      const { error } = await sb.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      triggerGlobalToast('Password updated securely.', 'success');
+      goBack();
+    } catch (e: any) {
+      triggerGlobalToast(e?.message ?? 'Failed to update password.', 'error');
+    }
+  };
 
   const renderHeader = (title: string) => (
     <div className="topbar">
@@ -26,21 +124,23 @@ export default function SettingsSubPage() {
           <>
             {renderHeader('Edit Profile')}
             <div style={{ padding: '24px 16px', color: 'white', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {err && <div style={{ color: '#fca5a5', fontSize: '13px' }}>{err}</div>}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
                 <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#2d2d3a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold' }}>
-                  YK
+                  {initials}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Display Name</label>
-                <input type="text" defaultValue="Yash Kumar" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
+                <input type="text" disabled value={profile?.full_name ?? ''} style={{ background: '#1c1c24', border: '1px solid #333', color: '#666', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
+                <div style={{ fontSize: '12px', color: '#888' }}>Name and college fields are locked after signup.</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Bio</label>
-                <textarea defaultValue="Building things that matter 🛠️ · Open source · DSA grinder" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px', minHeight: '100px' }} />
+                <textarea disabled value={'Bio editing is not wired yet.'} style={{ background: '#1c1c24', border: '1px solid #333', color: '#666', padding: '12px 16px', borderRadius: '12px', fontSize: '16px', minHeight: '100px' }} />
               </div>
               <button 
-                onClick={() => { triggerGlobalToast('Profile updated successfully!', 'success'); goBack(); }}
+                onClick={() => { triggerGlobalToast('Profile editing is not available yet.', 'info'); goBack(); }}
                 style={{ marginTop: '20px', background: '#fff', color: '#000', border: 'none', padding: '14px', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}
               >
                 Save Changes
@@ -54,16 +154,20 @@ export default function SettingsSubPage() {
           <>
             {renderHeader('Change Email')}
             <div style={{ padding: '24px 16px', color: 'white', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {err && <div style={{ color: '#fca5a5', fontSize: '13px' }}>{err}</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Current Email</label>
-                <input type="email" disabled defaultValue="example@cbit.ac.in" style={{ background: '#1c1c24', border: '1px solid #333', color: '#666', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
+                <input type="email" disabled value={email} style={{ background: '#1c1c24', border: '1px solid #333', color: '#666', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>New Email</label>
-                <input type="email" placeholder="new@example.edu" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
+                <input id="new-email" type="email" placeholder="new@college.edu" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
               </div>
               <button 
-                onClick={() => { triggerGlobalToast('Verification link sent to new email.', 'info'); goBack(); }}
+                onClick={() => {
+                  const el = document.getElementById('new-email') as HTMLInputElement | null;
+                  void requestEmailChange(el?.value ?? '');
+                }}
                 style={{ background: '#4ade80', color: '#000', border: 'none', padding: '14px', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}
               >
                 Send Verification Link
@@ -77,11 +181,15 @@ export default function SettingsSubPage() {
           <>
             {renderHeader('Change Password')}
             <div style={{ padding: '24px 16px', color: 'white', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <input type="password" placeholder="Current Password" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
-              <input type="password" placeholder="New Password" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
-              <input type="password" placeholder="Confirm New Password" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
+              {err && <div style={{ color: '#fca5a5', fontSize: '13px' }}>{err}</div>}
+              <input id="new-pass" type="password" placeholder="New Password" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
+              <input id="new-pass-confirm" type="password" placeholder="Confirm New Password" style={{ background: '#1c1c24', border: '1px solid #333', color: 'white', padding: '12px 16px', borderRadius: '12px', fontSize: '16px' }} />
               <button 
-                onClick={() => { triggerGlobalToast('Password updated securely.', 'success'); goBack(); }}
+                onClick={() => {
+                  const p1 = (document.getElementById('new-pass') as HTMLInputElement | null)?.value ?? '';
+                  const p2 = (document.getElementById('new-pass-confirm') as HTMLInputElement | null)?.value ?? '';
+                  void requestPasswordChange(p1, p2);
+                }}
                 style={{ background: '#fff', color: '#000', border: 'none', padding: '14px', borderRadius: '12px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}
               >
                 Update Password
@@ -96,8 +204,12 @@ export default function SettingsSubPage() {
             {renderHeader('Verification')}
             <div style={{ padding: '24px 16px', color: 'white', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(74, 222, 128, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80', fontSize: '32px', marginBottom: '16px' }}>✓</div>
-              <h2 style={{ margin: 0, fontSize: '24px' }}>Fully Verified</h2>
-              <p style={{ color: '#aaa', textAlign: 'center', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>Your educational identity is verified with CBIT. You have full access to campus feeds and communities.</p>
+              <h2 style={{ margin: 0, fontSize: '24px' }}>{(profile?.tier && profile.tier !== 'basic') ? 'Verified' : 'Basic'}</h2>
+              <p style={{ color: '#aaa', textAlign: 'center', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                {profile?.tier && profile.tier !== 'basic'
+                  ? 'Your account is verified. You have access to campus features based on your tier.'
+                  : 'Verify your college email to unlock campus features.'}
+              </p>
               
               <div style={{ width: '100%', background: '#1c1c24', borderRadius: '12px', padding: '16px', marginTop: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -106,11 +218,11 @@ export default function SettingsSubPage() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <span style={{ color: '#888' }}>Date</span>
-                  <span style={{ fontWeight: 500 }}>Aug 12, 2025</span>
+                  <span style={{ fontWeight: 500 }}>—</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#888' }}>Tier</span>
-                  <span style={{ color: '#a855f7', fontWeight: 600 }}>Pro Tier Active</span>
+                  <span style={{ color: '#a855f7', fontWeight: 600 }}>{String(profile?.tier ?? 'basic').toUpperCase()}</span>
                 </div>
               </div>
             </div>

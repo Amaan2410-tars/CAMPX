@@ -1,6 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { triggerGlobalToast } from '../components/AppLayout';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { getSupabase } from '@/lib/supabase';
 import '../index.css';
 
 type ChannelTab = 'text' | 'announce' | 'files' | 'voice';
@@ -17,10 +19,16 @@ interface CommunityData {
   online: number;
 }
 
-const COMMUNITIES: CommunityData[] = [];
+type DbCommunity = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+};
 
 export default function Communities() {
   usePageTitle('Communities');
+  const navigate = useNavigate();
   const [activeScreen, setActiveScreen] = useState<'list' | 'channel'>('list');
   const [activeCommunity, setActiveCommunity] = useState<CommunityData | null>(null);
   const [activeTab, setActiveTab] = useState<ChannelTab>('text');
@@ -28,10 +36,53 @@ export default function Communities() {
   const [inVoice, setInVoice] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const msgEndRef = useRef<HTMLDivElement>(null);
+  const [tier, setTier] = useState<string>('basic');
+  const [all, setAll] = useState<DbCommunity[]>([]);
+  const [joined, setJoined] = useState<Set<string>>(new Set());
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     msgEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, activeTab]);
+
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setErr('Supabase is not configured.');
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    void (async () => {
+      const { data: userData } = await sb.auth.getUser();
+      const user = userData.user;
+      if (!user) {
+        setErr('Not signed in.');
+        setLoading(false);
+        return;
+      }
+      const { data: profile } = await sb.from('profiles').select('tier').eq('id', user.id).maybeSingle();
+      if (!cancelled) setTier(String(profile?.tier ?? 'basic'));
+
+      const { data: comms, error: cErr } = await sb.from('communities').select('id,name,slug,description').order('name', { ascending: true }).limit(50);
+      if (!cancelled) {
+        if (cErr) setErr(cErr.message);
+        setAll((comms ?? []) as DbCommunity[]);
+      }
+
+      const { data: mine } = await sb.from('community_members').select('community_id').eq('user_id', user.id);
+      if (!cancelled) setJoined(new Set((mine ?? []).map((m) => m.community_id as string)));
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const joinedCount = joined.size;
+  const cap = 5;
+  const showCap = useMemo(() => tier === 'verified', [tier]);
 
   const openCommunity = (c: CommunityData) => {
     setActiveCommunity(c);
@@ -69,6 +120,27 @@ export default function Communities() {
     triggerGlobalToast(`Joined "${name}" community!`, 'success');
   };
 
+  const joinCommunity = async (c: DbCommunity) => {
+    if (tier === 'basic') {
+      triggerGlobalToast('Verify with your college email to join communities.', 'info');
+      navigate('/onboarding');
+      return;
+    }
+    const sb = getSupabase();
+    if (!sb) return;
+    const { data: userData } = await sb.auth.getUser();
+    const user = userData.user;
+    if (!user) return;
+
+    const { error } = await sb.from('community_members').insert({ community_id: c.id, user_id: user.id });
+    if (error) {
+      triggerGlobalToast(error.message, 'info');
+      return;
+    }
+    triggerGlobalToast(`Joined "${c.name}"`, 'success');
+    setJoined((prev) => new Set(prev).add(c.id));
+  };
+
   return (
     <>
       <style>{`
@@ -87,65 +159,62 @@ export default function Communities() {
         </div>
 
         <div className="quota-bar">
-          <div className="quota-text">Joined <strong>3 of 5</strong> communities</div>
-          <div className="quota-track"><div className="quota-fill"></div></div>
-          <div>Verified</div>
+          <div className="quota-text">
+            Joined <strong>{joinedCount}{showCap ? ` of ${cap}` : ''}</strong> communities
+          </div>
+          <div className="quota-track">
+            <div className="quota-fill" style={{ width: showCap ? `${Math.min(100, (joinedCount / cap) * 100)}%` : '0%' }}></div>
+          </div>
+          <div style={{ textTransform: 'capitalize' }}>{tier}</div>
         </div>
 
         <div className="community-list">
           <div className="section-label">Your communities</div>
-          {COMMUNITIES.length === 0 && (
+          {joinedCount === 0 && (
             <div style={{padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>You haven't joined any communities yet. Join one below!</div>
           )}
 
-          {COMMUNITIES.map((c, i) => (
-            <React.Fragment key={c.id}>
-              <div className="community-item" onClick={() => openCommunity(c)} style={{cursor: 'pointer'}}>
-                <div className="community-icon">{c.icon}</div>
-                <div className="community-info">
-                  <div className="community-name">
-                    {c.name}
-                    <span className={`comm-type-badge ${c.type === 'college' ? 'badge-college' : 'badge-open'}`}>{c.type === 'college' ? 'College' : 'Open'}</span>
+          {Array.from(joined).map((id) => {
+            const c = all.find((x) => x.id === id);
+            if (!c) return null;
+            return (
+              <React.Fragment key={id}>
+                <div className="community-item" onClick={() => triggerGlobalToast('Channel UI is prototype-only for now.', 'info')} style={{cursor: 'pointer'}}>
+                  <div className="community-icon">💬</div>
+                  <div className="community-info">
+                    <div className="community-name">
+                      {c.name}
+                      <span className="comm-type-badge badge-open">Open</span>
+                    </div>
+                    <div className="community-preview">{c.description || '—'}</div>
                   </div>
-                  <div className="community-preview">{c.preview}</div>
+                  <div className="community-meta">
+                    <div className="community-time">Joined</div>
+                  </div>
                 </div>
-                <div className="community-meta">
-                  <div className="community-time">{c.time}</div>
-                  {c.unread && <div className="unread-badge">{c.unread}</div>}
-                </div>
-              </div>
-              {i < COMMUNITIES.length - 1 && <div className="community-divider"></div>}
-            </React.Fragment>
-          ))}
+                <div className="community-divider"></div>
+              </React.Fragment>
+            );
+          })}
 
           <div className="section-label" style={{marginTop: '16px'}}>Discover communities</div>
 
-          <div className="discover-card">
-            <div className="discover-icon">🎨</div>
-            <div className="discover-info">
-              <div className="discover-name">Design &amp; UI Craft</div>
-              <div className="discover-sub">Open · 2.4k members</div>
+          {loading && (
+            <div style={{padding: '18px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>Loading…</div>
+          )}
+          {!loading && err && (
+            <div style={{padding: '18px 20px', textAlign: 'center', color: '#fca5a5'}}>{err}</div>
+          )}
+          {!loading && !err && all.filter((c) => !joined.has(c.id)).slice(0, 12).map((c) => (
+            <div key={c.id} className="discover-card">
+              <div className="discover-icon">✨</div>
+              <div className="discover-info">
+                <div className="discover-name">{c.name}</div>
+                <div className="discover-sub">Open</div>
+              </div>
+              <button className="join-btn" onClick={() => void joinCommunity(c)}>Join</button>
             </div>
-            <button className="join-btn" onClick={() => handleJoin('Design & UI Craft')}>Join</button>
-          </div>
-
-          <div className="discover-card">
-            <div className="discover-icon">🤖</div>
-            <div className="discover-info">
-              <div className="discover-name">AI &amp; ML Students</div>
-              <div className="discover-sub">Open · 5.1k members</div>
-            </div>
-            <button className="join-btn" onClick={() => handleJoin('AI & ML Students')}>Join</button>
-          </div>
-
-          <div className="discover-card">
-            <div className="discover-icon">📸</div>
-            <div className="discover-info">
-              <div className="discover-name">Campus Photography</div>
-              <div className="discover-sub">College · CBIT · 312 members</div>
-            </div>
-            <button className="join-btn" onClick={() => triggerGlobalToast('Community limit reached (3 of 5)', 'info')}>Limit</button>
-          </div>
+          ))}
         </div>
       </div>
       )}

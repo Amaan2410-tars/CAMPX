@@ -1,38 +1,91 @@
-import React, { useState } from "react";
-import { Search, Filter, Shield, MoreVertical, Ban, Check, X, Users } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Search, Filter, Shield, Check, X, Users } from "lucide-react";
+import { getSupabase } from "@/lib/supabase";
+import { triggerGlobalToast } from "@/components/AppLayout";
 
-interface CommunityMock {
-  id: string;
-  name: string;
-  type: "College" | "Open";
-  college: string;
-  members: number;
-  channels: number;
-  createdBy: string;
-  status: "Active" | "Suspended" | "Pending";
-  createdDate: string;
-}
-
-const MOCK_COMMUNITIES: CommunityMock[] = [
-  { id: "c1", name: "CBIT Hackers", type: "College", college: "CBIT", members: 450, channels: 5, createdBy: "Yash Kumar", status: "Active", createdDate: "2024-02-14" },
-  { id: "c2", name: "AI Enthusiasts Hyd", type: "Open", college: "Multiple", members: 1200, channels: 8, createdBy: "Neha Reddy", status: "Active", createdDate: "2024-01-20" },
-  { id: "c3", name: "Meme Central", type: "Open", college: "Multiple", members: 3400, channels: 4, createdBy: "Anonymous", status: "Suspended", createdDate: "2023-11-10" },
-  { id: "c4", name: "SNIST Placement Prep", type: "College", college: "SNIST", members: 0, channels: 1, createdBy: "Karan S", status: "Pending", createdDate: "2 mins ago" },
-];
+type CommunityRow = { id: string; name: string; slug: string; created_at: string };
+type CommunityReqRow = { id: string; name: string; slug: string | null; description: string | null; created_by: string; created_at: string; status: string };
 
 export default function Communities() {
   const [activeTab, setActiveTab] = useState<"All" | "Pending">("All");
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [communities, setCommunities] = useState<CommunityRow[]>([]);
+  const [pending, setPending] = useState<CommunityReqRow[]>([]);
 
-  const pendingRequests = MOCK_COMMUNITIES.filter(c => c.status === "Pending");
-  const activeList = MOCK_COMMUNITIES.filter(c => c.status !== "Pending");
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) {
+      setLoading(false);
+      setErr("Supabase is not configured.");
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        setLoading(true);
+        setErr(null);
+        const [comms, reqs] = await Promise.all([
+          sb.from("communities").select("id, name, slug, created_at").order("created_at", { ascending: false }).limit(200),
+          sb
+            .from("community_creation_requests")
+            .select("id, name, slug, description, created_by, created_at, status")
+            .order("created_at", { ascending: false })
+            .limit(200),
+        ]);
+        if (comms.error) throw comms.error;
+        if (reqs.error) throw reqs.error;
+        if (!cancelled) {
+          setCommunities((comms.data ?? []) as any);
+          setPending(((reqs.data ?? []) as any).filter((r: any) => r.status === "pending"));
+        }
+      } catch (e: any) {
+        if (!cancelled) setErr(e?.message ?? "Failed to load communities.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const getStatusBadge = (status: CommunityMock["status"]) => {
-    switch (status) {
-      case "Active": return <span className="text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded text-xs font-bold border border-emerald-400/20">Active</span>;
-      case "Suspended": return <span className="text-red-400 bg-red-400/10 px-2 py-0.5 rounded text-xs font-bold border border-red-400/20">Suspended</span>;
-      case "Pending": return <span className="text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded text-xs font-bold border border-yellow-400/20">Pending</span>;
+  const decide = async (id: string, decision: "approved" | "rejected") => {
+    const sb = getSupabase();
+    if (!sb) {
+      triggerGlobalToast("Supabase is not configured.", "error");
+      return;
+    }
+    try {
+      const { data: userData } = await sb.auth.getUser();
+      const reviewer = userData.user?.id ?? null;
+      await sb
+        .from("community_creation_requests")
+        .update({ status: decision, reviewed_by: reviewer, reviewed_at: new Date().toISOString() })
+        .eq("id", id)
+        .throwOnError();
+
+      setPending((p) => p.filter((r) => r.id !== id));
+      triggerGlobalToast(`Request ${decision}.`, "success");
+    } catch (e: any) {
+      triggerGlobalToast(e?.message ?? "Failed to update request.", "error");
     }
   };
+
+  const pendingRequests = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const src = pending;
+    if (!q) return src;
+    return src.filter((r) => `${r.name} ${r.slug ?? ""}`.toLowerCase().includes(q));
+  }, [pending, query]);
+
+  const activeList = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const src = communities;
+    if (!q) return src;
+    return src.filter((c) => `${c.name} ${c.slug}`.toLowerCase().includes(q));
+  }, [communities, query]);
 
   return (
     <div className="space-y-6">
@@ -49,6 +102,8 @@ export default function Communities() {
             <input 
               type="text" 
               placeholder="Search communities..." 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               className="w-full sm:w-64 bg-[#1c1c27] text-sm text-white placeholder-gray-500 border border-[#2a2a35] rounded-lg py-2 pl-9 pr-4 focus:ring-1 focus:ring-[#6c63ff] focus:border-[#6c63ff] focus:outline-none"
             />
           </div>
@@ -57,6 +112,12 @@ export default function Communities() {
           </button>
         </div>
       </div>
+
+      {err && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl p-4 text-sm">
+          {err}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-[#2a2a35]">
@@ -84,7 +145,7 @@ export default function Communities() {
       {/* Content */}
       {activeTab === "Pending" && (
         <div className="space-y-4">
-          {pendingRequests.length === 0 ? (
+          {!loading && pendingRequests.length === 0 ? (
              <div className="bg-[#1c1c27] border border-[#2a2a35] rounded-xl p-12 flex flex-col items-center justify-center text-gray-500">
                <Shield size={48} className="mb-4 opacity-20" />
                <p>No pending community creation requests.</p>
@@ -95,22 +156,21 @@ export default function Communities() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-lg font-bold text-white">{req.name}</h3>
-                    {getStatusBadge(req.status)}
-                    <span className="text-xs border border-gray-600 px-1.5 py-0.5 rounded text-gray-400">{req.type}</span>
+                    <span className="text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded text-xs font-bold border border-yellow-400/20">Pending</span>
                   </div>
                   <div className="text-sm text-gray-400">
-                    Requested by <span className="text-white">{req.createdBy}</span> • {req.college} • {req.createdDate}
+                    Requested by <span className="text-white">{req.created_by}</span> • {new Date(req.created_at).toLocaleString()}
                   </div>
                   <div className="mt-3 text-sm text-gray-300 bg-[#13131a] p-3 rounded-lg border border-[#2a2a35]">
-                    <span className="text-gray-500 font-medium">Purpose: </span> 
-                    A dedicated space for students to discuss placement strategies, share interview experiences, and prepare for upcoming campus drives.
+                    <span className="text-gray-500 font-medium">Description: </span> 
+                    {req.description || "—"}
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 font-bold rounded-lg hover:bg-red-500/20 transition flex items-center gap-2 text-sm">
+                  <button onClick={() => void decide(req.id, "rejected")} className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 font-bold rounded-lg hover:bg-red-500/20 transition flex items-center gap-2 text-sm">
                     <X size={16}/> Reject
                   </button>
-                  <button className="px-4 py-2 bg-emerald-500 text-black font-bold rounded-lg hover:bg-emerald-400 transition flex items-center gap-2 text-sm">
+                  <button onClick={() => void decide(req.id, "approved")} className="px-4 py-2 bg-emerald-500 text-black font-bold rounded-lg hover:bg-emerald-400 transition flex items-center gap-2 text-sm">
                     <Check size={16}/> Approve
                   </button>
                 </div>
@@ -127,11 +187,8 @@ export default function Communities() {
               <thead className="text-xs text-gray-500 uppercase bg-[#13131a] border-b border-[#2a2a35]">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Community</th>
-                  <th className="px-6 py-4 font-semibold">Scope</th>
-                  <th className="px-6 py-4 font-semibold">Creator</th>
                   <th className="px-6 py-4 font-semibold">Stats</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold text-center">Actions</th>
+                  <th className="px-6 py-4 font-semibold">Slug</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2a2a35]">
@@ -139,35 +196,14 @@ export default function Communities() {
                   <tr key={comm.id} className="hover:bg-[#13131a] transition cursor-pointer">
                     <td className="px-6 py-4">
                       <div className="font-semibold text-white">{comm.name}</div>
-                      <div className="text-xs mt-1 text-gray-500">Created {comm.createdDate}</div>
+                      <div className="text-xs mt-1 text-gray-500">Created {new Date(comm.created_at).toLocaleDateString()}</div>
                     </td>
-                    <td className="px-6 py-4">
-                      {comm.type === "College" ? (
-                        <div>
-                          <span className="text-purple-400">College-Specific</span>
-                          <div className="text-xs mt-1 text-gray-500">{comm.college}</div>
-                        </div>
-                      ) : (
-                        <span className="text-emerald-400">Open Platform</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-white">{comm.createdBy}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                         <span className="flex items-center gap-1"><Users size={14} className="text-gray-500"/> {comm.members}</span>
-                         <span className="text-gray-500">•</span>
-                         <span className="text-gray-400">{comm.channels} ch</span>
+                         <span className="flex items-center gap-1"><Users size={14} className="text-gray-500"/> —</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">{getStatusBadge(comm.status)}</td>
-                    <td className="px-6 py-4 text-center flex items-center justify-center gap-2">
-                      <button className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded transition" title="Suspend">
-                        <Ban size={16} />
-                      </button>
-                      <button className="p-1.5 text-gray-400 hover:text-white hover:bg-[#2a2a35] rounded transition">
-                        <MoreVertical size={16} />
-                      </button>
-                    </td>
+                    <td className="px-6 py-4 text-gray-300">{comm.slug}</td>
                   </tr>
                 ))}
               </tbody>

@@ -13,11 +13,7 @@ interface BrandItem {
   submitted: string;
 }
 
-const MOCK_BRANDS: BrandItem[] = [
-  { id: "b1", name: "Internshala", contact: "Neha Gupta", email: "neha@internshala.com", type: "Banner Ad", budget: "₹50,000", audience: "All Colleges", status: "Active", submitted: "May 10, 2026" },
-  { id: "b2", name: "GeeksforGeeks", contact: "Rahul V", email: "marketing@gfg.org", type: "Sponsored Content", budget: "₹25,000", audience: "Engineering only", status: "Pending", submitted: "May 12, 2026" },
-  { id: "b3", name: "RedBull India", contact: "Samir K", email: "samir@redbull.in", type: "Event Sponsorship", budget: "₹1,50,000", audience: "All Colleges", status: "Pending", submitted: "May 12, 2026" },
-];
+const MOCK_BRANDS: BrandItem[] = [];
 
 export default function Brands() {
   const getStatusBadge = (status: BrandItem["status"]) => {
@@ -86,6 +82,11 @@ export default function Brands() {
             )}
           </div>
         ))}
+        {MOCK_BRANDS.length === 0 && (
+          <div className="col-span-full py-12 text-center text-gray-500 border border-[#2a2a35] rounded-xl border-dashed">
+            Brand advertising queue is not wired to a backend table yet.
+          </div>
+        )}
       </div>
     </div>
   );

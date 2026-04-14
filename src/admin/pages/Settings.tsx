@@ -1,21 +1,54 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Shield, Users, Server, Mail, Activity, ToggleLeft, ToggleRight, Search } from "lucide-react";
-
-const MOCK_AUDIT_LOGS = [
-  { id: 1, action: "KYC Approved: Priya Reddy (SNIST)", admin: "Yash Kumar", time: "10 mins ago" },
-  { id: 2, action: "College Created: IITH (Status: Hidden)", admin: "Neha Sharma", time: "1 hour ago" },
-  { id: 3, action: "Post Removed (Violation: Hate Speech)", admin: "System Auto-Mod", time: "2 hours ago" },
-  { id: 4, action: "User Suspended: rahul_v (7 Days)", admin: "Yash Kumar", time: "3 hours ago" },
-];
+import { getSupabase } from "@/lib/supabase";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("Team");
   const [toggles, setToggles] = useState({
     maintenance: false,
     newSignups: true,
-    kycReview: true,
     autoMod: true
   });
+  const [auditQuery, setAuditQuery] = useState("");
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditErr, setAuditErr] = useState<string | null>(null);
+  const [auditLogs, setAuditLogs] = useState<Array<{ id: string; actor_id: string | null; action: string; entity: string; created_at: string }>>([]);
+
+  useEffect(() => {
+    if (activeTab !== "Audit") return;
+    const sb = getSupabase();
+    if (!sb) {
+      setAuditErr("Supabase is not configured.");
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        setAuditLoading(true);
+        setAuditErr(null);
+        const { data, error } = await sb
+          .from("audit_log")
+          .select("id, actor_id, action, entity, created_at")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (error) throw error;
+        if (!cancelled) setAuditLogs(data ?? []);
+      } catch (e: any) {
+        if (!cancelled) setAuditErr(e?.message ?? "Failed to load audit log.");
+      } finally {
+        if (!cancelled) setAuditLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
+
+  const filteredAudit = useMemo(() => {
+    const q = auditQuery.trim().toLowerCase();
+    if (!q) return auditLogs;
+    return auditLogs.filter((l) => `${l.entity} ${l.action}`.toLowerCase().includes(q));
+  }, [auditLogs, auditQuery]);
 
   return (
     <div className="space-y-6 flex flex-col h-full">
@@ -63,26 +96,8 @@ export default function Settings() {
               </div>
 
               <div className="bg-[#13131a] rounded-xl border border-[#2a2a35] divide-y divide-[#2a2a35]">
-                <div className="p-4 flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#6c63ff] to-purple-400 flex items-center justify-center font-bold text-white">YK</div>
-                    <div>
-                      <div className="text-sm font-bold text-white flex items-center gap-2">Yash Kumar <span className="bg-[#6c63ff]/20 text-[#6c63ff] text-[10px] uppercase px-1.5 py-0.5 rounded font-bold border border-[#6c63ff]/30">Founder</span></div>
-                      <div className="text-xs text-gray-400">yash@campx.app</div>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-500 font-medium">Session Active</span>
-                </div>
-
-                <div className="p-4 flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-bold text-gray-400">NS</div>
-                    <div>
-                      <div className="text-sm font-bold text-white flex items-center gap-2">Neha Sharma <span className="bg-gray-700 text-gray-300 text-[10px] uppercase px-1.5 py-0.5 rounded font-bold border border-gray-600">Admin</span></div>
-                      <div className="text-xs text-gray-400">neha@campx.app</div>
-                    </div>
-                  </div>
-                  <button className="text-xs text-red-400 hover:text-red-300 transition border border-red-500/20 bg-red-500/10 px-3 py-1.5 rounded font-semibold">Revoke Access</button>
+                <div className="p-6 text-sm text-gray-400">
+                  Admin roster is backed by `user_roles` and is not wired into this UI yet.
                 </div>
               </div>
             </div>
@@ -132,27 +147,53 @@ export default function Settings() {
                 <h2 className="text-lg font-bold text-white">System Audit Log</h2>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
-                  <input type="text" placeholder="Search logs..." className="bg-[#13131a] border border-[#2a2a35] rounded-lg py-1.5 pl-8 pr-3 text-xs focus:outline-none focus:border-[#6c63ff] text-white" />
+                  <input
+                    type="text"
+                    placeholder="Search logs..."
+                    value={auditQuery}
+                    onChange={(e) => setAuditQuery(e.target.value)}
+                    className="bg-[#13131a] border border-[#2a2a35] rounded-lg py-1.5 pl-8 pr-3 text-xs focus:outline-none focus:border-[#6c63ff] text-white"
+                  />
                 </div>
               </div>
+
+              {auditErr && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl p-4 text-sm">
+                  {auditErr}
+                </div>
+              )}
 
               <div className="bg-[#13131a] rounded-xl border border-[#2a2a35] overflow-hidden">
                 <table className="w-full text-left text-sm text-gray-300">
                   <thead className="bg-[#1c1c27] text-xs text-gray-500 uppercase border-b border-[#2a2a35]">
                     <tr>
                       <th className="px-4 py-3">Timestamp</th>
-                      <th className="px-4 py-3">Admin</th>
+                      <th className="px-4 py-3">Actor</th>
                       <th className="px-4 py-3">Action Recorded</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2a2a35]">
-                    {MOCK_AUDIT_LOGS.map(log => (
-                      <tr key={log.id} className="hover:bg-[#1c1c27]">
-                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{log.time}</td>
-                        <td className="px-4 py-3 font-medium text-white">{log.admin}</td>
-                        <td className="px-4 py-3">{log.action}</td>
+                    {auditLoading ? (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-10 text-center text-gray-500">
+                          Loading…
+                        </td>
                       </tr>
-                    ))}
+                    ) : filteredAudit.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-10 text-center text-gray-500">
+                          No audit events found.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredAudit.map((log) => (
+                        <tr key={log.id} className="hover:bg-[#1c1c27]">
+                          <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{new Date(log.created_at).toLocaleString()}</td>
+                          <td className="px-4 py-3 font-medium text-white">{log.actor_id ?? "System"}</td>
+                          <td className="px-4 py-3">{log.entity} • {log.action}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
