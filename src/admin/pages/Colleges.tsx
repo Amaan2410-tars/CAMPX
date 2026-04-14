@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Search, Plus, ChevronLeft, Building2, Users, Activity, CalendarDays, SearchX } from "lucide-react";
+import { Search, Plus, ChevronLeft, Building2, Users, Activity, CalendarDays, SearchX, X } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
 import { triggerGlobalToast } from "@/components/AppLayout";
 
