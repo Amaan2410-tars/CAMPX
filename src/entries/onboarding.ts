@@ -808,7 +808,7 @@ function wireGlobals(): void {
       if (!sb) return;
 
       const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: authRedirectBase(),
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
       if (error) {

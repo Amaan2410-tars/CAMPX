@@ -563,7 +563,9 @@ export default function Onboarding() {
     try {
       const sb = getSupabase();
       if (sb) {
-        const { error } = await sb.auth.resetPasswordForEmail(forgotEmail);
+        const { error } = await sb.auth.resetPasswordForEmail(forgotEmail, {
+          redirectTo: `${window.location.origin}/auth/reset-password`,
+        });
         if (error) {
           setForgotError(error.message);
           setForgotLoading(false);

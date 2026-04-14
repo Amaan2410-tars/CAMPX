@@ -22,6 +22,7 @@ import SubscriptionBilling from "./pages/SubscriptionBilling";
 import UserTiers from "./pages/UserTiers";
 import Branding from "./pages/Branding";
 import LegalPolicies from "./pages/LegalPolicies";
+import ResetPassword from "./pages/ResetPassword";
 
 // Import Admin App pages
 import AdminAuthGuard from "./admin/AdminAuthGuard";
@@ -82,6 +83,7 @@ export default function App() {
     return (
       <Routes>
         <Route path="/auth/login" element={<AdminLogin />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/" element={<AdminAuthGuard />}>
           <Route element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
@@ -107,6 +109,7 @@ export default function App() {
       {/* ---------------- Public / Branding Routes ---------------- */}
       <Route path="/branding" element={<Branding />} />
       <Route path="/policies" element={<LegalPolicies />} />
+      <Route path="/auth/reset-password" element={<ResetPassword />} />
 
       {/* ---------------- Admin Panel Routes ---------------- */}
       <Route path="/auth/login" element={<AdminLogin />} />
