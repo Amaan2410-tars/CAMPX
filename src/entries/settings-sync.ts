@@ -221,10 +221,10 @@ async function main(): Promise<void> {
     window.location.href = "/contact";
   });
   getRowByTitle("Request a feature")?.addEventListener("click", () => {
-    window.location.href = "mailto:support@campx.social?subject=Feature%20Request";
+    window.location.href = "mailto:ghoriamaan01@gmail.com?subject=Feature%20Request";
   });
   getRowByTitle("Report a bug")?.addEventListener("click", () => {
-    window.location.href = "mailto:support@campx.social?subject=Bug%20Report";
+    window.location.href = "mailto:ghoriamaan01@gmail.com?subject=Bug%20Report";
   });
   getRowByTitle("Delete account")?.addEventListener("click", () => {
     alert("For safety, account deletion is currently handled via support.");
