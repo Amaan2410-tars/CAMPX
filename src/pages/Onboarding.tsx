@@ -8,6 +8,117 @@ interface FormErrors {
   [key: string]: string;
 }
 
+const ALLOWED_COLLEGE_NAMES = [
+  'Lords College of Engineering and Technology',
+  'Shadan College of Engineering and Technology',
+  'Methodist College of Engineering and Technology',
+  'Muffakham Jah College of Engineering and Technology',
+  'Anwar-ul-Uloom Degree College',
+] as const;
+
+function normalizeCollegeName(name: string): string {
+  return (name || '')
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const COLLEGE_NAME_ALIASES: Record<string, (typeof ALLOWED_COLLEGE_NAMES)[number]> = {
+  [normalizeCollegeName('Lords College of Engineering and Technology')]: 'Lords College of Engineering and Technology',
+  [normalizeCollegeName('Lords College of engineering and technology')]: 'Lords College of Engineering and Technology',
+  [normalizeCollegeName('LIET')]: 'Lords College of Engineering and Technology',
+
+  [normalizeCollegeName('Shadan College of Engineering and Technology')]: 'Shadan College of Engineering and Technology',
+  [normalizeCollegeName('Shadan College of engineering and technology')]: 'Shadan College of Engineering and Technology',
+  [normalizeCollegeName('SCET')]: 'Shadan College of Engineering and Technology',
+
+  [normalizeCollegeName('Methodist College of Engineering and Technology')]: 'Methodist College of Engineering and Technology',
+  [normalizeCollegeName('Methodist College of engineering and technology')]: 'Methodist College of Engineering and Technology',
+
+  [normalizeCollegeName('Muffakham Jah College of Engineering and Technology')]: 'Muffakham Jah College of Engineering and Technology',
+  [normalizeCollegeName('MJ College of engineering and technology')]: 'Muffakham Jah College of Engineering and Technology',
+  [normalizeCollegeName('MJ College of Engineering and Technology')]: 'Muffakham Jah College of Engineering and Technology',
+  [normalizeCollegeName('MJCET')]: 'Muffakham Jah College of Engineering and Technology',
+
+  [normalizeCollegeName('Anwar-ul-Uloom Degree College')]: 'Anwar-ul-Uloom Degree College',
+  [normalizeCollegeName('Anwar-ul-uloom Degree college')]: 'Anwar-ul-Uloom Degree College',
+};
+
+// NEEDS FOUNDER INPUT:
+// Fill course lists per college (use exact college name keys from ALLOWED_COLLEGE_NAMES).
+// Example:
+// 'MJ College of engineering and technology': ['Computer Science and Engineering', 'ECE', ...]
+const COURSES_BY_COLLEGE: Record<(typeof ALLOWED_COLLEGE_NAMES)[number], string[]> = {
+  'Lords College of Engineering and Technology': [
+    'Computer Science and Engineering',
+    'CSE (Artificial Intelligence & Machine Learning)',
+    'CSE (Data Science)',
+    'Information Technology',
+    'Artificial Intelligence & Machine Learning',
+    'Electronics & Communication Engineering',
+    'Civil Engineering',
+    'Mechanical Engineering',
+    'BBA (Bachelor of Business Administration)',
+    'M.E / M.Tech — Computer Science Engineering',
+    'M.E / M.Tech — Structural Engineering',
+    'M.E / M.Tech — Construction Management',
+    'MBA (Finance)',
+    'MBA (HR)',
+    'MBA (Marketing)',
+    'MBA (Systems)',
+    'MBA (Other specializations)',
+  ],
+  'Shadan College of Engineering and Technology': [
+    'Computer Science and Engineering',
+    'CSE (Artificial Intelligence & Machine Learning)',
+    'Information Technology',
+    'Mechanical Engineering',
+    'Civil Engineering',
+    'M.Tech (various specializations)',
+    'MBA',
+  ],
+  'Methodist College of Engineering and Technology': [
+    'Computer Science Engineering',
+    'Information Technology',
+    'Electronics & Communication Engineering',
+    'Electrical & Electronics Engineering',
+    'Mechanical Engineering',
+    'Civil Engineering',
+    'M.Tech (multiple specializations)',
+    'MBA',
+  ],
+  'Muffakham Jah College of Engineering and Technology': [
+    'Computer Science Engineering',
+    'Information Technology',
+    'Artificial Intelligence & Data Science',
+    'Electronics & Communication Engineering',
+    'Electrical & Electronics Engineering',
+    'Instrumentation Engineering',
+    'Mechanical Engineering',
+    'Production Engineering',
+    'M.E (CAD/CAM)',
+    'M.E (Digital Systems)',
+    'M.E (Structural Engineering)',
+    'M.E (Power Electronics)',
+    'M.Tech (Computer Science)',
+    'MCA',
+  ],
+  'Anwar-ul-Uloom Degree College': [
+    'B.Com (General)',
+    'B.Com (Computers)',
+    'B.Com (Honours)',
+    'BBA',
+    'B.Sc (MPC)',
+    'B.Sc (MSCS)',
+    'B.Sc (Other combinations)',
+    'BA',
+    'M.Com',
+    'MBA',
+  ],
+};
+
 function is18Plus(dobIso: string): boolean {
   // dobIso is expected to be yyyy-mm-dd from <input type="date">
   const dob = new Date(dobIso);
@@ -35,6 +146,8 @@ export default function Onboarding() {
   const [collegeResults, setCollegeResults] = useState<{id: string; name: string}[]>([]);
   const [collegeDropdownOpen, setCollegeDropdownOpen] = useState(false);
   const [major, setMajor] = useState('');
+  const [majorQuery, setMajorQuery] = useState('');
+  const [majorDropdownOpen, setMajorDropdownOpen] = useState(false);
   const [yearOfStudy, setYearOfStudy] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -133,7 +246,7 @@ export default function Onboarding() {
   // ── College Search (debounced) ──
   const searchColleges = useCallback((query: string) => {
     if (collegeSearchTimer.current) clearTimeout(collegeSearchTimer.current);
-    if (!query.trim() || query.length < 2) {
+    if (!query.trim()) {
       setCollegeResults([]);
       setCollegeDropdownOpen(false);
       return;
@@ -146,15 +259,40 @@ export default function Onboarding() {
         return;
       }
       try {
-        const { data } = await sb.from('colleges').select('id, name').ilike('name', `%${query}%`).limit(8);
-        setCollegeResults(data ?? []);
-        setCollegeDropdownOpen(Boolean(data?.length));
+        const { data } = await sb
+          .from('colleges')
+          .select('id, name')
+          .ilike('name', `%${query.trim()}%`)
+          .limit(30);
+
+        const allowed = new Set(ALLOWED_COLLEGE_NAMES);
+        const filtered = (data ?? [])
+          .map((c) => {
+            const canonical = COLLEGE_NAME_ALIASES[normalizeCollegeName(c.name)];
+            return canonical && allowed.has(canonical) ? { id: c.id, name: canonical } : null;
+          })
+          .filter(Boolean) as { id: string; name: string }[];
+
+        // Deduplicate by canonical name (keep the first UUID we saw).
+        const dedup = Array.from(new Map(filtered.map((c) => [c.name, c])).values()).slice(0, 8);
+        setCollegeResults(dedup);
+        setCollegeDropdownOpen(Boolean(dedup.length));
       } catch {
         setCollegeResults([]);
         setCollegeDropdownOpen(false);
       }
-    }, 300);
+    }, 200);
   }, []);
+
+  const currentCollegeKey = COLLEGE_NAME_ALIASES[normalizeCollegeName(collegeName)] ?? null;
+
+  const majorOptions = currentCollegeKey ? (COURSES_BY_COLLEGE[currentCollegeKey] ?? []) : [];
+  const majorResults = (() => {
+    const q = majorQuery.trim().toLowerCase();
+    const base = majorOptions;
+    if (!q) return base.slice(0, 8);
+    return base.filter((m) => m.toLowerCase().includes(q)).slice(0, 8);
+  })();
 
   // ── OTP Handling ──
   const handleOtpChange = (index: number, value: string) => {
@@ -594,11 +732,13 @@ export default function Onboarding() {
                       const v = e.target.value;
                       setCollegeName(v);
                       setCollegeId(null);
+                      setMajor('');
+                      setMajorQuery('');
                       setErrors(p => ({ ...p, college: '' }));
                       searchColleges(v);
                     }}
                     onFocus={() => {
-                      if (collegeName.trim().length >= 2) searchColleges(collegeName);
+                      searchColleges(collegeName || ' ');
                     }}
                   />
                   {collegeDropdownOpen && (
@@ -613,12 +753,19 @@ export default function Onboarding() {
                             setCollegeName(c.name);
                             setCollegeId(c.id);
                             setCollegeDropdownOpen(false);
+                            setMajor('');
+                            setMajorQuery('');
                             setErrors(p => ({ ...p, college: '' }));
                           }}
                         >
                           {c.name}
                         </div>
                       ))}
+                      {!collegeResults.length && (
+                        <div className="college-dropdown-item" style={{ cursor: 'default', opacity: 0.8 }}>
+                          No matching college found.
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -627,13 +774,54 @@ export default function Onboarding() {
 
               <div className="input-group">
                 <label className="input-label" htmlFor="signup-major">Major / Branch</label>
-                <input
-                  id="signup-major"
-                  className={`year-select ${errors.major ? 'has-error' : ''}`}
-                  placeholder="e.g. Computer Science and Engineering"
-                  value={major}
-                  onChange={(e) => { setMajor(e.target.value); setErrors(p => ({ ...p, major: '' })); }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="signup-major"
+                    className={`year-select ${errors.major ? 'has-error' : ''}`}
+                    placeholder={currentCollegeKey ? 'Search your course...' : 'Select college first'}
+                    value={majorQuery || major}
+                    disabled={!currentCollegeKey}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setMajorQuery(v);
+                      setMajor('');
+                      setErrors(p => ({ ...p, major: '' }));
+                      setMajorDropdownOpen(true);
+                    }}
+                    onFocus={() => {
+                      if (!currentCollegeKey) return;
+                      setMajorDropdownOpen(true);
+                    }}
+                    onBlur={() => {
+                      window.setTimeout(() => setMajorDropdownOpen(false), 120);
+                    }}
+                  />
+                  {majorDropdownOpen && currentCollegeKey && (
+                    <div className="college-dropdown" role="listbox" aria-label="Major search results">
+                      {majorResults.map((m) => (
+                        <div
+                          key={m}
+                          className="college-dropdown-item"
+                          role="option"
+                          onMouseDown={(evt) => {
+                            evt.preventDefault();
+                            setMajor(m);
+                            setMajorQuery('');
+                            setMajorDropdownOpen(false);
+                            setErrors(p => ({ ...p, major: '' }));
+                          }}
+                        >
+                          {m}
+                        </div>
+                      ))}
+                      {!majorResults.length && (
+                        <div className="college-dropdown-item" style={{ cursor: 'default', opacity: 0.8 }}>
+                          No courses configured for this college yet.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {renderInlineError('major')}
               </div>
 
