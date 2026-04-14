@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Building2, Users2, MessagesSquare, 
@@ -6,6 +6,7 @@ import {
   Bell, LineChart, Settings, LogOut, Menu, X, Search 
 } from "lucide-react";
 import { getSupabase } from "../lib/supabase";
+import "./admin-reset.css";
 
 const isAdminDomain = window.location.hostname.includes('admin');
 const basePath = isAdminDomain ? "" : "/admin";
@@ -31,6 +32,13 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.documentElement.classList.add("campx-admin");
+    return () => {
+      document.documentElement.classList.remove("campx-admin");
+    };
+  }, []);
 
   const handleLogout = async () => {
     const sb = getSupabase();

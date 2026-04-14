@@ -1,0 +1,36 @@
+/* Admin-only CSS reset to neutralize prototype/global styles in `campx-pages.css`.
+   We activate it by toggling `campx-admin` on <html> from `AdminLayout`. */
+
+html.campx-admin,
+html.campx-admin body,
+html.campx-admin #root {
+  height: 100%;
+}
+
+html.campx-admin,
+html.campx-admin body {
+  overflow: auto !important;
+  background: #0a0a0f;
+  color: #f0f0f8;
+}
+
+html.campx-admin body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Ensure prototype “phone app” styles never affect admin. */
+html.campx-admin .app,
+html.campx-admin .phone {
+  all: unset;
+}
+
+/* Prevent generic h1/ul/li rules from forcing odd spacing. */
+html.campx-admin h1,
+html.campx-admin h2,
+html.campx-admin h3,
+html.campx-admin ul,
+html.campx-admin li {
+  all: revert;
+}
+
