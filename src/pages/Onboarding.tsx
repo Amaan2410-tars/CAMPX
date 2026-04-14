@@ -155,8 +155,8 @@ export default function Onboarding() {
 
   // Loading / UI state
   const [loading, setLoading] = useState(false);
-  const [otpLength] = useState(6);
-  const [otpDigits, setOtpDigits] = useState(Array(6).fill(''));
+  const [otpLength] = useState(8);
+  const [otpDigits, setOtpDigits] = useState(Array(8).fill(''));
   const [otpError, setOtpError] = useState('');
   const [otpShake, setOtpShake] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(true);
@@ -394,7 +394,7 @@ export default function Onboarding() {
   const handleOtpPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, otpLength);
-    if (pasted.length === otpLength || pasted.length === 6) { // support both 6 and 8 for backward combability
+    if (pasted.length === otpLength) {
       const newDigits = Array(otpLength).fill('');
       pasted.split('').forEach((char, i) => newDigits[i] = char);
       setOtpDigits(newDigits);
@@ -466,7 +466,7 @@ export default function Onboarding() {
 
   const handleVerifyOtp = async () => {
     const code = otpDigits.join('');
-    if (code.length !== 6) {
+    if (code.length !== otpLength) {
       setOtpError('Enter the complete verification code');
       return;
     }

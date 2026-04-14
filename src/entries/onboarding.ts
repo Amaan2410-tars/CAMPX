@@ -342,7 +342,7 @@ function setupOtpInputs(): void {
     cell.addEventListener("paste", (e) => {
       e.preventDefault();
       const text = e.clipboardData?.getData("text") || "";
-      const digits = text.replace(/\D/g, "").slice(0, 6);
+      const digits = text.replace(/\D/g, "").slice(0, 8);
       for (let i = 0; i < cells.length; i++) {
         cells[i].value = digits[i] || "";
       }
@@ -673,8 +673,8 @@ function wireGlobals(): void {
     };
   window.handleVerifyCode = async () => {
       const code = getOtpValue();
-      if (code.length !== 6 || !/^\d{6}$/.test(code)) {
-        showToast("Enter the full 6-digit code (digits only).");
+      if (code.length !== 8 || !/^\d{8}$/.test(code)) {
+        showToast("Enter the full 8-digit code (digits only).");
         return;
       }
 
