@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, Users, Plus, X } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
 
 type DbEvent = {
@@ -17,6 +17,8 @@ export default function Events() {
   const [err, setErr] = useState<string | null>(null);
   const [events, setEvents] = useState<DbEvent[]>([]);
   const [regCounts, setRegCounts] = useState<Record<string, number>>({});
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createSaving, setCreateSaving] = useState(false);
 
   useEffect(() => {
     const sb = getSupabase();
@@ -69,8 +71,11 @@ export default function Events() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Events & Contests</h1>
           <p className="text-gray-400 text-sm mt-1">Manage published events and registrations.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#1c1c27] text-white text-sm font-semibold rounded-lg border border-[#333] hover:bg-[#2a2a35] transition">
-          <CalendarDays size={16} /> Create Event (wire backend)
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-[#6c63ff] text-white text-sm font-semibold rounded-lg hover:bg-[#5b54e5] transition border border-transparent"
+        >
+          <Plus size={16} /> Create Event
         </button>
       </div>
 
@@ -120,6 +125,132 @@ export default function Events() {
           </div>
         )}
       </div>
+
+      {createOpen && (
+        <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-[#1c1c27] border border-[#2a2a35] rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-[#2a2a35]">
+              <div className="text-white font-bold">Create event</div>
+              <button onClick={() => setCreateOpen(false)} className="text-gray-400 hover:text-white transition">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5">
+              <form
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const sb = getSupabase();
+                  if (!sb) {
+                    setErr("Supabase is not configured.");
+                    return;
+                  }
+                  try {
+                    setErr(null);
+                    setCreateSaving(true);
+                    const fd = new FormData(e.currentTarget);
+                    const title = String(fd.get("title") ?? "").trim();
+                    const starts_at = String(fd.get("starts_at") ?? "").trim();
+                    const ends_at = String(fd.get("ends_at") ?? "").trim();
+                    const tier_min = String(fd.get("tier_min") ?? "").trim() || null;
+                    const description = String(fd.get("description") ?? "").trim() || null;
+                    if (!title) throw new Error("Title is required.");
+                    if (!starts_at) throw new Error("Start date/time is required.");
+                    const { data: u } = await sb.auth.getUser();
+                    const user = u.user;
+                    if (!user) throw new Error("Not signed in.");
+
+                    const { data, error } = await sb
+                      .from("events")
+                      .insert({
+                        title,
+                        description,
+                        starts_at: new Date(starts_at).toISOString(),
+                        ends_at: ends_at ? new Date(ends_at).toISOString() : null,
+                        tier_min,
+                        created_by: user.id,
+                      })
+                      .select("id, title, starts_at, ends_at, tier_min, created_by, created_at")
+                      .single();
+                    if (error) throw error;
+
+                    setEvents((prev) => [data as any, ...prev]);
+                    setCreateOpen(false);
+                  } catch (e2: any) {
+                    setErr(e2?.message ?? "Failed to create event.");
+                  } finally {
+                    setCreateSaving(false);
+                  }
+                }}
+              >
+                <div className="md:col-span-2">
+                  <label className="block text-xs text-gray-400 mb-1">Title*</label>
+                  <input
+                    name="title"
+                    className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                    placeholder="e.g. Hackathon Week 1"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs text-gray-400 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                    placeholder="Optional details"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Starts at*</label>
+                  <input
+                    name="starts_at"
+                    type="datetime-local"
+                    className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Ends at</label>
+                  <input
+                    name="ends_at"
+                    type="datetime-local"
+                    className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Minimum tier</label>
+                  <select
+                    name="tier_min"
+                    className="w-full bg-[#13131a] border border-[#2a2a35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
+                    defaultValue=""
+                  >
+                    <option value="">None</option>
+                    <option value="basic">basic</option>
+                    <option value="verified">verified</option>
+                    <option value="pro">pro</option>
+                    <option value="plus">plus</option>
+                  </select>
+                </div>
+                <div className="flex items-end justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCreateOpen(false)}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-300 border border-[#2a2a35] hover:bg-white/5"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={createSaving}
+                    type="submit"
+                    className="px-4 py-2 bg-[#6c63ff] hover:bg-[#5b54e5] text-white text-sm font-semibold rounded-lg transition disabled:opacity-50"
+                  >
+                    {createSaving ? "Creating..." : "Create"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
