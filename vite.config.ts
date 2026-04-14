@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // We'll register SW in-app for the student experience only.
+      // Admin must never be controlled by a SW (prevents stale/cached shell CSS).
+      injectRegister: false,
       registerType: "autoUpdate",
       devOptions: {
         enabled: true,

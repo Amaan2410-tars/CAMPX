@@ -112,7 +112,7 @@ export default function Colleges() {
 
   if (selectedCollege) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 w-full max-w-none">
         {/* Detail View Header */}
         <div className="flex items-center gap-4 border-b border-[#2a2a35] pb-4">
           <button 
@@ -200,7 +200,7 @@ export default function Colleges() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-none">
       {err && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl p-4 text-sm">
           {err}
@@ -219,7 +219,7 @@ export default function Colleges() {
               placeholder="Search colleges..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-64 bg-[#1c1c27] text-sm text-white placeholder-gray-500 border border-[#2a2a35] rounded-lg py-2 pl-9 pr-4 focus:ring-1 focus:ring-[#6c63ff] focus:border-[#6c63ff] focus:outline-none"
+              className="w-full sm:w-80 bg-[#1c1c27] text-sm text-white placeholder-gray-500 border border-[#2a2a35] rounded-lg py-2 pl-9 pr-4 focus:ring-1 focus:ring-[#6c63ff] focus:border-[#6c63ff] focus:outline-none"
             />
           </div>
 
@@ -235,7 +235,7 @@ export default function Colleges() {
       {/* College Table */}
       <div className="bg-[#1c1c27] border border-[#2a2a35] rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-400">
+          <table className="w-full min-w-[900px] text-left text-sm text-gray-400">
             <thead className="text-xs text-gray-500 uppercase bg-[#13131a] border-b border-[#2a2a35]">
               <tr>
                 <th className="px-6 py-4 font-semibold">College Name</th>
