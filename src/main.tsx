@@ -7,7 +7,12 @@ import "./campx-pages.css";
 import "./admin/admin-reset.css";
 
 // Apply admin isolation as early as possible so global prototype CSS can't flash/break admin layout.
-if (window.location.hostname.includes("admin")) {
+const path = window.location.pathname || "/";
+if (
+  window.location.hostname.includes("admin") ||
+  path.startsWith("/admin") ||
+  path.startsWith("/auth/login")
+) {
   document.documentElement.classList.add("campx-admin");
 }
 

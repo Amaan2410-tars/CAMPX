@@ -9,7 +9,11 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <script>
       (function () {
-        var isAdmin = window.location.hostname.indexOf("admin") !== -1;
+        var path = window.location.pathname || "/";
+        var isAdmin =
+          window.location.hostname.indexOf("admin") !== -1 ||
+          path.indexOf("/admin") === 0 ||
+          path.indexOf("/auth/login") === 0;
         if (isAdmin) {
           // Apply admin isolation before any CSS loads.
           document.documentElement.classList.add("campx-admin");
