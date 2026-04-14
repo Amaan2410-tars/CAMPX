@@ -13,7 +13,9 @@ export function getSupabase(): SupabaseClient | null {
   if (!client) {
     client = createClient(url, anonKey, {
       auth: {
-        flowType: "pkce",
+        // Implicit flow keeps recovery links portable across devices/browsers.
+        // (PKCE requires a stored code_verifier from the device that initiated the flow.)
+        flowType: "implicit",
         detectSessionInUrl: true,
         persistSession: true,
         storage: typeof localStorage !== "undefined" ? localStorage : undefined,

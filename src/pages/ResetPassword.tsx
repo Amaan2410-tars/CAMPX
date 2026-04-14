@@ -111,7 +111,7 @@ export default function ResetPassword() {
           <div className="mt-6 text-sm text-white/60">Loading…</div>
         ) : !hasSession ? (
           <div className="mt-6 text-sm text-red-300">
-            This reset link is invalid or has expired. Please request a new password reset email.
+            {err || "This reset link is invalid or has expired. Please request a new password reset email."}
           </div>
         ) : (
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
