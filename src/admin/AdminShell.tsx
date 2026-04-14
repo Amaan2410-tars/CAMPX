@@ -108,7 +108,7 @@ export default function AdminShell() {
           </div>
 
           <div className="flex-1 overflow-y-auto pb-4 custom-scrollbar">
-            <nav className="space-y-1 px-3">
+            <nav className="space-y-1 px-0">
               {NAV_ITEMS.map((item) => {
                 const dashboardActive = item.path === "/admin" || item.path === "/";
                 const active = dashboardActive
@@ -119,7 +119,7 @@ export default function AdminShell() {
                     key={item.path}
                     to={item.path}
                     className={[
-                      "group flex items-center gap-4 rounded-xl px-4 py-3 text-[15px] font-medium transition",
+                      "group flex items-center justify-start gap-4 rounded-none px-6 py-3 text-[15px] font-medium transition text-left",
                       active
                         ? "bg-white/5 text-white"
                         : "text-white/70 hover:bg-white/5 hover:text-white",
