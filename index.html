@@ -7,8 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="stylesheet" href="/campx-speed-dial.css?v=4">
-    <link rel="stylesheet" href="/campx-web-layout.css?v=4">
+    <script>
+      (function () {
+        var isAdmin = window.location.hostname.indexOf("admin") !== -1;
+        if (isAdmin) {
+          // Apply admin isolation before any CSS loads.
+          document.documentElement.classList.add("campx-admin");
+          return;
+        }
+        // Only load prototype shell CSS for the student-facing app.
+        document.write('<link rel="stylesheet" href="/campx-speed-dial.css?v=4">');
+        document.write('<link rel="stylesheet" href="/campx-web-layout.css?v=4">');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
