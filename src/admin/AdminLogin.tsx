@@ -37,7 +37,11 @@ export default function AdminLogin() {
     });
 
     if (error) {
-      alert(error.message);
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("invalid login")) alert("Incorrect email or password.");
+      else if (msg.includes("email not confirmed") || msg.includes("not confirmed")) alert("Please verify your email before logging in.");
+      else if (msg.includes("rate limit") || msg.includes("too many requests")) alert("Too many attempts. Please try again later.");
+      else alert("Login failed. Please try again.");
       setLoading(false);
       return;
     }

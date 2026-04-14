@@ -12,6 +12,8 @@ export default function ResetPassword() {
   const [pw2, setPw2] = useState("");
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState<string | null>(null);
+  const isStrongPassword = (p: string) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(p);
 
   useEffect(() => {
     const sb = getSupabase();
@@ -53,8 +55,8 @@ export default function ResetPassword() {
     e.preventDefault();
     setErr(null);
     setOk(null);
-    if (pw.length < 8) {
-      setErr("Password must be at least 8 characters.");
+    if (!isStrongPassword(pw)) {
+      setErr("Password must include uppercase, lowercase, number, and symbol (min 8).");
       return;
     }
     if (pw !== pw2) {
@@ -103,7 +105,7 @@ export default function ResetPassword() {
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 className="w-full bg-[#0b0b10] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#6c63ff]"
-                placeholder="At least 8 characters"
+                placeholder="Uppercase + lowercase + number + symbol"
               />
             </div>
             <div>

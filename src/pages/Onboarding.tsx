@@ -134,9 +134,13 @@ export default function Onboarding() {
   const [currentScreen, setCurrentScreen] = useState('splash');
   const [history, setHistory] = useState<string[]>(['splash']);
 
+  const isStrongPassword = (pw: string) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pw);
+
   // Form state
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
@@ -161,6 +165,7 @@ export default function Onboarding() {
   const [otpShake, setOtpShake] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(true);
   const [resendCountdown, setResendCountdown] = useState(60);
+  const [usernameChecking, setUsernameChecking] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -235,6 +240,8 @@ export default function Onboarding() {
     if (!fullName.trim()) errs.fullName = 'Full name is required';
     if (!email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address';
+    if (!username.trim()) errs.username = 'Username is required';
+    else if (!/^[a-zA-Z0-9_.]{3,20}$/.test(username.trim())) errs.username = 'Use 3–20 characters: letters, numbers, _ or .';
     if (!dateOfBirth) errs.dob = 'Date of birth is required';
     else if (!is18Plus(dateOfBirth)) errs.dob = 'You must be 18+ to create an account';
     if (!mobile.trim()) errs.mobile = 'Mobile number is required';
@@ -243,7 +250,7 @@ export default function Onboarding() {
       if (mobileErr) errs.mobile = mobileErr;
     }
     if (!password) errs.password = 'Password is required';
-    else if (password.length < 8) errs.password = 'Password must be at least 8 characters';
+    else if (!isStrongPassword(password)) errs.password = 'Password must have uppercase, lowercase, number, and symbol (min 8).';
     if (!confirmPassword) errs.confirmPassword = 'Please confirm your password';
     else if (confirmPassword !== password) errs.confirmPassword = 'Passwords do not match';
     setErrors(errs);
@@ -447,6 +454,7 @@ export default function Onboarding() {
             major,
             year_of_study: yearOfStudy,
             date_of_birth: dateOfBirth,
+            username: username.trim().toLowerCase(),
           },
         },
       });
@@ -484,6 +492,22 @@ export default function Onboarding() {
           setLoading(false);
           return;
         }
+
+        // Set password after OTP session is created.
+        if (password && !isStrongPassword(password)) {
+          setOtpError('Password must have uppercase, lowercase, number, and symbol (min 8).');
+          setLoading(false);
+          return;
+        }
+        if (password) {
+          const { error: pwErr } = await sb.auth.updateUser({ password });
+          if (pwErr) {
+            setOtpError(pwErr.message);
+            setLoading(false);
+            return;
+          }
+        }
+
         // Upsert profile
         try {
           const { data: { user } } = await sb.auth.getUser();
@@ -498,6 +522,7 @@ export default function Onboarding() {
               major,
               year_of_study: yearOfStudy,
               date_of_birth: dateOfBirth,
+              username: username.trim().toLowerCase(),
             }, { onConflict: 'id' });
           }
         } catch { /* non-critical */ }
@@ -520,7 +545,20 @@ export default function Onboarding() {
       if (sb) {
         await sb.auth.signInWithOtp({
           email: storedEmail,
-          options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/onboarding` },
+          options: {
+            shouldCreateUser: true,
+            emailRedirectTo: `${window.location.origin}/onboarding`,
+            data: {
+              full_name: fullName,
+              phone: mobile,
+              college: collegeName,
+              college_id: collegeId,
+              major,
+              year_of_study: yearOfStudy,
+              date_of_birth: dateOfBirth,
+              username: username.trim().toLowerCase(),
+            },
+          },
         });
       }
     } catch { /* silently retry */ }
@@ -538,9 +576,11 @@ export default function Onboarding() {
       if (sb) {
         const { error } = await sb.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
         if (error) {
-          if (error.message.includes('Invalid login')) setLoginError('Incorrect email or password');
-          else if (error.message.includes('not found')) setLoginError('No account found with this email');
-          else setLoginError(error.message);
+          const msg = (error.message || '').toLowerCase();
+          if (msg.includes('invalid login')) setLoginError('Incorrect email or password');
+          else if (msg.includes('email not confirmed') || msg.includes('not confirmed')) setLoginError('Please verify your email before logging in');
+          else if (msg.includes('rate limit') || msg.includes('too many requests')) setLoginError('Too many attempts. Please try again later.');
+          else setLoginError('Login failed. Please try again.');
           setLoginLoading(false);
           return;
         }
@@ -582,7 +622,7 @@ export default function Onboarding() {
 
   const handleResetPassword = async () => {
     if (!resetPassword) { setResetError('Enter a new password'); return; }
-    if (resetPassword.length < 8) { setResetError('Password must be at least 8 characters'); return; }
+    if (!isStrongPassword(resetPassword)) { setResetError('Password must have uppercase, lowercase, number, and symbol (min 8).'); return; }
     if (resetPassword !== resetConfirm) { setResetError('Passwords do not match'); return; }
     setResetLoading(true);
     setResetError('');
@@ -605,6 +645,37 @@ export default function Onboarding() {
   };
 
   const verifyEmail = localStorage.getItem('campx_verify_email') || email;
+
+  const checkUsernameAvailable = async (raw: string): Promise<boolean> => {
+    const u = raw.trim().toLowerCase();
+    if (!u) return false;
+    if (!/^[a-zA-Z0-9_.]{3,20}$/.test(u)) return false;
+    const sb = getSupabase();
+    if (!sb) return true; // allow in demo / no backend
+    const { data, error } = await sb
+      .from('profiles')
+      .select('id')
+      .eq('username', u)
+      .limit(1);
+    if (error) return true; // don't block on transient errors
+    return (data ?? []).length === 0;
+  };
+
+  const handleContinueSignup1 = async () => {
+    if (!validateSignup1()) return;
+    setUsernameChecking(true);
+    try {
+      const ok = await checkUsernameAvailable(username);
+      if (!ok) {
+        setErrors((p) => ({ ...p, username: 'Username already taken' }));
+        return;
+      }
+      setErrors({});
+      goTo('signup2');
+    } finally {
+      setUsernameChecking(false);
+    }
+  };
 
   const renderInlineError = (field: string) =>
     errors[field] ? <div className="inline-error">{errors[field]}</div> : null;
@@ -738,6 +809,22 @@ export default function Onboarding() {
               </div>
 
               <div className="input-group">
+                <label className="input-label" htmlFor="signup-username">Username</label>
+                <div className={`input-wrap ${errors.username ? 'has-error' : ''}`}>
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  <input
+                    type="text"
+                    id="signup-username"
+                    placeholder="unique username"
+                    value={username}
+                    onChange={e => { setUsername(e.target.value); setErrors(p => ({...p, username: ''})); }}
+                    onBlur={() => { void checkUsernameAvailable(username).then((ok) => { if (!ok) setErrors((p) => ({ ...p, username: 'Username already taken' })); }); }}
+                  />
+                </div>
+                {renderInlineError('username')}
+              </div>
+
+              <div className="input-group">
                 <label className="input-label" htmlFor="signup-dob">Date of birth</label>
                 <div className={`input-wrap ${errors.dob ? 'has-error' : ''}`}>
                   <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -773,7 +860,9 @@ export default function Onboarding() {
                 {renderInlineError('confirmPassword')}
               </div>
 
-              <button type="button" className="btn btn-primary" onClick={() => { if (validateSignup1()) { setErrors({}); goTo('signup2'); } }}>Continue</button>
+              <button type="button" className="btn btn-primary" disabled={usernameChecking} onClick={handleContinueSignup1}>
+                {usernameChecking ? 'Checking…' : 'Continue'}
+              </button>
 
               <div className="divider">
                 <div className="divider-line"></div>
