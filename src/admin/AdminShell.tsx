@@ -156,9 +156,12 @@ export default function AdminShell() {
 
         {/* Main column */}
         <div className="min-w-0 flex flex-col">
-          <header className="sticky top-0 z-10 h-16 shrink-0 border-b border-[#1c1c27] bg-[#0a0a0f]/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between">
+          <header className="sticky top-0 z-10 h-14 shrink-0 border-b border-[#1c1c27] bg-[#0a0a0f]/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between">
             <div className="flex items-center gap-4 min-w-0">
-              <h1 className="text-xl font-semibold text-white tracking-tight truncate">{pageTitle}</h1>
+              <div className="min-w-0">
+                <div className="text-[13px] text-white/50 leading-none">Admin</div>
+                <div className="text-[15px] font-semibold text-white tracking-tight truncate leading-tight">{pageTitle}</div>
+              </div>
             </div>
 
             <div className="flex items-center gap-4 sm:gap-6">
@@ -180,8 +183,12 @@ export default function AdminShell() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar min-w-0">
-            <Outlet />
+          <div className="flex-1 overflow-y-auto custom-scrollbar min-w-0">
+            <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+              <div className="bg-[#0b0b10] border border-white/10 rounded-2xl p-5 sm:p-6">
+                <Outlet />
+              </div>
+            </div>
           </div>
         </div>
       </div>
