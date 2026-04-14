@@ -4,6 +4,7 @@ import { getSupabase } from "@/lib/supabase";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const isAdminHost = (window.location.hostname || "").toLowerCase().includes("admin");
   const [ready, setReady] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -71,8 +72,7 @@ export default function ResetPassword() {
       setSaving(true);
       const { error } = await sb.auth.updateUser({ password: pw });
       if (error) throw error;
-      setOk("Password updated. Redirecting to login…");
-      setTimeout(() => navigate("/onboarding"), 600);
+      setOk("Password updated.");
     } catch (e2: any) {
       setErr(e2?.message ?? "Failed to update password.");
     } finally {
@@ -127,6 +127,16 @@ export default function ResetPassword() {
             >
               {saving ? "Saving…" : "Update password"}
             </button>
+
+            {ok && (
+              <button
+                type="button"
+                onClick={() => navigate(isAdminHost ? "/auth/login" : "/onboarding")}
+                className="w-full px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold rounded-lg transition"
+              >
+                Go to login
+              </button>
+            )}
           </form>
         )}
       </div>
