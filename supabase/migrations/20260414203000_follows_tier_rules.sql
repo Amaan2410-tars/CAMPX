@@ -2,6 +2,15 @@
 -- - Basic users cannot follow or be followed.
 -- - Verified+ users can follow.
 
+-- Ensure follows table exists (some environments may not have it yet).
+CREATE TABLE IF NOT EXISTS public.follows (
+  follower_id uuid NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
+  following_id uuid NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT follows_pk PRIMARY KEY (follower_id, following_id),
+  CONSTRAINT follows_no_self CHECK (follower_id <> following_id)
+);
+
 CREATE OR REPLACE FUNCTION public.can_follow(_following uuid)
 RETURNS boolean
 LANGUAGE plpgsql

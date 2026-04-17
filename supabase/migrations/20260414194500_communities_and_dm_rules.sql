@@ -39,34 +39,38 @@ CREATE POLICY "community_members_insert_self" ON public.community_members
   FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id AND public.community_join_allowed());
 
--- Community creation must not auto-publish: introduce requests table.
+-- Community creation must not auto-publish: introduce requests table (admin review queue).
+-- Keep schema aligned with later migrations (created_by references auth.users).
 CREATE TABLE IF NOT EXISTS public.community_creation_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  requested_by UUID NOT NULL REFERENCES public.profiles (id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  slug TEXT NOT NULL,
+  slug TEXT,
   description TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_by UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  reviewed_by UUID REFERENCES public.profiles (id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   reviewed_at TIMESTAMPTZ,
-  review_notes TEXT
+  reviewed_by UUID REFERENCES auth.users (id) ON DELETE SET NULL
 );
 
 ALTER TABLE public.community_creation_requests ENABLE ROW LEVEL SECURITY;
 
+-- Drop any older policy names (from previous iterations).
 DROP POLICY IF EXISTS "community_creation_requests_insert_verified" ON public.community_creation_requests;
-CREATE POLICY "community_creation_requests_insert_verified" ON public.community_creation_requests
+DROP POLICY IF EXISTS "community_creation_requests_select_own_or_staff" ON public.community_creation_requests;
+
+DROP POLICY IF EXISTS "community_creation_requests_insert_own" ON public.community_creation_requests;
+CREATE POLICY "community_creation_requests_insert_own" ON public.community_creation_requests
   FOR INSERT TO authenticated
   WITH CHECK (
-    auth.uid() = requested_by
+    auth.uid() = created_by
     AND public.require_min_tier('pro') -- only Pro/Plus can request creation
   );
 
-DROP POLICY IF EXISTS "community_creation_requests_select_own_or_staff" ON public.community_creation_requests;
-CREATE POLICY "community_creation_requests_select_own_or_staff" ON public.community_creation_requests
+DROP POLICY IF EXISTS "community_creation_requests_select_staff" ON public.community_creation_requests;
+CREATE POLICY "community_creation_requests_select_staff" ON public.community_creation_requests
   FOR SELECT TO authenticated
-  USING (requested_by = auth.uid() OR public.has_any_staff_role());
+  USING (public.has_any_staff_role());
 
 DROP POLICY IF EXISTS "community_creation_requests_update_staff" ON public.community_creation_requests;
 CREATE POLICY "community_creation_requests_update_staff" ON public.community_creation_requests
@@ -85,15 +89,23 @@ CREATE POLICY "communities_insert_staff_only" ON public.communities
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.are_mutual_follows(_a uuid, _b uuid)
 RETURNS boolean
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT
+BEGIN
+  -- Some environments may apply this migration before the follows table exists.
+  -- In that case, treat as "not mutual" rather than erroring.
+  IF to_regclass('public.follows') IS NULL THEN
+    RETURN false;
+  END IF;
+
+  RETURN
     EXISTS (SELECT 1 FROM public.follows f WHERE f.follower_id = _a AND f.following_id = _b)
     AND
     EXISTS (SELECT 1 FROM public.follows f WHERE f.follower_id = _b AND f.following_id = _a);
+END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.can_dm(_other uuid)

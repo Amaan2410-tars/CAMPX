@@ -166,7 +166,7 @@ export default function AppLayout() {
               <strong style={{ color: "rgba(255,255,255,0.92)" }}>Basic tier:</strong> Verify with your <strong>college email</strong> to unlock posting, communities, and DMs.
               <button
                 type="button"
-                onClick={() => navigate("/onboarding")}
+                onClick={() => navigate("/settings/change-email")}
                 style={{
                   marginLeft: 10,
                   padding: "6px 10px",

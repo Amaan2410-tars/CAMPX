@@ -20,8 +20,12 @@ function shouldSkipGate(): boolean {
   const p = normalizedPath();
   if (p === "/" || p === "/index.html") return true;
   if (p === "/auth/login") return true;
+  if (p === "/auth/callback") return true;
   if (p === "/onboarding") return true;
   if (p.endsWith(SIGN_IN_PATH) || p.includes("campx-onboarding.html")) return true;
+  // Allow Supabase email links to be processed by the SPA before any redirects.
+  if (window.location.search.includes("code=")) return true;
+  if (window.location.hash.includes("access_token")) return true;
   return false;
 }
 

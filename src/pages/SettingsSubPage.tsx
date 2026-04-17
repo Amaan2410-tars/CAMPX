@@ -95,7 +95,10 @@ export default function SettingsSubPage() {
     try {
       const cleaned = newEmail.trim();
       if (!cleaned) throw new Error('Enter a new email.');
-      const { error } = await sb.auth.updateUser({ email: cleaned });
+      const { error } = await sb.auth.updateUser(
+        { email: cleaned },
+        { emailRedirectTo: `${window.location.origin}/auth/callback?next=/settings` },
+      );
       if (error) throw error;
       triggerGlobalToast('Verification link sent to your new email.', 'info');
       goBack();

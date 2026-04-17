@@ -153,7 +153,10 @@ async function main(): Promise<void> {
   getRowByTitle("Change email")?.addEventListener("click", async () => {
     const nextEmail = window.prompt("New email");
     if (!nextEmail) return;
-    const { error: e } = await sb.auth.updateUser({ email: nextEmail.trim() });
+    const { error: e } = await sb.auth.updateUser(
+      { email: nextEmail.trim() },
+      { emailRedirectTo: `${window.location.origin}/auth/callback?next=/settings` },
+    );
     if (e) {
       alert(e.message);
       return;

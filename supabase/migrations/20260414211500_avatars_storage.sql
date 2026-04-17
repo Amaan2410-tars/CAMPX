@@ -7,7 +7,8 @@ VALUES ('avatars', 'avatars', true)
 ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- RLS for storage.objects
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Note: In hosted Supabase, `storage.objects` already has RLS enabled and may not
+-- be alterable from migrations depending on role/ownership.
 
 -- Public can read avatars (public bucket).
 DROP POLICY IF EXISTS "avatars_public_read" ON storage.objects;

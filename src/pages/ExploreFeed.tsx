@@ -13,6 +13,8 @@ export default function ExploreFeed() {
   const navigate = useNavigate();
   const [postText, setPostText] = useState('');
   const [activeTab, setActiveTab] = useState('All');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState('');
   const [nudgeOpen, setNudgeOpen] = useState(false);
   const [tier, setTier] = useState<string>('basic');
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -21,6 +23,14 @@ export default function ExploreFeed() {
   const [loading, setLoading] = useState(false);
 
   const canEngage = useMemo(() => tier !== 'basic', [tier]);
+  const visiblePosts = useMemo(() => {
+    const q = searchQ.trim().toLowerCase();
+    if (!q) return posts;
+    return posts.filter((p) => {
+      const hay = `${p.full_name ?? ''} ${p.campx_id ?? ''} ${p.college ?? ''} ${p.body ?? ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [posts, searchQ]);
 
   useEffect(() => {
     const sb = getSupabase();
@@ -142,10 +152,24 @@ export default function ExploreFeed() {
             <img src="/campx-logo-512.png" alt="CampX" style={{ height: '24px', marginRight: '6px' }} />
           </div>
           <div className="topbar-right">
-            <div className="icon-btn" onClick={() => triggerGlobalToast('Search opened', 'info')}>
+            <div
+              className="icon-btn"
+              onClick={() => setSearchOpen(true)}
+              role="button"
+              tabIndex={0}
+              aria-label="Search"
+              title="Search"
+            >
               <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
             </div>
-            <div className="icon-btn">
+            <div
+              className="icon-btn"
+              onClick={() => navigate('/settings')}
+              role="button"
+              tabIndex={0}
+              aria-label="Settings"
+              title="Settings"
+            >
               <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
             </div>
           </div>
@@ -211,7 +235,7 @@ export default function ExploreFeed() {
           <div style={{padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)'}}>Loading…</div>
         )}
 
-        {!loading && posts.map((p) => (
+        {!loading && visiblePosts.map((p) => (
           <div key={p.id} className="post campx-post-live" style={{position: 'relative'}}>
             <div className="post-header">
               <div className="avatar" style={{background: 'linear-gradient(135deg, #2d1b4e, #3d2b6e)'}}>
@@ -295,6 +319,48 @@ export default function ExploreFeed() {
           <button className="nudge-close" onClick={() => setNudgeOpen(false)}>Maybe later</button>
         </div>
       </div>
+
+      {/* Search modal */}
+      {searchOpen && (
+        <div
+          className="nudge-overlay open"
+          onClick={() => setSearchOpen(false)}
+          role="dialog"
+          aria-label="Search"
+        >
+          <div className="nudge-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="nudge-handle"></div>
+            <div className="nudge-title">Search</div>
+            <div className="nudge-sub">Search posts by name, college, or text.</div>
+            <input
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              placeholder="Search…"
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                borderRadius: 14,
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'var(--surface, #13131a)',
+                color: 'var(--text, #f0f0f8)',
+                outline: 'none',
+                marginTop: 10,
+              }}
+              autoFocus
+            />
+            <div style={{ marginTop: 10, color: 'var(--text-muted)', fontSize: 12 }}>
+              {searchQ.trim() ? `${visiblePosts.length} result(s)` : 'Type to search'}
+            </div>
+            <button
+              className="nudge-close"
+              onClick={() => setSearchOpen(false)}
+              style={{ marginTop: 10 }}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

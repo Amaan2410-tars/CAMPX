@@ -445,7 +445,7 @@ export default function Onboarding() {
         email,
         options: {
           shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/onboarding`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/explore-feed`,
           data: {
             full_name: fullName,
             phone: mobile,
@@ -547,7 +547,7 @@ export default function Onboarding() {
           email: storedEmail,
           options: {
             shouldCreateUser: true,
-            emailRedirectTo: `${window.location.origin}/onboarding`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/explore-feed`,
             data: {
               full_name: fullName,
               phone: mobile,

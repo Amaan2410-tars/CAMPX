@@ -12,6 +12,11 @@ interface UserRecord {
   year_of_study: string | null;
   tier: "basic" | "verified" | "pro" | "plus";
   verification_status: "unverified" | "email_verified" | "verified";
+  warning_count?: number | null;
+  last_warning_at?: string | null;
+  suspended_until?: string | null;
+  banned_at?: string | null;
+  banned_reason?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +27,8 @@ export default function Users() {
   const [rows, setRows] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifySaving, setVerifySaving] = useState(false);
+  const [modSaving, setModSaving] = useState<null | "warn" | "suspend" | "unsuspend" | "ban" | "unban">(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createEmail, setCreateEmail] = useState("");
   const [createRole, setCreateRole] = useState<"user" | "ambassador" | "moderator" | "admin">("user");
@@ -69,7 +76,7 @@ export default function Users() {
     void (async () => {
       const { data, error } = await sb
         .from("profiles")
-        .select("id, full_name, email, phone, college, major, year_of_study, tier, verification_status, created_at, updated_at")
+        .select("id, full_name, email, phone, college, major, year_of_study, tier, verification_status, warning_count, last_warning_at, suspended_until, banned_at, banned_reason, created_at, updated_at")
         .order("created_at", { ascending: false })
         .limit(200);
 
@@ -87,6 +94,138 @@ export default function Users() {
       cancelled = true;
     };
   }, []);
+
+  async function adminVerifyUser(userId: string): Promise<void> {
+    try {
+      setError(null);
+      const sb = getSupabase();
+      if (!sb) throw new Error("Supabase is not configured for admin.");
+      setVerifySaving(true);
+      const { error } = await sb.rpc("admin_verify_user", {
+        _user_id: userId,
+        _verification_status: "verified",
+        _tier: null,
+      });
+      if (error) throw error;
+
+      // Refresh local state.
+      setRows((prev) =>
+        prev.map((r) =>
+          r.id === userId
+            ? { ...r, verification_status: "verified", tier: r.tier === "basic" ? "verified" : r.tier, updated_at: new Date().toISOString() }
+            : r,
+        ),
+      );
+      setSelectedUser((prev) =>
+        prev && prev.id === userId
+          ? { ...prev, verification_status: "verified", tier: prev.tier === "basic" ? "verified" : prev.tier, updated_at: new Date().toISOString() }
+          : prev,
+      );
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to verify user.");
+    } finally {
+      setVerifySaving(false);
+    }
+  }
+
+  function patchUserLocal(userId: string, patch: Partial<UserRecord>): void {
+    setRows((prev) => prev.map((r) => (r.id === userId ? { ...r, ...patch } : r)));
+    setSelectedUser((prev) => (prev && prev.id === userId ? { ...prev, ...patch } : prev));
+  }
+
+  async function adminWarn(userId: string): Promise<void> {
+    const notes = window.prompt("Warning note (optional)") ?? "";
+    try {
+      setError(null);
+      const sb = getSupabase();
+      if (!sb) throw new Error("Supabase is not configured for admin.");
+      setModSaving("warn");
+      const { error } = await sb.rpc("admin_issue_warning", { _user_id: userId, _notes: notes.trim() || null });
+      if (error) throw error;
+      const nowIso = new Date().toISOString();
+      patchUserLocal(userId, {
+        warning_count: Number((selectedUser as any)?.warning_count ?? 0) + 1,
+        last_warning_at: nowIso,
+        updated_at: nowIso,
+      });
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to issue warning.");
+    } finally {
+      setModSaving(null);
+    }
+  }
+
+  async function adminSuspend(userId: string, days: number): Promise<void> {
+    const notes = window.prompt("Suspension note (optional)") ?? "";
+    try {
+      setError(null);
+      const sb = getSupabase();
+      if (!sb) throw new Error("Supabase is not configured for admin.");
+      setModSaving("suspend");
+      const { error } = await sb.rpc("admin_suspend_user", { _user_id: userId, _days: days, _notes: notes.trim() || null });
+      if (error) throw error;
+      const now = new Date();
+      const until = new Date(now.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+      patchUserLocal(userId, { suspended_until: until, updated_at: now.toISOString() });
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to suspend user.");
+    } finally {
+      setModSaving(null);
+    }
+  }
+
+  async function adminUnsuspend(userId: string): Promise<void> {
+    const notes = window.prompt("Unsuspend note (optional)") ?? "";
+    try {
+      setError(null);
+      const sb = getSupabase();
+      if (!sb) throw new Error("Supabase is not configured for admin.");
+      setModSaving("unsuspend");
+      const { error } = await sb.rpc("admin_unsuspend_user", { _user_id: userId, _notes: notes.trim() || null });
+      if (error) throw error;
+      patchUserLocal(userId, { suspended_until: null, updated_at: new Date().toISOString() });
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to unsuspend user.");
+    } finally {
+      setModSaving(null);
+    }
+  }
+
+  async function adminBan(userId: string): Promise<void> {
+    const notes = window.prompt("Ban reason (optional)") ?? "";
+    const ok = window.confirm("Permanent ban this user? They will be marked banned in profiles.\n\n(Does NOT delete auth user.)");
+    if (!ok) return;
+    try {
+      setError(null);
+      const sb = getSupabase();
+      if (!sb) throw new Error("Supabase is not configured for admin.");
+      setModSaving("ban");
+      const { error } = await sb.rpc("admin_ban_user", { _user_id: userId, _notes: notes.trim() || null });
+      if (error) throw error;
+      patchUserLocal(userId, { banned_at: new Date().toISOString(), banned_reason: notes.trim() || null, updated_at: new Date().toISOString() });
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to ban user.");
+    } finally {
+      setModSaving(null);
+    }
+  }
+
+  async function adminUnban(userId: string): Promise<void> {
+    const notes = window.prompt("Unban note (optional)") ?? "";
+    try {
+      setError(null);
+      const sb = getSupabase();
+      if (!sb) throw new Error("Supabase is not configured for admin.");
+      setModSaving("unban");
+      const { error } = await sb.rpc("admin_unban_user", { _user_id: userId, _notes: notes.trim() || null });
+      if (error) throw error;
+      patchUserLocal(userId, { banned_at: null, banned_reason: null, updated_at: new Date().toISOString() });
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to unban user.");
+    } finally {
+      setModSaving(null);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -188,6 +327,11 @@ export default function Users() {
             </div>
             
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl p-3 text-sm">
+                  {error}
+                </div>
+              )}
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#6c63ff] to-purple-400 flex items-center justify-center text-xl font-bold text-white shadow-xl">
                   {(selectedUser.full_name || "?").charAt(0)}
@@ -222,6 +366,31 @@ export default function Users() {
               </div>
 
               <div className="bg-[#13131a] rounded-xl p-4 border border-[#2a2a35]">
+                <h4 className="text-xs uppercase text-gray-500 font-bold mb-3 tracking-wider">Moderation Status</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-500 mb-1">Warnings</div>
+                    <div className="text-white font-medium">{Number(selectedUser.warning_count ?? 0)}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 mb-1">Last warning</div>
+                    <div className="text-white font-medium">{selectedUser.last_warning_at ? new Date(selectedUser.last_warning_at).toLocaleString() : "—"}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 mb-1">Suspended until</div>
+                    <div className="text-white font-medium">{selectedUser.suspended_until ? new Date(selectedUser.suspended_until).toLocaleString() : "—"}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 mb-1">Banned</div>
+                    <div className="text-white font-medium">{selectedUser.banned_at ? `Yes (${new Date(selectedUser.banned_at).toLocaleDateString()})` : "No"}</div>
+                  </div>
+                </div>
+                {selectedUser.banned_reason && (
+                  <div className="mt-3 text-xs text-gray-400">Reason: <span className="text-gray-200">{selectedUser.banned_reason}</span></div>
+                )}
+              </div>
+
+              <div className="bg-[#13131a] rounded-xl p-4 border border-[#2a2a35]">
                 <h4 className="text-xs uppercase text-gray-500 font-bold mb-3 tracking-wider">Platform Stats</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
@@ -241,15 +410,76 @@ export default function Users() {
 
               <div className="space-y-3 pt-4 border-t border-[#2a2a35]">
                 <h4 className="text-xs uppercase text-gray-500 font-bold tracking-wider mb-2">Moderation Actions</h4>
-                <button className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-yellow-500/50 rounded-lg transition text-white text-sm font-medium">
+                <button
+                  disabled={verifySaving}
+                  className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-emerald-500/50 rounded-lg transition text-white text-sm font-medium disabled:opacity-50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void adminVerifyUser(selectedUser.id);
+                  }}
+                  title="Marks the user as verified and activates the account (OTP is the only KYC for now)."
+                >
+                  <span className="flex items-center gap-2 text-emerald-400">
+                    <ShieldAlert size={18} /> {verifySaving ? "Verifying..." : "Verify / Activate user"}
+                  </span>
+                </button>
+                <button
+                  disabled={modSaving !== null}
+                  className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-yellow-500/50 rounded-lg transition text-white text-sm font-medium disabled:opacity-50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void adminWarn(selectedUser.id);
+                  }}
+                >
                   <span className="flex items-center gap-2 text-yellow-500"><AlertTriangle size={18}/> Issue Warning</span>
                 </button>
-                <button className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-red-500/50 rounded-lg transition text-white text-sm font-medium">
-                  <span className="flex items-center gap-2 text-red-500"><ShieldAlert size={18}/> Suspend Account (7 Days)</span>
-                </button>
-                <button className="w-full flex items-center justify-between p-3 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 rounded-lg transition text-red-500 text-sm font-bold">
-                  <span className="flex items-center gap-2"><Ban size={18}/> Permanent Ban (Founder Only)</span>
-                </button>
+                {selectedUser.suspended_until ? (
+                  <button
+                    disabled={modSaving !== null}
+                    className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-emerald-500/40 rounded-lg transition text-white text-sm font-medium disabled:opacity-50"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void adminUnsuspend(selectedUser.id);
+                    }}
+                  >
+                    <span className="flex items-center gap-2 text-emerald-400"><ShieldAlert size={18}/> Remove suspension</span>
+                  </button>
+                ) : (
+                  <button
+                    disabled={modSaving !== null}
+                    className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-red-500/50 rounded-lg transition text-white text-sm font-medium disabled:opacity-50"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void adminSuspend(selectedUser.id, 7);
+                    }}
+                  >
+                    <span className="flex items-center gap-2 text-red-500"><ShieldAlert size={18}/> Suspend Account (7 Days)</span>
+                  </button>
+                )}
+
+                {selectedUser.banned_at ? (
+                  <button
+                    disabled={modSaving !== null}
+                    className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-emerald-500/40 rounded-lg transition text-white text-sm font-medium disabled:opacity-50"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void adminUnban(selectedUser.id);
+                    }}
+                  >
+                    <span className="flex items-center gap-2 text-emerald-400"><Ban size={18}/> Unban user</span>
+                  </button>
+                ) : (
+                  <button
+                    disabled={modSaving !== null}
+                    className="w-full flex items-center justify-between p-3 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 rounded-lg transition text-red-500 text-sm font-bold disabled:opacity-50"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void adminBan(selectedUser.id);
+                    }}
+                  >
+                    <span className="flex items-center gap-2"><Ban size={18}/> Permanent Ban (Founder Only)</span>
+                  </button>
+                )}
                 <button
                   className="w-full flex items-center justify-between p-3 bg-[#13131a] border border-[#2a2a35] hover:border-red-500/40 rounded-lg transition text-white text-sm font-medium"
                   onClick={async () => {

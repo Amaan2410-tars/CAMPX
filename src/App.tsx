@@ -23,6 +23,7 @@ import UserTiers from "./pages/UserTiers";
 import Branding from "./pages/Branding";
 import LegalPolicies from "./pages/LegalPolicies";
 import ResetPassword from "./pages/ResetPassword";
+import AuthCallback from "./pages/AuthCallback";
 
 // Import Admin App pages
 import AdminAuthGuard from "./admin/AdminAuthGuard";
@@ -110,6 +111,7 @@ export default function App() {
       <Route path="/branding" element={<Branding />} />
       <Route path="/policies" element={<LegalPolicies />} />
       <Route path="/auth/reset-password" element={<ResetPassword />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
       {/* ---------------- Admin Panel Routes ---------------- */}
       <Route path="/auth/login" element={<AdminLogin />} />

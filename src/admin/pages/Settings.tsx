@@ -17,6 +17,8 @@ export default function Settings() {
     newSignups: true,
     autoMod: true
   });
+  const [togglesLoading, setTogglesLoading] = useState(false);
+  const [togglesErr, setTogglesErr] = useState<string | null>(null);
   const [auditQuery, setAuditQuery] = useState("");
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditErr, setAuditErr] = useState<string | null>(null);
@@ -96,6 +98,59 @@ export default function Settings() {
     if (activeTab !== "Team") return;
     void loadTeam();
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "Platform") return;
+    const sb = getSupabase();
+    if (!sb) {
+      setTogglesErr("Supabase is not configured.");
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        setTogglesLoading(true);
+        setTogglesErr(null);
+        const { data, error } = await sb
+          .from("platform_settings")
+          .select("maintenance_mode, allow_signups, auto_moderation")
+          .eq("id", 1)
+          .maybeSingle();
+        if (error) throw error;
+        if (cancelled) return;
+        setToggles({
+          maintenance: Boolean((data as any)?.maintenance_mode),
+          newSignups: Boolean((data as any)?.allow_signups),
+          autoMod: Boolean((data as any)?.auto_moderation),
+        });
+      } catch (e: any) {
+        if (!cancelled) setTogglesErr(e?.message ?? "Failed to load platform settings.");
+      } finally {
+        if (!cancelled) setTogglesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
+
+  async function setPlatformToggle(key: "maintenance_mode" | "allow_signups" | "auto_moderation", value: boolean): Promise<void> {
+    const sb = getSupabase();
+    if (!sb) {
+      setTogglesErr("Supabase is not configured.");
+      return;
+    }
+    try {
+      setTogglesErr(null);
+      setTogglesLoading(true);
+      const { error } = await sb.rpc("admin_set_platform_setting", { _key: key, _value: value });
+      if (error) throw error;
+    } catch (e: any) {
+      setTogglesErr(e?.message ?? "Failed to update platform setting.");
+    } finally {
+      setTogglesLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (activeTab !== "Audit") return;
@@ -375,6 +430,12 @@ export default function Settings() {
           {activeTab === "Platform" && (
             <div className="space-y-6">
               <h2 className="text-lg font-bold text-white pb-4 border-b border-[#2a2a35]">Global Platform Controls</h2>
+
+              {togglesErr && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl p-4 text-sm">
+                  {togglesErr}
+                </div>
+              )}
               
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-4 bg-[#13131a] rounded-xl border border-[#2a2a35]">
@@ -382,7 +443,14 @@ export default function Settings() {
                     <h3 className="font-bold text-white text-sm">Maintenance Mode</h3>
                     <p className="text-xs text-gray-400 mt-0.5">Disables student access and displays a "We'll be right back" banner.</p>
                   </div>
-                  <button onClick={() => setToggles({...toggles, maintenance: !toggles.maintenance})}>
+                  <button
+                    disabled={togglesLoading}
+                    onClick={() => {
+                      const next = !toggles.maintenance;
+                      setToggles({ ...toggles, maintenance: next });
+                      void setPlatformToggle("maintenance_mode", next);
+                    }}
+                  >
                     {toggles.maintenance ? <ToggleRight size={32} className="text-red-500"/> : <ToggleLeft size={32} className="text-gray-500"/>}
                   </button>
                 </div>
@@ -392,7 +460,14 @@ export default function Settings() {
                     <h3 className="font-bold text-white text-sm">Allow New Signups</h3>
                     <p className="text-xs text-gray-400 mt-0.5">When disabled, new users cannot create accounts on the platform.</p>
                   </div>
-                  <button onClick={() => setToggles({...toggles, newSignups: !toggles.newSignups})}>
+                  <button
+                    disabled={togglesLoading}
+                    onClick={() => {
+                      const next = !toggles.newSignups;
+                      setToggles({ ...toggles, newSignups: next });
+                      void setPlatformToggle("allow_signups", next);
+                    }}
+                  >
                     {toggles.newSignups ? <ToggleRight size={32} className="text-emerald-500"/> : <ToggleLeft size={32} className="text-gray-500"/>}
                   </button>
                 </div>
@@ -402,7 +477,14 @@ export default function Settings() {
                     <h3 className="font-bold text-white text-sm">Automated Moderation</h3>
                     <p className="text-xs text-gray-400 mt-0.5">Use AI tools to instantly block severe policy violations entirely.</p>
                   </div>
-                  <button onClick={() => setToggles({...toggles, autoMod: !toggles.autoMod})}>
+                  <button
+                    disabled={togglesLoading}
+                    onClick={() => {
+                      const next = !toggles.autoMod;
+                      setToggles({ ...toggles, autoMod: next });
+                      void setPlatformToggle("auto_moderation", next);
+                    }}
+                  >
                     {toggles.autoMod ? <ToggleRight size={32} className="text-[#6c63ff]"/> : <ToggleLeft size={32} className="text-gray-500"/>}
                   </button>
                 </div>

@@ -107,7 +107,7 @@ export default function Settings() {
         <div className="section-label">Profile</div>
       </div>
       
-      <div className="profile-card" role="button" tabIndex={0} onClick={() => navigate('/profile')}>
+      <div className="profile-card" role="button" tabIndex={0} onClick={() => navigate('/settings/edit-profile')}>
         <div className="pc-avatar"><div className="pc-ring"></div>{initials}</div>
         <div className="pc-info">
           <div className="pc-name">{profile?.full_name || '—'}</div>

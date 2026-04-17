@@ -55,7 +55,8 @@ export async function fetchPosts(
 
   const { data, error } = await sb
     .from("posts")
-    .select("id, body, created_at, author_id, profiles(full_name, campx_id, college)")
+    // Explicit foreign key to avoid "more than one relationship" ambiguity in Supabase.
+    .select("id, body, created_at, author_id, profiles!posts_author_id_fkey(full_name, campx_id, college)")
     .eq("feed_kind", kind)
     .order("created_at", { ascending: false })
     .limit(40);
